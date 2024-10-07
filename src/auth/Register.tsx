@@ -1,7 +1,7 @@
 import { Field, Form, Formik } from 'formik';
 import { useState } from 'react';
 import * as yup from 'yup';
-import CustomField from './components/CustomField';
+import CustomField from '../components/CustomField';
 
 function Register() {
 

@@ -1,12 +1,9 @@
-import './App.css'
-import Register from './Register'
 
 function App() {
 
   return (
     <>
-      {/* <Login /> */}
-      <Register />
+      <h1>Mon application</h1>
     </>
   )
 }

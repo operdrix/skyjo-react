@@ -1,0 +1,25 @@
+{
+	"name": "lotr-jdr-api",
+	"version": "1.0.0",
+	"description": "API pour le jeu de rôle LOTR",
+	"main": "index.js",
+	"author": "haudrey.dev",
+	"type": "module",
+	"dependencies": {
+		"@fastify/cors": "^10.0.0",
+		"@fastify/jwt": "^9.0.0",
+		"@fastify/swagger": "^9.0.0",
+		"@fastify/swagger-ui": "^5.0.1",
+		"@sequelize/mysql": "^7.0.0-alpha.42",
+		"chalk": "^5.3.0",
+		"dotenv": "^16.4.5",
+		"fastify": "^5.0.0",
+		"fastify-bcrypt": "^1.0.1",
+		"mysql2": "^3.11.3",
+		"nodemailer": "^6.9.15",
+		"sequelize": "^6.37.3"
+	},
+	"scripts": {
+		"dev": "node --watch src/server.js"
+	}
+}

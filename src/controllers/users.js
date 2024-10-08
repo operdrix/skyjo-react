@@ -3,7 +3,6 @@ import { Op } from "sequelize";
 import User from "../models/users.js";
 
 function createTransporter() {
-	console.log(process.env.GMAIL_APP_EMAIL);
 	return nodemailer.createTransport({
 		service: 'gmail',
 		auth: {

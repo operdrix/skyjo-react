@@ -15,8 +15,10 @@
 		"dotenv": "^16.4.5",
 		"fastify": "^5.0.0",
 		"fastify-bcrypt": "^1.0.1",
+		"mjml": "^4.15.3",
 		"mysql2": "^3.11.3",
 		"nodemailer": "^6.9.15",
+		"nodemailer-mjml": "^1.4.3",
 		"sequelize": "^6.37.3"
 	},
 	"scripts": {

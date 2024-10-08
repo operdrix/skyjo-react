@@ -1,3 +1,6 @@
+import crypto from "crypto";
+import fs from "fs";
+import mjml2html from "mjml";
 import nodemailer from "nodemailer";
 import { Op } from "sequelize";
 import User from "../models/users.js";
@@ -10,6 +13,16 @@ function createTransporter() {
 			pass: process.env.GMAIL_APP_PASSWORD,
 		}
 	});
+}
+
+function getMJMLTemplate(firstname, confirmLink) {
+	const mjmlFilePath = "./src/templates/confirmation.mjml";
+	const emailTemplate = fs.readFileSync(mjmlFilePath, "utf8");
+	const mjmlTemplate = emailTemplate
+		.replace(/{{firstname}}/g, firstname)
+		.replace(/{{confirmLink}}/g, confirmLink);
+	const { html } = mjml2html(mjmlTemplate);
+	return html;
 }
 
 async function generateID(id) {
@@ -82,6 +95,9 @@ export async function registerUser(userDatas, bcrypt) {
 	);
 	//hashage du mot de passe
 	const hashedPassword = await bcrypt.hash(password);
+	//génération du token de vérification
+	const generateToken = crypto.randomBytes(32).toString('hex');
+
 	//création de l'utilisateur dans la base de données
 	const user = {
 		id,
@@ -90,6 +106,7 @@ export async function registerUser(userDatas, bcrypt) {
 		username,
 		email,
 		password: hashedPassword,
+		verifiedtoken: generateToken,
 	};
 
 	const newUser = await User.create(user);
@@ -102,7 +119,7 @@ export async function registerUser(userDatas, bcrypt) {
 			from: 'olivperdrix@gmail.com',
 			to: newUser.email,
 			subject: 'Confirmation d\'inscription',
-			text: `Bonjour ${newUser.firstname},\n\nMerci de vous être inscrit sur notre plateforme. Votre inscription est confirmée!\n\nCordialement,\nL'équipe.`,
+			html: getMJMLTemplate(newUser.firstname, `http://localhost:5173/auth/verify/${newUser.verifiedtoken}`),
 		};
 
 		try {
@@ -156,4 +173,21 @@ export async function loginUser(userDatas, app) {
 		{ expiresIn: "3h" }
 	);
 	return { token };
+}
+
+export async function verifyUser(token) {
+	const user = await User.findOne({
+		where: {
+			verifiedtoken: {
+				[Op.eq]: token,
+			},
+		},
+	});
+	if (!user) {
+		return { error: "Une erreur est survenue. Demander un nouvel email de confirmation.", code: 400 };
+	}
+	user.verified = true;
+	user.verifiedtoken = null;
+	await user.save();
+	return user;
 }

@@ -7,6 +7,7 @@ import AuthLayout from './auth/AuthLayout.tsx'
 import Login from './auth/Login.tsx'
 import Register from './auth/Register.tsx'
 import VerifyEmail from './auth/VerifyEmail.tsx'
+import { UserProvider } from './context/UserContext.tsx'
 import './index.css'
 
 const router = createBrowserRouter([
@@ -43,6 +44,8 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <UserProvider>
+      <RouterProvider router={router} />
+    </UserProvider>
   </StrictMode>,
 )

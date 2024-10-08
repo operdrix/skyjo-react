@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
+import { useUser } from "../hooks/User";
 
 const ToggleMenu = () => {
   const [open, setOpen] = useState(false);
@@ -17,7 +18,7 @@ const ToggleMenu = () => {
 const Header = () => {
 
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
-  console.log(open);
+  const { token, isAuthentified, saveToken } = useUser();
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
@@ -39,7 +40,11 @@ const Header = () => {
         <ul className="menu menu-horizontal px-1">
           <li><NavLink to={'/'}>Accueil</NavLink></li>
           <li>
-            <ToggleMenu />
+            {isAuthentified ? (
+              <NavLink to={'/game'}>Jouer</NavLink>
+            ) : (
+              <ToggleMenu />
+            )}
           </li>
         </ul>
         <button className="btn ml-4" onClick={toggleTheme}>

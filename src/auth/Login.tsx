@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import * as yup from 'yup';
 import CustomField from '../components/CustomField';
+import { useUser } from '../hooks/User';
 
 function Login() {
 
@@ -10,6 +11,7 @@ function Login() {
   const [successMessage, setSuccessMessage] = useState<string>('');
   const [error, setError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const { saveToken } = useUser();
 
   const navigate = useNavigate()
 
@@ -53,6 +55,7 @@ function Login() {
         console.log('Success:', data);
         const token = data.token;
         localStorage.setItem('authToken', token);
+        saveToken(token);
         navigate('/', { state: { message: 'Vous êtes connecté' } });
       } else {
         console.error('Error bdd:', data);

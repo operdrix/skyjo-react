@@ -1,15 +1,27 @@
 import { Field, Form, Formik } from 'formik';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
 import CustomField from '../components/CustomField';
 
 function Register() {
 
+  const [error, setError] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
+
+  const navigateToLogin = useNavigate()
+
+  useEffect(() => {
+    if (error) {
+      const modal = document.getElementById('error_modal');
+      modal?.showModal();
+    }
+  }, [error]);
+
   const [initialValues] = useState({
     firstname: "",
     lastname: "",
-    pseudo: "",
+    username: "",
     email: "",
     password: "",
     passwordConfirm: "",
@@ -18,7 +30,7 @@ function Register() {
   const validationSchema = yup.object().shape({
     firstname: yup.string().required("Le prénom est requis"),
     lastname: yup.string().required("Le nom est requis"),
-    pseudo: yup.string().required("Le pseudo est requis"),
+    username: yup.string().required("Le nom d'utilisateur est requis"),
     email: yup.string().email().required("L'email est requis"),
     password: yup.string().required("Le mot de passe est requis"),
     passwordConfirm: yup.string()
@@ -26,11 +38,49 @@ function Register() {
       .required("La confirmation du mot de passe est requise"),
   });
 
-  const handleSubmit = (values: typeof initialValues) => {
-    console.log("Form values", values);
+  const handleSubmit = async (values: typeof initialValues) => {
+    try {
+      console.log("Form values", values);
+      const response = await fetch('http://localhost:3000/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        console.log('Success:', data);
+        navigateToLogin('/auth/login', { state: { message: 'Votre compte a bien été créé, vous pouvez maintenant vous connecter' } });
+      } else {
+        console.error('Error bdd:', data);
+        setError(true);
+        setErrorMessage(data.error);
+      }
+    } catch (error) {
+      console.error('Error serveur:', error);
+      setError(true);
+      setErrorMessage('Une erreur est survenue');
+    }
   };
   return (
     <>
+      <dialog id="error_modal" className="modal modal-bottom sm:modal-middle">
+        <div className="modal-box">
+          <div role="alert" className="alert alert-error">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+            </svg>
+            <span>Oups ! Il semblerait qu'il y ait un problème</span>
+          </div>
+          <p className="py-4">{errorMessage}</p>
+          <div className="modal-action">
+            <form method="dialog">
+              <button className="btn" onClick={() => setError(false)}>Fermer</button>
+            </form>
+          </div>
+        </div>
+      </dialog>
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}
@@ -42,7 +92,7 @@ function Register() {
             <div className="px-5 py-7">
               <Field component={CustomField} name="firstname" label="Prénom" type='text' />
               <Field component={CustomField} name="lastname" label="Nom" type='text' />
-              <Field component={CustomField} name="pseudo" label="Pseudo" type='text' />
+              <Field component={CustomField} name="username" label="Nom d'utilisateur" type='text' />
               <Field component={CustomField} name="email" label="E-mail" type='text' />
               <Field component={CustomField} name="password" label="Mot de passe" type='password' />
               <Field component={CustomField} name="passwordConfirm" label="Confirmer le mot de passe" type='password' />

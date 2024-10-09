@@ -4,7 +4,7 @@ import ToggleTheme from "./ToggleTheme";
 
 const Header = () => {
 
-  const { isAuthentified, logout } = useUser();
+  const { isAuthentified, logout, loading } = useUser();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -20,13 +20,17 @@ const Header = () => {
       <div className="flex-none">
         <ul className="menu menu-horizontal px-1">
           <li><NavLink to={'/'}>Accueil</NavLink></li>
-          {isAuthentified ? (
-            <li><button onClick={handleLogout}>Déconnexion</button></li>
+          {loading ? (
+            <li><span className="loading loading-ring loading-md"></span></li>
           ) : (
-            <>
-              <li><Link to={'/auth/login'}>Connexion</Link></li>
-              <li><Link to={'/auth/register'}>Créer un compte</Link></li>
-            </>
+            isAuthentified ? (
+              <li><button onClick={handleLogout}>Déconnexion</button></li>
+            ) : (
+              <>
+                <li><Link to={'/auth/login'}>Connexion</Link></li>
+                <li><Link to={'/auth/register'}>Créer un compte</Link></li>
+              </>
+            )
           )}
         </ul>
         {/* <button className="btn ml-4" onClick={toggleTheme}>

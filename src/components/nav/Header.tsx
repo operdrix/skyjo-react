@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { useUser } from "../hooks/User";
+import { useUser } from "../../hooks/User";
 import ToggleTheme from "./ToggleTheme";
 
 const Header = () => {

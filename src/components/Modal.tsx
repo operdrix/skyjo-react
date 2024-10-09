@@ -4,14 +4,14 @@ interface ModalProps {
   id: string
   title: string
   message: string
-  type?: "error" | "success" | "info" | "warning" | null
+  type?: "error" | "success" | "info" | "warning" | "alert"
   open?: boolean
 }
 
 export type LocationStateType = {
   title?: string;
   message: string;
-  type?: "error" | "success" | "info" | "warning" | null
+  type?: "error" | "success" | "info" | "warning" | "alert"
 };
 
 const SvgAlert = () => (
@@ -84,7 +84,7 @@ const SvgWarning = () => (
   </svg>
 )
 
-export default function Modal({ id, title, message, type = null, open = false }: ModalProps) {
+export default function Modal({ id, title, message, type = "alert", open = false }: ModalProps) {
   const [isOpen, setIsOpen] = useState(open)
 
   const openModal = () => {
@@ -120,10 +120,18 @@ export default function Modal({ id, title, message, type = null, open = false }:
     }
   }, [isOpen])
 
+  const classVariant = {
+    alert: '',
+    success: 'alert-success',
+    error: 'alert-error',
+    info: 'alert-info',
+    warning: 'alert-warning',
+  }
+
   return (
     <dialog id={id} className="modal modal-bottom sm:modal-middle" open={isOpen}>
       <div className="modal-box">
-        <div role="alert" className={`alert ${type && 'alert-' + type}`}>
+        <div role="alert" className={`alert ${classVariant[type]}`}>
           {type === 'success' && <SvgSuccess />}
           {type === 'error' && <SvgError />}
           {type === 'info' && <SvgInfo />}

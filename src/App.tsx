@@ -49,7 +49,7 @@ function App() {
               Jouez avec vos amis à SkyJo en ligne, gratuitement. Des heures de fun en perspective !
             </p>
             <p className="flex flex-row justify-center space-x-4">
-              <button className="btn btn-accent text-white" onClick={handleStartGame}>Commencer une partie</button>
+              <button className="btn btn-accent text-white" onClick={handleStartGame}>Créer une partie</button>
               <button className="btn btn-primary text-white" onClick={handleJoinGame}>Rejoindre une partie</button>
             </p>
           </div>

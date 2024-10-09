@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import AuthHeader from "../components/auth/AuthHeader";
+import AuthHeader from "../components/nav/AuthHeader";
 
 export default function Layout() {
   return (

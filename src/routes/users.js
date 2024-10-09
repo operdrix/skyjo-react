@@ -51,4 +51,25 @@ export function usersRoutes(app, blacklistedTokens) {
 			reply.send(response);
 		}
 	});
+
+	// Vérification du token jwt
+	app.get("/auth/verify", async (request, reply) => {
+		const bearer = request.headers["authorization"];
+		if (!bearer) {
+			reply.status(401).send({ error: "Token manquant" });
+			return
+		}
+		const token = bearer.split(" ")[1];
+		// Vérifier si le token est dans la liste noire
+		if (blacklistedTokens.includes(token)) {
+			reply.status(401).send({ error: "Token invalide ou expiré" });
+			return
+		}
+		try {
+			const decoded = app.jwt.verify(token);
+			reply.send(decoded);
+		} catch (error) {
+			reply.status(401).send({ error: "Token invalide" });
+		}
+	});
 }

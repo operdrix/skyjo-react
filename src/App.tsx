@@ -19,7 +19,7 @@ function App() {
         }
       });
     } else {
-      // Créer une partie
+      navigate('/create');
     }
   }
   const handleJoinGame = () => {
@@ -31,11 +31,11 @@ function App() {
             type: 'info',
             title: 'Connexion requise'
           },
-          from: '/game'
+          from: '/join'
         }
       });
     } else {
-      // Rejoindre une partie
+      navigate('/join');
     }
   }
 

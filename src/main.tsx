@@ -8,6 +8,8 @@ import Login from './auth/Login.tsx'
 import Register from './auth/Register.tsx'
 import VerifyEmail from './auth/VerifyEmail.tsx'
 import { UserProvider } from './context/UserContext.tsx'
+import Create from './game/Create.tsx'
+import Join from './game/Join.tsx'
 import './index.css'
 
 const router = createBrowserRouter([
@@ -18,6 +20,14 @@ const router = createBrowserRouter([
       {
         path: '/',
         element: <App />
+      },
+      {
+        path: '/join',
+        element: <Join />
+      },
+      {
+        path: '/create',
+        element: <Create />
       }
     ]
   },

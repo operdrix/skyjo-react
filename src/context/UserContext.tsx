@@ -1,9 +1,14 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, useCallback, useEffect, useState } from "react";
+import { verifyJwt } from "../services/authService";
+import getUserIdFromToken from "../utils/getUserIdFromToken";
 
 type UserContextType = {
     token: string | null;
-    setToken: (token: string | null) => void;
+    userId: string | null;
+    userName: string | null;
     isAuthentified: boolean;
+    loading: boolean;
+    setToken: (token: string | null) => void;
     logout: () => void;
 };
 
@@ -12,53 +17,73 @@ export const UserContext = createContext<UserContextType | undefined>(undefined)
 export const UserProvider = ({ children }: {
     children: React.ReactNode;
 }) => {
-    const [token, setToken] = useState(() => {
+    const [token, setToken] = useState<string | null>(() => {
         if (typeof window !== "undefined") {
             return window.localStorage.getItem("authToken") || null;
         }
         return null;
     });
-    const [isAuthentified, setIsAuthentified] = useState(false);
+    const [userId, setUserId] = useState<string | null>(null);
+    const [userName, setUserName] = useState<string | null>(null);
+    const [isAuthentified, setIsAuthentified] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
-        verifyJwt()
-            .then((auth) => {
-                setIsAuthentified(auth);
+        let isMounted = true;
+
+        if (token) {
+            verifyJwt(token).then((auth) => {
+                if (isMounted) {
+                    const decode = getUserIdFromToken(token);
+                    if (decode) {
+                        setUserId(decode.id);
+                        setUserName(decode.username);
+                    }
+                    setIsAuthentified(auth);
+                    setLoading(false);  // Fin de la vérification
+                }
             });
-    });
+        } else {
+            setIsAuthentified(false);
+            setLoading(false);  // Fin de la vérification
+        }
+
+        return () => {
+            isMounted = false;
+        };
+
+    }, [token]);
 
     // Sauvegarde du token dans le localStorage ou suppression
     useEffect(() => {
+        setTokenInLocalStorage(token);
+    }, [token]);
+
+    useEffect(() => {
+        if (userId) {
+            window.localStorage.setItem("userId", userId);
+        } else {
+            window.localStorage.removeItem("userId");
+        }
+    }, [userId]);
+
+    useEffect(() => {
+        if (userName) {
+            window.localStorage.setItem("userName", userName);
+        } else {
+            window.localStorage.removeItem("userName");
+        }
+    }, [userName]);
+
+    const setTokenInLocalStorage = (token: string | null) => {
         if (token) {
             window.localStorage.setItem("authToken", token);
         } else {
             window.localStorage.removeItem("authToken");
         }
-    }, [token]);
+    };
 
-    const verifyJwt = async () => {
-        try {
-            const response = await fetch(`${process.env.BACKEND_HOST}/auth/verify`, {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            if (response.ok) {
-                return true
-            } else {
-                setToken(null);
-                return false
-            }
-        } catch (error) {
-            setToken(null);
-            console.log(error);
-            return false
-
-        }
-    }
-
-    const logout = () => {
+    const logout = useCallback(() => {
         // appel de l'api pour détruire le token
         try {
             fetch(`${process.env.BACKEND_HOST}/logout`, {
@@ -72,10 +97,10 @@ export const UserProvider = ({ children }: {
         }
         setToken(null);
         window.localStorage.removeItem('authToken');
-    };
+    }, [token]);
 
     return (
-        <UserContext.Provider value={{ token, setToken, isAuthentified, logout }}>
+        <UserContext.Provider value={{ token, setToken, userId, userName, isAuthentified, loading, logout }}>
             {children}
         </UserContext.Provider>
     );

@@ -150,7 +150,7 @@ export async function loginUser(userDatas, app) {
 		};
 	} else if (rows[0].verified === false) {
 		return {
-			error: "Votre compte n'est pas encore vérifié. Veuillez vérifier votre boîte mail.",
+			error: "Votre compte n'est pas encore vérifié.<br>Veuillez vérifier votre boîte mail.",
 			code: 400
 		};
 	}

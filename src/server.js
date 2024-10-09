@@ -1,14 +1,14 @@
 import chalk from "chalk";
 //pour fastify
-import fastify from "fastify";
-import fastifyBcrypt from "fastify-bcrypt";
 import cors from "@fastify/cors";
+import fastifyJWT from "@fastify/jwt";
 import fastifySwagger from "@fastify/swagger";
 import fastifySwaggerUi from "@fastify/swagger-ui";
-import fastifyJWT from "@fastify/jwt";
+import fastify from "fastify";
+import fastifyBcrypt from "fastify-bcrypt";
 //routes
-import { usersRoutes } from "./routes/users.js";
 import { gamesRoutes } from "./routes/games.js";
+import { usersRoutes } from "./routes/users.js";
 //bdd
 import { sequelize } from "./bdd.js";
 
@@ -38,7 +38,7 @@ await app
 		openapi: {
 			openapi: "3.0.0",
 			info: {
-				title: "Documentation de l'API JDR LOTR",
+				title: "Documentation de l'API SkyJo",
 				description:
 					"API développée pour un exercice avec React avec Fastify et Sequelize",
 				version: "0.1.0",
@@ -95,7 +95,7 @@ app.decorate("authenticate", async (request, reply) => {
 	}
 });
 //gestion utilisateur
-usersRoutes(app,blacklistedTokens);
+usersRoutes(app, blacklistedTokens);
 //gestion des jeux
 gamesRoutes(app);
 

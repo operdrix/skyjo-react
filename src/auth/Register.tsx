@@ -11,7 +11,7 @@ function Register() {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
-  const navigateToLogin = useNavigate()
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (error) {
@@ -54,11 +54,13 @@ function Register() {
       const data = await response.json();
       if (response.ok) {
         console.log('Success:', data);
-        navigateToLogin('/auth/login', {
+        navigate('/auth/login', {
           state: {
-            title: 'Compte créé',
-            message: 'Votre compte a bien été créé.<br><br>Veuillez consulter vos mails pour confirmer votre adresse email.<br><br>Une fois votre adresse email confirmée, vous pourrez vous connecter avec vos identifiants.',
-            type: 'success'
+            message: {
+              title: 'Compte créé',
+              message: 'Votre compte a bien été créé.<br><br>Veuillez consulter vos mails pour confirmer votre adresse email.<br><br>Une fois votre adresse email confirmée, vous pourrez vous connecter avec vos identifiants.',
+              type: 'success'
+            }
           }
         });
       } else {

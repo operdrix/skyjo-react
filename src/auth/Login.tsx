@@ -3,14 +3,15 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import * as yup from 'yup';
 import CustomField from '../components/forms/CustomField';
-import Modal, { LocationStateType } from '../components/Modal';
+import Modal, { MessageType } from '../components/Modal';
 import { useUser } from '../hooks/User';
 
 
 function Login() {
 
   const location = useLocation();
-  const [locationState, setLocationState] = useState<LocationStateType | null>(null);
+  const [redirect, setRedirect] = useState<string>('/');
+  const [message, setMessage] = useState<MessageType | null>(null);
 
   const [error, setError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -27,12 +28,18 @@ function Login() {
   }, [error]);
 
   useEffect(() => {
-    if (location.state) {
-      setLocationState(location.state);
-      const modal = document.getElementById('location_modal');
+    if (location.state?.message) {
+      setMessage(location.state.message);
+      const modal = document.getElementById('message_modal');
       (modal as HTMLDialogElement)?.showModal();
     }
-  }, [location.state]);
+  }, [location]);
+
+  useEffect(() => {
+    if (location.state?.from) {
+      setRedirect(location.state.from);
+    }
+  }, [location]);
 
   const [initialValues] = useState({
     email: "",
@@ -60,7 +67,7 @@ function Login() {
         const token = data.token;
         localStorage.setItem('authToken', token);
         setToken(token);
-        navigate('/', { state: { message: 'Vous êtes connecté' } });
+        navigate(redirect, { state: { message: 'Vous êtes connecté' } });
       } else {
         console.error('Error bdd:', data);
         setError(true);
@@ -75,7 +82,7 @@ function Login() {
 
   return (
     <>
-      <Modal id="location_modal" title={locationState?.title || "Succès"} message={locationState?.message || ''} type={locationState?.type || 'success'} />
+      <Modal id="message_modal" title={message?.title || "Succès"} message={message?.message || ''} type={message?.type || 'success'} />
       <Modal id="error_modal" title="Oups ! Il semblerait qu'il y ait un problème" message={errorMessage} type="error" />
 
       <Formik

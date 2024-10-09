@@ -8,7 +8,7 @@ interface ModalProps {
   open?: boolean
 }
 
-export type LocationStateType = {
+export type MessageType = {
   title?: string;
   message: string;
   type?: "error" | "success" | "info" | "warning" | "alert"

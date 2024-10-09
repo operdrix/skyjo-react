@@ -8,6 +8,12 @@ interface ModalProps {
   open?: boolean
 }
 
+export type LocationStateType = {
+  title?: string;
+  message: string;
+  type?: "error" | "success" | "info" | "warning" | null
+};
+
 const SvgAlert = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"

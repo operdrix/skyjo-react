@@ -57,7 +57,8 @@ function Register() {
         navigateToLogin('/auth/login', {
           state: {
             title: 'Compte créé',
-            message: 'Votre compte a bien été créé.<br><br>Veuillez consulter vos mails pour confirmer votre adresse email.<br><br>Une fois votre adresse email confirmée, vous pourrez vous connecter avec vos identifiants.'
+            message: 'Votre compte a bien été créé.<br><br>Veuillez consulter vos mails pour confirmer votre adresse email.<br><br>Une fois votre adresse email confirmée, vous pourrez vous connecter avec vos identifiants.',
+            type: 'success'
           }
         });
       } else {

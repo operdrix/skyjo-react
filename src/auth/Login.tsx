@@ -3,20 +3,18 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import * as yup from 'yup';
 import CustomField from '../components/forms/CustomField';
-import Modal from '../components/Modal';
+import Modal, { LocationStateType } from '../components/Modal';
 import { useUser } from '../hooks/User';
 
-type LocationState = {
-  title?: string;
-  message: string;
-};
 
 function Login() {
 
   const location = useLocation();
-  const [success, setSuccess] = useState<LocationState | null>(null);
+  const [locationState, setLocationState] = useState<LocationStateType | null>(null);
+
   const [error, setError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
+
   const { setToken } = useUser();
 
   const navigate = useNavigate()
@@ -30,8 +28,8 @@ function Login() {
 
   useEffect(() => {
     if (location.state) {
-      setSuccess(location.state);
-      const modal = document.getElementById('success_modal');
+      setLocationState(location.state);
+      const modal = document.getElementById('location_modal');
       (modal as HTMLDialogElement)?.showModal();
     }
   }, [location.state]);
@@ -77,7 +75,7 @@ function Login() {
 
   return (
     <>
-      <Modal id="success_modal" title={success?.title || "Succès"} message={success?.message || ''} type="success" />
+      <Modal id="location_modal" title={locationState?.title || "Succès"} message={locationState?.message || ''} type={locationState?.type || 'success'} />
       <Modal id="error_modal" title="Oups ! Il semblerait qu'il y ait un problème" message={errorMessage} type="error" />
 
       <Formik

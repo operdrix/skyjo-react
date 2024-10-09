@@ -6,6 +6,7 @@ import fastifySwagger from "@fastify/swagger";
 import fastifySwaggerUi from "@fastify/swagger-ui";
 import fastify from "fastify";
 import fastifyBcrypt from "fastify-bcrypt";
+import socketioServer from "fastify-socket.io";
 //routes
 import { gamesRoutes } from "./routes/games.js";
 import { usersRoutes } from "./routes/users.js";
@@ -33,6 +34,11 @@ await app
 	})
 	.register(cors, {
 		origin: "*",
+	})
+	.register(socketioServer, {
+		cors: {
+			origin: "*",
+		},
 	})
 	.register(fastifySwagger, {
 		openapi: {
@@ -98,6 +104,19 @@ app.decorate("authenticate", async (request, reply) => {
 usersRoutes(app, blacklistedTokens);
 //gestion des jeux
 gamesRoutes(app);
+
+/**********
+ * Socket.io
+ * pour la gestion du jeu
+ * **********/
+app.io.on("connection", (socket) => {
+	console.log(`Joueur connecté : ${socket.id}`);
+	socket.emit("validation", "Vous êtes connecté au serveur de jeu.");
+	socket.on("disconnect", () => {
+		console.log(`Joueur déconnecté : ${socket.id}`);
+	});
+});
+
 
 /**********
  * START

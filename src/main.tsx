@@ -9,7 +9,9 @@ import Register from './auth/Register.tsx'
 import VerifyEmail from './auth/VerifyEmail.tsx'
 import { UserProvider } from './context/UserContext.tsx'
 import Create from './game/Create.tsx'
-import Join from './game/Join.tsx'
+import Game from './game/Game.tsx'
+import JoinPublic from './game/JoinPublic.tsx'
+import Waiting from './game/Waiting.tsx'
 import './index.css'
 
 const router = createBrowserRouter([
@@ -22,13 +24,27 @@ const router = createBrowserRouter([
         element: <App />
       },
       {
-        path: '/join',
-        element: <Join />
+        // Lien pour créer une partie
+        path: '/game/create',
+        element: <Create />
       },
       {
-        path: '/create',
-        element: <Create />
-      }
+        // Lien pour consulter les parties publiques
+        path: '/game/public',
+        element: <JoinPublic />
+      },
+      {
+        // Salle de jeu
+        path: '/game/:gameId',
+        element: <Game />
+      },
+      {
+        // Lien de la salle d'attente
+        path: '/game/:gameId/waiting',
+        element: <Waiting />
+      },
+
+
     ]
   },
   {

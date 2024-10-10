@@ -6,7 +6,7 @@ import { WebSocketProvider } from "./context/WebSocketContext"
 const AppLayout = () => {
   return (
     <WebSocketProvider url={(process.env.BACKEND_HOST as string)}>
-      <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col min-h-screen font-kalam">
         <Header />
         <div className="flex-1 container mx-auto flex items-center">
           <Outlet />

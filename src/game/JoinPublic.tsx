@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useWebSocket } from "../hooks/WebSocket";
 
-const Join = () => {
+const JoinPublic = () => {
     const { socket, isConnected } = useWebSocket()
     useEffect(() => {
         if (socket && isConnected) {
@@ -29,4 +29,4 @@ const Join = () => {
     )
 }
 
-export default Join
+export default JoinPublic

@@ -15,7 +15,7 @@ function App() {
             type: 'info',
             title: 'Connexion requise'
           },
-          from: '/game'
+          from: '/create'
         }
       });
     } else {

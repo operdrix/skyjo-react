@@ -10,6 +10,8 @@ import socketioServer from "fastify-socket.io";
 //routes
 import { gamesRoutes } from "./routes/games.js";
 import { usersRoutes } from "./routes/users.js";
+//websockets
+import { websockets } from "./websockets/websockets.js";
 //bdd
 import { sequelize } from "./bdd.js";
 
@@ -109,14 +111,7 @@ gamesRoutes(app);
  * Socket.io
  * pour la gestion du jeu
  * **********/
-app.io.on("connection", (socket) => {
-	console.log(`Joueur connecté : ${socket.id}`);
-	socket.emit("validation", "Vous êtes connecté au serveur de jeu.");
-	socket.on("disconnect", () => {
-		console.log(`Joueur déconnecté : ${socket.id}`);
-	});
-});
-
+websockets(app);
 
 /**********
  * START

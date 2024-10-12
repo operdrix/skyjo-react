@@ -16,7 +16,7 @@ function Login() {
   const [error, setError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
 
-  const { setToken } = useUser();
+  const { setToken, loading, isAuthentified } = useUser();
 
   const navigate = useNavigate()
 
@@ -33,9 +33,6 @@ function Login() {
       const modal = document.getElementById('message_modal');
       (modal as HTMLDialogElement)?.showModal();
     }
-  }, [location]);
-
-  useEffect(() => {
     if (location.state?.from) {
       setRedirect(location.state.from);
     }
@@ -52,7 +49,7 @@ function Login() {
   });
 
   const handleSubmit = async (values: typeof initialValues) => {
-    console.log("Form values", values);
+    console.log("Login: Form values", values);
     try {
       const response = await fetch('http://localhost:3000/login', {
         method: 'POST',
@@ -62,11 +59,12 @@ function Login() {
         body: JSON.stringify(values),
       });
       const data = await response.json();
+
       if (response.ok) {
-        console.log('Success:', data);
-        const token = data.token;
-        localStorage.setItem('authToken', token);
-        setToken(token);
+        console.log('Login Success, token:', data);
+        setToken(data.token);
+        console.log('login: isauthentified:', isAuthentified);
+        console.log('login: Redirect:', redirect);
         navigate(redirect, { state: { message: 'Vous êtes connecté' } });
       } else {
         console.error('Error bdd:', data);

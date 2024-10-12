@@ -5,30 +5,12 @@ import { useUser } from "../hooks/User";
 import { useWebSocket } from "../hooks/WebSocket";
 
 const Create = () => {
-  const { token, userId, isAuthentified, loading: userLoading } = useUser();
+  const { token, userId, loading: userLoading } = useUser();
   const { socket, isConnected, loading: wbLoading } = useWebSocket()
   const [gameId, setGameId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [privateRoom, setPrivateRoom] = useState<boolean>(false);
   const navigate = useNavigate();
-
-  // Vérifier si l'utilisateur est connecté
-  useEffect(() => {
-    if (!userLoading) { // Attendre que le chargement soit terminé avant de vérifier l'authentification
-      if (!isAuthentified) {
-        navigate('/auth/login', {
-          state: {
-            message: {
-              type: 'error',
-              message: 'Vous devez être connecté pour accéder à cette page',
-              title: 'Connexion requise'
-            },
-            from: '/game/create'
-          }
-        });
-      }
-    }
-  }, [token, isAuthentified, userLoading, navigate]);
 
   useEffect(() => {
     if (gameId) {
@@ -76,9 +58,9 @@ const Create = () => {
       <p>
         Vous pourrez commencer la partie dès que tous les joueurs seront prêts.
       </p>
-      <div className="flex justify-center gap-3">
+      <div className="flex justify-center join">
         <button
-          className="btn btn-primary text-xl flex-1"
+          className="btn btn-primary text-md flex-1 join-item"
           disabled={loading}
           onClick={() => handleCreateGame(true)}
         >
@@ -91,7 +73,7 @@ const Create = () => {
           }
         </button>
         <button
-          className="btn btn-secondary text-xl flex-1"
+          className="btn btn-warning text-md flex-1 join-item"
           disabled={loading}
           onClick={() => handleCreateGame(false)}
         >

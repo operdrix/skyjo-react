@@ -1,43 +1,6 @@
-import { useNavigate } from "react-router-dom";
-import { useUser } from "./hooks/User";
+import { Link } from "react-router-dom";
 
 function App() {
-
-  const { isAuthentified } = useUser();
-  const navigate = useNavigate();
-
-  const handleStartGame = () => {
-    if (!isAuthentified) {
-      navigate('/auth/login', {
-        state: {
-          message: {
-            message: 'Vous devez être connecté pour commencer une partie',
-            type: 'info',
-            title: 'Connexion requise'
-          },
-          from: '/game/create'
-        }
-      });
-    } else {
-      navigate('/game/create');
-    }
-  }
-  const handleJoinGame = () => {
-    if (!isAuthentified) {
-      navigate('/auth/login', {
-        state: {
-          message: {
-            message: 'Vous devez être connecté pour commencer une partie',
-            type: 'info',
-            title: 'Connexion requise'
-          },
-          from: '/game/public'
-        }
-      });
-    } else {
-      navigate('/game/public');
-    }
-  }
 
   return (
     <div className="flex flex-col justify-center w-full font-courgette">
@@ -51,8 +14,8 @@ function App() {
               Jouez avec vos amis à SkyJo en ligne, gratuitement. Des heures de fun en perspective !
             </p>
             <p className="flex flex-row justify-center space-x-4">
-              <button className="btn btn-accent text-white" onClick={handleStartGame}>Créer une partie</button>
-              <button className="btn btn-primary text-white" onClick={handleJoinGame}>Rejoindre une partie</button>
+              <Link to={'/game/create'} className="btn btn-accent text-white">Créer une partie</Link>
+              <Link to={'/game/public'} className="btn btn-primary text-white">Rejoindre une partie</Link>
             </p>
           </div>
         </div>

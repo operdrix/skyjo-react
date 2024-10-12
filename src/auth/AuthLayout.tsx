@@ -1,10 +1,10 @@
 import { Outlet } from "react-router-dom";
-import AuthHeader from "../components/nav/AuthHeader";
+import Header from "../components/nav/Header";
 
 export default function Layout() {
   return (
     <>
-      <AuthHeader />
+      <Header />
       <div className="min-h-screen flex flex-col justify-center">
         <div className="p-10 xs:p-0 mx-auto md:w-full md:max-w-xl">
           <Outlet />

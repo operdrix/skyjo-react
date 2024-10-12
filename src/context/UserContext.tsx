@@ -26,9 +26,17 @@ export const UserProvider = ({ children }: {
     const [userId, setUserId] = useState<string | null>(null);
     const [userName, setUserName] = useState<string | null>(null);
     const [isAuthentified, setIsAuthentified] = useState<boolean>(false);
-    const [loading, setLoading] = useState<boolean>(true);
+    const [loading, setLoading] = useState<boolean>(false);
+
+    // Sauvegarde du token dans le localStorage ou suppression
+    useEffect(() => {
+        setTokenInLocalStorage(token);
+    }, [token]);
 
     useEffect(() => {
+        setLoading(true);
+        console.log("usercontext: Token", loading);
+
         let isMounted = true;
 
         if (token) {
@@ -39,6 +47,8 @@ export const UserProvider = ({ children }: {
                         setUserId(decode.id);
                         setUserName(decode.username);
                     }
+                    console.log("usercontext: isAuthentified", auth);
+
                     setIsAuthentified(auth);
                     setLoading(false);  // Fin de la vérification
                 }
@@ -52,11 +62,6 @@ export const UserProvider = ({ children }: {
             isMounted = false;
         };
 
-    }, [token]);
-
-    // Sauvegarde du token dans le localStorage ou suppression
-    useEffect(() => {
-        setTokenInLocalStorage(token);
     }, [token]);
 
     useEffect(() => {

@@ -8,6 +8,7 @@ export interface WebSocketContextType {
     isConnected: boolean;
     loading: boolean;
     error: string | null;
+    joinRoom: (room: string) => void;
     sendMessage: (event: string, data: any) => void;
     subscribeToEvent: (event: string, callback: (data: any) => void) => void;
     unsubscribeFromEvent: (event: string, callback: (data: any) => void) => void;
@@ -63,6 +64,12 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, 
         };
     }, [url]);
 
+    const joinRoom = useCallback((gameId: string) => {
+        if (socket && isConnected) {
+            socket.emit('join-room', gameId);
+        }
+    }, [socket, isConnected]);
+
     const sendMessage = useCallback((event: string, data: any) => {
         if (socket && isConnected) {
             socket.emit(event, data);
@@ -113,6 +120,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, 
         isConnected,
         loading,
         error,
+        joinRoom,
         sendMessage,
         subscribeToEvent,
         unsubscribeFromEvent,
@@ -120,7 +128,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, 
         disconnect,
         subscribeToError,
         clearError,
-    }), [socket, isConnected, loading, error, sendMessage, subscribeToEvent, unsubscribeFromEvent, reconnect, disconnect, subscribeToError, clearError]);
+    }), [socket, isConnected, loading, error, joinRoom, sendMessage, subscribeToEvent, unsubscribeFromEvent, reconnect, disconnect, subscribeToError, clearError]);
 
     return (
         <WebSocketContext.Provider value={contextValue}>

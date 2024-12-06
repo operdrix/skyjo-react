@@ -28,76 +28,82 @@ type GameType = {
 
 const WaitingRoom = () => {
   const { token, userId, loading: userLoading } = useUser();
-  const { socket, isConnected, sendMessage, subscribeToEvent, loading: wsLoading } = useWebSocket()
+  const { socket, isConnected, sendMessage, subscribeToEvent, unsubscribeFromEvent, loading: wsLoading } = useWebSocket()
   const { gameId } = useParams<string>();
-  const [game, setGame] = useState<GameType>(
-    {
-      id: '',
-      players: [],
-      state: '',
-      private: false,
-      createdAt: '',
-      creator: '',
-      roundNumber: 0,
-      updatedAt: '',
-      winner: '',
-      winnerScore: 0,
-      maxPlayers: 3,
-      creatorPlayer: {
-        id: '',
-        username: ''
-      }
-    });
-  const [loading, setLoading] = useState<boolean>(false);
+  const [game, setGame] = useState<GameType | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
   const [isCreator, setIsCreator] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  if (!gameId) {
-    navigate('/game/create');
-  }
-
-  const getGame = useCallback(async () => {
-    setLoading(true);
-    const response = await fetch(`${process.env.BACKEND_HOST}/game/${gameId}`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    const data = await response.json();
-    if (response.ok) {
-      setGame(data);
-      if (data.creator === userId) {
-        setIsCreator(true);
-      }
-    } else {
-      console.error('Error:', data);
-    }
-    setLoading(false);
-  }, [gameId, token, userId, game]);
+  // Rediriger vers la création de partie si gameId n'est pas défini dans l'URL
 
   useEffect(() => {
+    if (!gameId) {
+      navigate("/game/create");
+    }
+  }, [gameId, navigate]);
+
+  //Récupérer les informations de la partie
+  const getGame = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${process.env.BACKEND_HOST}/game/${gameId}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setGame(data);
+        if (data.creator === userId) {
+          setIsCreator(true);
+        }
+      } else {
+        console.error('Error fetching game:', data);
+      }
+    } catch (error) {
+      console.error('Network error:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [gameId, token, userId]);
+
+  // Appeler getGame au montage du composant
+  useEffect(() => {
     getGame();
+  }, [getGame]);
 
-    subscribeToEvent('player-joined-game', (updatedGame: GameType) => {
-      console.log('Player joined game:', updatedGame);
+  // Écouter l'événement "player-joined-game" et mettre à jour l'état
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+    console.log('useEffect 1');
+
+    const handlePlayerJoined = (updatedGame: GameType) => {
+      console.log("Player joined game:", updatedGame);
       setGame(updatedGame);
-    });
+    };
 
-  }, []);
+    subscribeToEvent("player-joined-game", handlePlayerJoined);
+
+    return () => {
+      unsubscribeFromEvent("player-joined-game", handlePlayerJoined);
+    };
+
+  }, [socket, isConnected, subscribeToEvent, unsubscribeFromEvent]);
 
   // rejoindre si on n'est pas déjà dans la liste des joueurs
   useEffect(() => {
-    console.log('useEffect', game.players);
+    if (loading || userLoading || wsLoading || !gameId || !game) return;
 
-    if (!loading && !userLoading && !wsLoading && gameId) {
-      // si l'utilisateur n'est pas dans la liste des joueurs, le faire rejoindre
-      const player = game.players.find(player => player.id === userId);
-      if (!player) {
-        sendMessage('player-joined-game', { room: gameId, userId: userId });
-      }
+    console.log('useEffect 2', game.players);
+
+    const player = game.players.find((p) => p.id === userId);
+    if (!player) {
+      sendMessage("player-joined-game", { room: gameId, userId });
     }
-  }, [userId, loading, userLoading, wsLoading, game]);
+
+  }, [game, gameId, userId, sendMessage, userLoading, wsLoading, loading]);
 
   const handleCopyToClipboard = () => {
     const url = `${window.location.origin}/game/${gameId}`;
@@ -105,6 +111,7 @@ const WaitingRoom = () => {
   }
 
   const handleChangeMaxPlayers = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isCreator || !game) return;
     const value = parseInt(e.target.value);
     setGame({
       ...game,
@@ -165,7 +172,7 @@ const WaitingRoom = () => {
           }
         </div>
         {!isCreator &&
-          <p>Salon créé par {game.creatorPlayer.username}</p>
+          <p>Salon créé par {game?.creatorPlayer.username}</p>
         }
         <div className="divider"></div>
         <div className="flex">
@@ -221,12 +228,12 @@ const WaitingRoom = () => {
       </div>
       <div className="bg-base-300 flex flex-col space-y-4 rounded-box p-5">
         <div className="flex justify-between items-start">
-          <h2 className="text-2xl">Joueurs {game.players.length}/{game.maxPlayers}</h2>
+          <h2 className="text-2xl">Joueurs {game?.players.length}/{game?.maxPlayers}</h2>
           <OnlineStatus isConnected={isConnected} sockerId={socket?.id} />
         </div>
         <div className="divider"></div>
         <ul className="flex flex-col space-y-2">
-          {game.players.map((player, index) => (
+          {game?.players.map((player, index) => (
             <li key={index} className="flex items-center gap-2">
               <div className="avatar online placeholder">
                 <div className="bg-neutral text-neutral-content w-12 rounded-full">

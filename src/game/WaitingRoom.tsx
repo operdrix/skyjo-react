@@ -58,6 +58,8 @@ const WaitingRoom = () => {
         setGame(data);
         if (data.creator === userId) {
           setIsCreator(true);
+          // le créateur est ajouté à la room socket
+          sendMessage("player-joined-game", { room: gameId, userId });
         }
       } else {
         console.error('Error fetching game:', data);
@@ -67,7 +69,7 @@ const WaitingRoom = () => {
     } finally {
       setLoading(false);
     }
-  }, [gameId, token, userId]);
+  }, [gameId, token, userId, sendMessage]);
 
   // Appeler getGame au montage du composant
   useEffect(() => {

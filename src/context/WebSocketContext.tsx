@@ -32,7 +32,10 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, 
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const socketInstance = io(url);
+        const socketInstance = io(
+            url,
+            { transports: ['websocket'], autoConnect: true }
+        );
 
         setLoading(true); // La connexion commence
 

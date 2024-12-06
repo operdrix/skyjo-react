@@ -170,7 +170,7 @@ export async function loginUser(userDatas, app) {
 	// Générer le JWT après une authentification réussie
 	const token = app.jwt.sign(
 		{ id: user.id, username: user.username },
-		{ expiresIn: "3h" }
+		{ expiresIn: "12h" }
 	);
 	return { token, user: { id: user.id, username: user.username } };
 }

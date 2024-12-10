@@ -17,7 +17,14 @@ import { sequelize } from "./bdd.js";
 
 //Test de la connexion
 try {
-	sequelize.authenticate();
+	sequelize.authenticate(
+		{
+			retry: {
+				max: 2,
+				timeout: 10000,
+			},
+		}
+	);
 	console.log(chalk.grey("Connecté à la base de données MySQL!"));
 } catch (error) {
 	console.error("Impossible de se connecter, erreur suivante :", error);

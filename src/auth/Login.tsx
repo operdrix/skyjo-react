@@ -16,7 +16,7 @@ function Login() {
   const [error, setError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
 
-  const { setToken, loading, isAuthentified } = useUser();
+  const { setToken, isAuthentified, setIsAuthentified } = useUser();
 
   const navigate = useNavigate()
 
@@ -33,9 +33,8 @@ function Login() {
       const modal = document.getElementById('message_modal');
       (modal as HTMLDialogElement)?.showModal();
     }
-    if (location.state?.from) {
-      setRedirect(location.state.from);
-    }
+    const referrer = location.state?.from || '/';
+    setRedirect(referrer);
   }, [location]);
 
   const [initialValues] = useState({
@@ -63,6 +62,7 @@ function Login() {
       if (response.ok) {
         console.log('Login Success, token:', data);
         setToken(data.token);
+        setIsAuthentified(true);
         console.log('login: isauthentified:', isAuthentified);
         console.log('login: Redirect:', redirect);
         navigate(redirect, { state: { message: 'Vous êtes connecté' } });

@@ -8,6 +8,7 @@ type UserContextType = {
   userId: string | null;
   userName: string | null;
   isAuthentified: boolean;
+  setIsAuthentified: (isAuthentified: boolean) => void;
   loading: boolean;
   setToken: (token: string | null) => void;
   logout: () => void;
@@ -108,7 +109,7 @@ export const UserProvider = ({ children }: {
   }, [token]);
 
   return (
-    <UserContext.Provider value={{ token, setToken, userId, userName, isAuthentified, loading, logout }}>
+    <UserContext.Provider value={{ token, setToken, userId, userName, isAuthentified, setIsAuthentified, loading, logout }}>
       {children}
     </UserContext.Provider>
   );

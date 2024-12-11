@@ -4,7 +4,7 @@ function App() {
 
   return (
     <div className="flex flex-col justify-center w-full font-courgette">
-      <div className="hero bg-base-200 rounded-box mt-5">
+      <div className="hero bg-base-200 rounded-box mt-5 min-h-[50vh]">
         <div className="hero-content text-center">
           <div className="max-w-md">
             <h1

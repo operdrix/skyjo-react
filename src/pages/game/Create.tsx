@@ -47,11 +47,11 @@ const Create = () => {
   }
 
   return (
-    <div className="bg-base-300 flex-1 flex flex-col space-y-4 rounded-box p-5">
+    <div className="bg-base-300 flex-1 flex flex-col space-y-4 rounded-box p-5 min-h-[50vh]">
       <div className="flex flex-row-reverse">
         <OnlineStatus isConnected={isConnected} sockerId={socket?.id} className="absolute" />
       </div>
-      <h1 className="text-2xl">Créez une partie !</h1>
+      <h1 className="text-4xl">Créez une partie !</h1>
       <p>
         Vous êtes prêt à jouer ? Cliquez sur le bouton ci-dessous pour créer une partie et inviter vos amis à vous rejoindre.
       </p>

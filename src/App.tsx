@@ -14,8 +14,8 @@ function App() {
               Jouez avec vos amis à SkyJo en ligne, gratuitement. Des heures de fun en perspective !
             </p>
             <p className="flex flex-row justify-center space-x-4">
-              <Link to={'/game/create'} className="btn btn-accent text-white">Créer une partie</Link>
-              <Link to={'/game/public'} className="btn btn-primary text-white">Rejoindre une partie</Link>
+              <Link to={'/create'} className="btn btn-accent text-white">Créer une partie</Link>
+              <Link to={'/public-rooms'} className="btn btn-primary text-white">Rejoindre une partie</Link>
             </p>
           </div>
         </div>

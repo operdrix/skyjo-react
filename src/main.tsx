@@ -26,17 +26,17 @@ const router = createBrowserRouter([
     ]
   },
   {
-    path: '/game',
+    path: '/',
     element: <GameLayout />,
     children: [
       {
         // Lien pour créer une partie
-        path: '/game/create',
+        path: '/create',
         element: <Create />
       },
       {
         // Lien pour consulter les parties publiques
-        path: '/game/public',
+        path: '/public-rooms',
         element: <JoinPublic />
       },
       {
@@ -46,7 +46,7 @@ const router = createBrowserRouter([
       },
       {
         // Lien de la salle d'attente
-        path: '/game/:gameId/waiting',
+        path: '/join/:gameId',
         element: <WaitingRoom />
       },
 

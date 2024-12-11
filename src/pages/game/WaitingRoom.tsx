@@ -39,6 +39,7 @@ const WaitingRoom = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [isCreator, setIsCreator] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [creationLoading, setCreationLoading] = useState<boolean>(false);
   const navigate = useNavigate();
 
   // Rediriger vers la création de partie si gameId n'est pas défini dans l'URL
@@ -69,7 +70,7 @@ const WaitingRoom = () => {
             setIsCreator(true);
           }
         } else {
-          // la pariie n'existe pas
+          // la partie n'existe pas
           console.error('Error fetching game:', data);
           setError("La partie n'existe pas.");
         }
@@ -141,21 +142,28 @@ const WaitingRoom = () => {
       setGame(updatedGame);
     }
 
+    const handleStartGame = (updatedGame: GameType) => {
+      console.log("Game started:", updatedGame);
+      navigate(`/game/${gameId}`);
+    }
+
     subscribeToEvent("player-joined-game", handlePlayerJoined);
     subscribeToEvent("player-left-game", handlePlayerLeft);
     subscribeToEvent("update-game-params", setGame);
+    subscribeToEvent("start-game", handleStartGame);
 
     return () => {
       unsubscribeFromEvent("player-joined-game", handlePlayerJoined);
       unsubscribeFromEvent("player-left-game", handlePlayerLeft);
       unsubscribeFromEvent("update-game-params", setGame);
+      unsubscribeFromEvent("start-game", handleStartGame);
     };
 
-  }, [socket, isConnected, subscribeToEvent, unsubscribeFromEvent, navigate, error]);
+  }, [socket, isConnected, subscribeToEvent, unsubscribeFromEvent, navigate, error, gameId]);
 
   // copie de l'url du jeu dans le presse-papier
   const handleCopyToClipboard = () => {
-    const url = `${window.location.origin}/game/${gameId}`;
+    const url = `${window.location.origin}/join/${gameId}`;
     navigator.clipboard.writeText(url);
   }
 
@@ -177,6 +185,13 @@ const WaitingRoom = () => {
   }
 
   const handleStartGame = () => {
+    setCreationLoading(true);
+    if (!isCreator || !game) return;
+    sendMessage("start-game", { room: gameId });
+
+    setTimeout(() => {
+      setCreationLoading(false);
+    }, 5000);
   }
 
   if (wsLoading || !isConnected) {
@@ -282,7 +297,7 @@ const WaitingRoom = () => {
               type="text"
               className="grow"
               placeholder="http://"
-              value={`${window.location.origin}/game/${gameId}`}
+              value={`${window.location.origin}/join/${gameId}`}
               readOnly
             />
           </label>
@@ -323,8 +338,16 @@ const WaitingRoom = () => {
               </div>
             </div>
             <div className="flex flex-1 items-end justify-center">
-              <button className="btn btn-warning text-xl w-full" onClick={handleStartGame}>👾 Commencer la partie 👾</button>
-
+              <button
+                className="btn btn-warning text-xl w-full"
+                onClick={handleStartGame}
+                disabled={game.players.length < 2 || creationLoading}
+              >
+                👾 Commencer la partie 👾
+                {creationLoading &&
+                  <span className="loading loading-spinner loading-sm"></span>
+                }
+              </button>
             </div>
           </>
         }

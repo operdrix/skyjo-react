@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import OnlineStatus from "../../components/game/OnlineStatus";
 import { useUser } from "../../hooks/User";
@@ -7,34 +7,30 @@ import { useWebSocket } from "../../hooks/WebSocket";
 const Create = () => {
   const { token, userId, loading: userLoading } = useUser();
   const { socket, isConnected, loading: wbLoading } = useWebSocket()
-  const [gameId, setGameId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [privateRoom, setPrivateRoom] = useState<boolean>(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (gameId) {
-      navigate(`/game/${gameId}/waiting`)
-    }
-  }, [gameId, navigate, privateRoom]);
 
   const handleCreateGame = async (privateRoom: boolean) => {
     setLoading(true);
     if (socket && isConnected) {
-      const response = await fetch(`${process.env.BACKEND_HOST}/game`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ userId: userId, privateRoom: privateRoom }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        setPrivateRoom(privateRoom);
-        setGameId(data.gameId);
-      } else {
-        console.error('Error:', data);
+      try {
+        const response = await fetch(`${process.env.BACKEND_HOST}/game`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ userId: userId, privateRoom: privateRoom }),
+        });
+        const data = await response.json();
+        if (response.ok) {
+          navigate(`/join/${data.gameId}`)
+        } else {
+          console.error('Error:', data);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error:', error);
         setLoading(false);
       }
     }

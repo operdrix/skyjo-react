@@ -1,35 +1,43 @@
 import { createGame, getGame, updateGame, updateGameSettings } from "../controllers/games.js";
+
 export function gamesRoutes(app) {
 	// Consulter une partie
-	app.get("/game/:gameId",
-		async (request, reply) => {
-			reply.send(await getGame(request.params.gameId));
-		});
+	app.get("/game/:gameId", async (request, reply) => {
+		const response = await getGame(request.params.gameId);
+		if (response.error) {
+			reply.status(response.code).send(response);
+		} else {
+			reply.send(response);
+		}
+	});
 
-	//création d'un jeu
-	app.post(
-		"/game",
-		{ preHandler: [app.authenticate] },
-		async (request, reply) => {
-			reply.send(await createGame(request.body.userId, request.body.privateRoom));
+	// Création d'un jeu
+	app.post("/game", { preHandler: [app.authenticate] }, async (request, reply) => {
+		const response = await createGame(request.body.userId, request.body.privateRoom);
+		if (response.error) {
+			reply.status(response.code || 400).send(response); // Utilisez le code HTTP approprié
+		} else {
+			reply.send(response);
 		}
-	);
-	//rejoindre un jeu
-	app.patch(
-		"/game/:action/:gameId",
-		{ preHandler: [app.authenticate] },
-		async (request, reply) => {
-			reply.send(await updateGame(request));
-		}
-	);
-	//changer les paramètres d'une partie
-	app.patch(
-		"/game/:gameId",
-		{ preHandler: [app.authenticate] },
-		async (request, reply) => {
-			console.log(request.body);
+	});
 
-			reply.send(await updateGameSettings(request.params.gameId, request.body));
+	// Rejoindre un jeu
+	app.patch("/game/:action/:gameId", { preHandler: [app.authenticate] }, async (request, reply) => {
+		const response = await updateGame(request);
+		if (response.error) {
+			reply.status(response.code || 400).send(response); // Utilisez le code HTTP approprié
+		} else {
+			reply.send(response);
 		}
-	);
+	});
+
+	// Changer les paramètres d'une partie
+	app.patch("/game/:gameId", { preHandler: [app.authenticate] }, async (request, reply) => {
+		const response = await updateGameSettings(request.params.gameId, request.body);
+		if (response.error) {
+			reply.status(response.code).send(response);
+		} else {
+			reply.send(response);
+		}
+	});
 }

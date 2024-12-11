@@ -27,7 +27,7 @@ export async function getGame(gameId) {
 // Créer une nouvelle partie
 export async function createGame(userId, privateRoom) {
   if (!userId) {
-    return { error: "L'identifiant du créateur est manquant" };
+    return { error: "L'identifiant du créateur est manquant", code: 400 };
   }
   // Création de la partie
   const game = await Game.create({
@@ -53,7 +53,7 @@ export async function updateGame(request) {
 
   if (!userId) {
     console.log("User ID is missing");
-    return { error: "L'identifiant du joueur est manquant" };
+    return { error: "L'identifiant du joueur est manquant", code: 400 };
   }
 
   // Rechercher la partie
@@ -63,12 +63,12 @@ export async function updateGame(request) {
 
   if (!game) {
     console.log("Game not found");
-    return { error: "La partie n'existe pas." };
+    return { error: "La partie n'existe pas.", code: 404 };
   }
 
   if (game.state === "finished") {
     console.log("Game is already finished");
-    return { error: "Cette partie est déjà terminée !" };
+    return { error: "Cette partie est déjà terminée !", code: 400 };
   }
 
   switch (action) {
@@ -79,29 +79,35 @@ export async function updateGame(request) {
       }
       if (game.players.some(player => player.id === userId)) {
         console.log("Player already in game");
-        return { error: "Vous êtes déjà dans cette partie." };
+        return { error: "Vous êtes déjà dans cette partie.", code: 400 };
       }
       console.log("addPlayer ", userId);
       try {
         await game.addPlayer(userId);
       } catch (error) {
         console.error("Error adding player to game:", error);
-        return { error: "Impossible de rejoindre la partie." };
+        return { error: "Impossible de rejoindre la partie.", code: 500 };
       }
       break;
 
     case "leave":
       console.log("removePlayer ", userId);
       if (game.state !== "pending") {
-        return { error: "Impossible de quitter une partie en cours." };
+        return { error: "Impossible de quitter une partie en cours.", code: 400 };
       }
 
       await game.removePlayer(userId);
+      // Supprimer la partie si le créateur la quitte ou si tous les joueurs la quittent
+      if (game.creator === userId || game.players.length === 0) {
+        console.log("destroy game");
+        await game.destroy();
+        return { gameDestroyed: true };
+      }
       break;
 
     case "start":
       if (game.state !== "pending") {
-        return { error: "La partie a déjà commencé." };
+        return { error: "La partie a déjà commencé.", code: 400 };
       }
 
       game.state = "playing";
@@ -109,7 +115,7 @@ export async function updateGame(request) {
 
     case "finish":
       if (!request.body.score || !request.body.winner) {
-        return { error: "Le score et le gagnant doivent être fournis." };
+        return { error: "Le score et le gagnant doivent être fournis.", code: 400 };
       }
 
       game.state = "finished";
@@ -119,7 +125,7 @@ export async function updateGame(request) {
 
     default:
       console.log("Unknown action");
-      return { error: "Action inconnue" };
+      return { error: "Action inconnue", code: 400 };
   }
 
   await game.save();

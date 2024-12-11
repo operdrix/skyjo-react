@@ -9,6 +9,7 @@ export async function websockets(app) {
     // Ecoute des événements socket
     playerJoinedGame(socket, app.io);
     gameSettingsChanged(socket, app.io);
+    startGame(socket, app.io);
 
     // Lorsqu'un joueur se déconnecte
     socket.on("disconnect", async () => {
@@ -78,5 +79,25 @@ export async function gameSettingsChanged(socket, io) {
 
     // Émettre l'événement à tous les membres de la room
     io.to(room).emit("update-game-params", game);
+  });
+}
+
+// Démarrer une partie
+// on envoie à tous les joueurs de la partie les informations de la partie
+export async function startGame(socket, io) {
+  socket.on("start-game", async ({ room }) => {
+    console.log("start-game", room);
+    await updateGame({ params: { action: "start", gameId: room } });
+
+    const game = await getGame(room);
+    if (!game) {
+      console.error("Game not found for room:", room);
+      return;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // Émettre l'événement à tous les membres de la room
+    io.to(room).emit("start-game", game);
   });
 }

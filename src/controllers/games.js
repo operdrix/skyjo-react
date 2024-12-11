@@ -35,7 +35,7 @@ export async function createGame(userId, privateRoom) {
     private: privateRoom,
     creator: userId
   });
-  console.log("ID de la partie créée :", game.id);
+  console.log("[game controller] ID de la partie créée :", game.id);
 
   // Ajouter le créateur comme premier joueur
   await game.addPlayer(userId);
@@ -45,14 +45,13 @@ export async function createGame(userId, privateRoom) {
 
 // Mettre à jour une partie (joindre, démarrer, terminer)
 export async function updateGame(request) {
-
   const { action, gameId } = request.params;
-  const userId = request.body.userId;
+  const userId = request.body ? request.body.userId : null;
 
   console.log(`Update game ${gameId} with action ${action} for user ${userId}`);
 
-  if (!userId) {
-    console.log("User ID is missing");
+  if ((action === "join" || action === "leave") && !userId) {
+    console.log("[game controller] User ID is missing");
     return { error: "L'identifiant du joueur est manquant", code: 400 };
   }
 
@@ -62,26 +61,26 @@ export async function updateGame(request) {
   });
 
   if (!game) {
-    console.log("Game not found");
+    console.log("[game controller] Game not found");
     return { error: "La partie n'existe pas.", code: 404 };
   }
 
   if (game.state === "finished") {
-    console.log("Game is already finished");
+    console.log("[game controller] Game is already finished");
     return { error: "Cette partie est déjà terminée !", code: 400 };
   }
 
   switch (action) {
     case "join":
       if (game.players.length >= game.maxPlayers) {
-        console.log("Game is full");
+        console.log("[game controller] Game is full");
         return { error: `Cette partie est déjà complète avec ${game.maxPlayers} joueurs !` };
       }
       if (game.players.some(player => player.id === userId)) {
-        console.log("Player already in game");
+        console.log("[game controller] Player already in game");
         return { error: "Vous êtes déjà dans cette partie.", code: 400 };
       }
-      console.log("addPlayer ", userId);
+      console.log("[game controller] addPlayer ", userId);
       try {
         await game.addPlayer(userId);
       } catch (error) {
@@ -91,17 +90,23 @@ export async function updateGame(request) {
       break;
 
     case "leave":
-      console.log("removePlayer ", userId);
-      if (game.state !== "pending") {
-        return { error: "Impossible de quitter une partie en cours.", code: 400 };
-      }
+      console.log("[game controller] player leaded ", userId);
 
-      await game.removePlayer(userId);
-      // Supprimer la partie si le créateur la quitte ou si tous les joueurs la quittent
-      if (game.creator === userId || game.players.length === 0) {
-        console.log("destroy game");
-        await game.destroy();
-        return { gameDestroyed: true };
+      if (game.state === "pending") {
+        await game.removePlayer(userId);
+        // Supprimer la partie si le créateur la quitte ou si tous les joueurs la quittent
+        if (game.creator === userId || game.players.length === 0) {
+          console.log("[game controller] destroy game");
+          await game.destroy();
+          return { gameDestroyed: true };
+        }
+      } else {
+        // Marquer le joueur comme déconnecté
+        const player = game.players.find(player => player.id === userId);
+        if (player) {
+          player.game_players.status = "disconnected";
+          await player.game_players.save();
+        }
       }
       break;
 

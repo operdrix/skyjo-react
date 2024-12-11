@@ -64,6 +64,11 @@ const GamePlayers = sequelize.define("game_players", {
 		allowNull: false,
 		defaultValue: {},
 	},
+	status: {
+		type: DataTypes.ENUM("connected", "disconnected"),
+		allowNull: false,
+		defaultValue: "connected",
+	},
 });
 
 // Relations

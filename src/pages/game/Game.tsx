@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useUser } from "../hooks/User";
-import { useWebSocket } from "../hooks/WebSocket";
+import { useUser } from "../../hooks/User";
+import { useWebSocket } from "../../hooks/WebSocket";
 
 type GameType = {
   id: string,

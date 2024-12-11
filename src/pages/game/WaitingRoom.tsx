@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import OnlineStatus from "../components/game/OnlineStatus";
-import { useUser } from "../hooks/User";
-import { useWebSocket } from "../hooks/WebSocket";
+import OnlineStatus from "../../components/game/OnlineStatus";
+import { useUser } from "../../hooks/User";
+import { useWebSocket } from "../../hooks/WebSocket";
 
 type GameType = {
   id: string,

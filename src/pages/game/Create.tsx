@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import OnlineStatus from "../components/game/OnlineStatus";
-import { useUser } from "../hooks/User";
-import { useWebSocket } from "../hooks/WebSocket";
+import OnlineStatus from "../../components/game/OnlineStatus";
+import { useUser } from "../../hooks/User";
+import { useWebSocket } from "../../hooks/WebSocket";
 
 const Create = () => {
   const { token, userId, loading: userLoading } = useUser();

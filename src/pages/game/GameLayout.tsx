@@ -2,10 +2,10 @@
 
 import { useEffect } from "react"
 import { Outlet, useNavigate } from "react-router-dom"
-import Footer from "../components/nav/Footer"
-import Header from "../components/nav/Header"
-import { WebSocketProvider } from "../context/WebSocketContext"
-import { useUser } from "../hooks/User"
+import Footer from "../../components/nav/Footer"
+import Header from "../../components/nav/Header"
+import { WebSocketProvider } from "../../context/WebSocketContext"
+import { useUser } from "../../hooks/User"
 
 const GameLayout = () => {
   const { isAuthentified, loading: userLoading } = useUser();

@@ -29,12 +29,16 @@ function playerJoinedGame(socket, io) {
     // attente d'un délai pour éviter les problèmes de concurrence
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    //await updateGame({ params: { action: "join", gameId: room }, body: { userId } });
-
-    const game = await getGame(room);
+    let game = null;
+    game = await getGame(room);
     if (!game) {
       console.error("Game not found for room:", room);
       return;
+    }
+
+    if (game.state !== "pending") {
+      await updateGame({ params: { action: "join", gameId: room }, body: { userId } });
+      game = await getGame(room);
     }
 
     // Ajouter le socket à la room

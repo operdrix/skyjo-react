@@ -72,20 +72,28 @@ export async function updateGame(request) {
 
   switch (action) {
     case "join":
-      if (game.players.length >= game.maxPlayers) {
-        console.log("[game controller] Game is full");
-        return { error: `Cette partie est déjà complète avec ${game.maxPlayers} joueurs !` };
-      }
-      if (game.players.some(player => player.id === userId)) {
-        console.log("[game controller] Player already in game");
-        return { error: "Vous êtes déjà dans cette partie.", code: 400 };
-      }
-      console.log("[game controller] addPlayer ", userId);
-      try {
-        await game.addPlayer(userId);
-      } catch (error) {
-        console.error("Error adding player to game:", error);
-        return { error: "Impossible de rejoindre la partie.", code: 500 };
+      if (game.state !== "pending") {
+        const player = game.players.find(player => player.id === userId);
+        if (player) {
+          player.game_players.status = "connected";
+          await player.game_players.save();
+        }
+      } else {
+        if (game.players.length >= game.maxPlayers) {
+          console.log("[game controller] Game is full");
+          return { error: `Cette partie est déjà complète avec ${game.maxPlayers} joueurs !` };
+        }
+        if (game.players.some(player => player.id === userId)) {
+          console.log("[game controller] Player already in game");
+          return { error: "Vous êtes déjà dans cette partie.", code: 400 };
+        }
+        console.log("[game controller] addPlayer ", userId);
+        try {
+          await game.addPlayer(userId);
+        } catch (error) {
+          console.error("Error adding player to game:", error);
+          return { error: "Impossible de rejoindre la partie.", code: 500 };
+        }
       }
       break;
 

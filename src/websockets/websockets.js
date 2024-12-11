@@ -1,18 +1,20 @@
 import { getGame, updateGame } from "../controllers/games.js";
-import { joinRoom } from "./room/joinRoom.js";
 
-export function websockets(app) {
-  app.ready().then(() => {
-    app.io.on("connection", (socket) => {
-      console.log(`Joueur connecté : ${socket.id}`);
+export async function websockets(app) {
+  await app.ready();
+  // Lorsqu'un joueur se connecte
+  app.io.on("connection", (socket) => {
+    console.log(`Joueur connecté : ${socket.id} room: ${socket.room}`);
 
-      joinRoom(socket);
+    // Ecoute des événements socket
+    playerJoinedGame(socket, app.io);
+    gameSettingsChanged(socket, app.io);
 
-      playerJoinedGame(socket, app.io);
-
-      socket.on("disconnect", () => {
-        console.log(`Joueur déconnecté : ${socket.id}`);
-      });
+    // Lorsqu'un joueur se déconnecte
+    socket.on("disconnect", async () => {
+      console.log(`Joueur déconnecté : ${socket.id} room: ${socket.room}`);
+      // Si le joueur est dans une partie, le retirer de la partie
+      await playerLeftGame(socket.room, socket.userId, app.io);
     });
   });
 }
@@ -22,9 +24,11 @@ export function websockets(app) {
 function playerJoinedGame(socket, io) {
 
   socket.on("player-joined-game", async ({ room, userId }) => {
-    console.log("player-joined-game", room, userId);
 
-    updateGame({ params: { action: "join", gameId: room }, body: { userId } });
+    // attente d'un délai pour éviter les problèmes de concurrence
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    //await updateGame({ params: { action: "join", gameId: room }, body: { userId } });
 
     const game = await getGame(room);
     if (!game) {
@@ -34,6 +38,10 @@ function playerJoinedGame(socket, io) {
 
     // Ajouter le socket à la room
     socket.join(room);
+    socket.room = room;
+    socket.userId = userId;
+
+    console.log("(player-joined-game) room:", room, "userId:", userId);
 
     // Émettre l'événement à tous les membres de la room
     io.to(room).emit("player-joined-game", game);
@@ -41,3 +49,34 @@ function playerJoinedGame(socket, io) {
 
 }
 
+// un joueur quitte une partie
+// on envoie à tous les joueurs de la partie les informations de la partie
+export async function playerLeftGame(room, userId, io) {
+  await updateGame({ params: { action: "leave", gameId: room }, body: { userId } });
+
+  const game = await getGame(room);
+  if (!game) {
+    console.error("Game not found for room:", room);
+    return;
+  }
+
+  // Émettre l'événement à tous les membres de la room
+  io.to(room).emit("player-left-game", game);
+}
+
+// les paramètres de la partie ont changé
+// on envoie à tous les joueurs de la partie les informations de la partie
+export async function gameSettingsChanged(socket, io) {
+  socket.on("update-game-params", async ({ room }) => {
+    console.log("update-game-params", room);
+
+    const game = await getGame(room);
+    if (!game) {
+      console.error("Game not found for room:", room);
+      return;
+    }
+
+    // Émettre l'événement à tous les membres de la room
+    io.to(room).emit("update-game-params", game);
+  });
+}

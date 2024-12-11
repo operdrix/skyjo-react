@@ -1,13 +1,14 @@
 import { DataTypes } from "@sequelize/core";
+import { nanoid } from "nanoid";
 import { sequelize } from "../bdd.js";
 import User from "./users.js";
 
 // Définition du modèle Game
 const Game = sequelize.define("game", {
 	id: {
-		type: DataTypes.UUID,
+		type: DataTypes.STRING,
 		primaryKey: true,
-		defaultValue: DataTypes.UUIDV4,
+		defaultValue: () => nanoid(5),
 	},
 	winnerScore: {
 		type: DataTypes.INTEGER,
@@ -38,7 +39,7 @@ const Game = sequelize.define("game", {
 // Définition du modèle GamePlayers pour la relation de jointure
 const GamePlayers = sequelize.define("game_players", {
 	gameId: {
-		type: DataTypes.UUID,
+		type: DataTypes.STRING,
 		references: {
 			model: Game,
 			key: "id"
@@ -76,3 +77,4 @@ Game.belongsTo(User, { foreignKey: "winner", as: "winPlayer" });
 
 export default Game;
 export { GamePlayers };
+

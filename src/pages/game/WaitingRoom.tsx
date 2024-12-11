@@ -38,6 +38,7 @@ const WaitingRoom = () => {
   const [game, setGame] = useState<GameType | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isCreator, setIsCreator] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   // Rediriger vers la création de partie si gameId n'est pas défini dans l'URL
@@ -66,27 +67,25 @@ const WaitingRoom = () => {
           setGame(data);
           if (data.creator === userId) {
             setIsCreator(true);
-            // le créateur est ajouté à la room socket
-            //sendMessage("player-joined-game", { room: gameId, userId });
           }
         } else {
+          // la pariie n'existe pas
           console.error('Error fetching game:', data);
-          navigate('/', {
-            state: { message: data.error }
-          });
+          setError("La partie n'existe pas.");
         }
       } catch (error) {
         console.error('Network error:', error);
+        setError("Une erreur réseau s'est produite.");
       } finally {
         setLoading(false);
       }
     };
-    getGame();
-  }, [gameId, token, userId, navigate]);
+    if (!error) getGame();
+  }, [gameId, token, userId, error]);
 
-  // rejoindre une partie si l'utilisateur n'est pas déjà dans la partie
+  // Cas de l'utilisateur qui rejoint la partie
   useEffect(() => {
-    if (loading || userLoading || wsLoading || !gameId || !game || !token) return;
+    if (loading || userLoading || wsLoading || !gameId || !game || !token || error) return;
 
     console.log('rejoindre partie', userId);
 
@@ -113,16 +112,17 @@ const WaitingRoom = () => {
       addPlayer();
       sendMessage("player-joined-game", { room: gameId, userId });
     }
-  }, [game, gameId, userId, sendMessage, userLoading, wsLoading, loading, navigate, token]);
+  }, [game, gameId, userId, sendMessage, userLoading, wsLoading, loading, navigate, token, error]);
 
+  // Avertir les autres joueurs de la connexion du joueur
   useEffect(() => {
-    if (!gameId || !userId) return;
+    if (!gameId || !userId || error) return;
     sendMessage("player-joined-game", { room: gameId, userId });
-  }, [gameId, userId, sendMessage]);
+  }, [gameId, userId, sendMessage, error]);
 
   // Ecouter les événements de connexion/déconnexion du socket
   useEffect(() => {
-    if (!socket || !isConnected) return;
+    if (!socket || !isConnected || error) return;
     console.log('useEffect 1');
 
     const handlePlayerJoined = (updatedGame: GameType) => {
@@ -151,7 +151,7 @@ const WaitingRoom = () => {
       unsubscribeFromEvent("update-game-params", setGame);
     };
 
-  }, [socket, isConnected, subscribeToEvent, unsubscribeFromEvent, navigate]);
+  }, [socket, isConnected, subscribeToEvent, unsubscribeFromEvent, navigate, error]);
 
   // copie de l'url du jeu dans le presse-papier
   const handleCopyToClipboard = () => {
@@ -181,24 +181,67 @@ const WaitingRoom = () => {
 
   if (wsLoading || !isConnected) {
     return (
-      <div className="flex-1 grid grid-cols-3 gap-4 p-5">
-        <h1>Tentative de reconnexion en cours</h1>
-        <span className="loading loading-lg"></span>
+      <div className="hero bg-base-200 min-h-[50vh] p-20">
+        <div className="hero-content flex-col lg:flex-row text-center">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-96 max-w-sm text-warning">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+          </svg>
+          <div>
+            <h1 className="text-5xl font-bold">
+              Tentative de reconnexion en cours
+            </h1>
+            <p className="py-6 text-xl">
+              Veuillez patienter... <br /><span className="loading loading-dots loading-lg text-warning"></span>
+            </p>
+          </div>
+        </div>
       </div>
     )
   }
 
   if (loading) {
     return (
-      <div className="flex-1 grid grid-cols-3 gap-4 p-5">
-        <h1>Chargement en cours</h1>
-        <span className="loading loading-lg"></span>
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 p-5">
+        <div className="flex lg:col-span-2 space-y-4 flex-col gap-4">
+          <div className="skeleton h-32 w-full"></div>
+          <div className="skeleton h-4 w-28"></div>
+          <div className="skeleton h-4 w-full"></div>
+          <div className="skeleton h-4 w-full"></div>
+        </div>
+        <div className="flex space-y-4 flex-col gap-4">
+          <div className="skeleton h-32 w-full"></div>
+          <div className="skeleton h-4 w-28"></div>
+          <div className="skeleton h-4 w-full"></div>
+          <div className="skeleton h-4 w-full"></div>
+        </div>
       </div>
     )
   }
 
+  if (error) {
+    return (
+      <div className="hero bg-base-200 min-h-[50vh] p-20">
+        <div className="hero-content flex-col lg:flex-row text-center">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-96 max-w-sm text-warning">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+          </svg>
+          <div>
+            <h1 className="text-5xl font-bold">
+              Une erreur est survenue 😕
+            </h1>
+            <p className="py-6 text-xl">
+              {error}
+            </p>
+            <button onClick={() => navigate("/")} className="btn btn-primary">Retour à l'accueil</button>
+          </div>
+        </div>
+      </div>
+
+    )
+  }
+
   return (
-    <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 p-5">
+    <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 p-5 min-h-[50vh]">
       <div className="bg-base-300 lg:col-span-2 flex flex-col space-y-4 rounded-box p-5">
         <div className="flex justify-between items-start">
           <h1 className="text-2xl">Salle d'attente</h1>
@@ -220,7 +263,7 @@ const WaitingRoom = () => {
               data-tip='Salon visible dans la liste des salons publics'
             >
               <div className='badge badge-accent gap-2'>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-3">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
                 </svg>
                 Salon public
@@ -252,7 +295,7 @@ const WaitingRoom = () => {
           </div>
         </div>
         <div>
-          <p>En attente de joueurs...</p>
+          <p className="mt-4">En attente de joueurs...</p>
         </div>
         {isCreator && game &&
           <>
@@ -279,8 +322,10 @@ const WaitingRoom = () => {
                 </div>
               </div>
             </div>
+            <div className="flex flex-1 items-end justify-center">
+              <button className="btn btn-warning text-xl w-full" onClick={handleStartGame}>👾 Commencer la partie 👾</button>
 
-            <button className="btn btn-warning text-xl" onClick={handleStartGame}>👾 Commencer la partie 👾</button>
+            </div>
           </>
         }
       </div>

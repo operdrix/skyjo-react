@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import OnlineStatus from "../components/game/OnlineStatus";
 import { useUser } from "../hooks/User";
@@ -36,47 +36,83 @@ const WaitingRoom = () => {
   const navigate = useNavigate();
 
   // Rediriger vers la création de partie si gameId n'est pas défini dans l'URL
-
   useEffect(() => {
     if (!gameId) {
       navigate("/game/create");
     }
   }, [gameId, navigate]);
 
-  //Récupérer les informations de la partie
-  const getGame = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(`${process.env.BACKEND_HOST}/game/${gameId}`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await response.json();
-      if (response.ok) {
-        setGame(data);
-        if (data.creator === userId) {
-          setIsCreator(true);
-          // le créateur est ajouté à la room socket
-          sendMessage("player-joined-game", { room: gameId, userId });
-        }
-      } else {
-        console.error('Error fetching game:', data);
-      }
-    } catch (error) {
-      console.error('Network error:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [gameId, token, userId, sendMessage]);
-
-  // Appeler getGame au montage du composant
+  //On récupère les informations de la partie
   useEffect(() => {
-    getGame();
-  }, [getGame]);
+    if (!gameId || !token || !userId) return;
+    console.log('récupération de la partie', gameId);
 
-  // Écouter l'événement "player-joined-game" et mettre à jour l'état
+    const getGame = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`${process.env.BACKEND_HOST}/game/${gameId}`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await response.json();
+        if (response.ok) {
+          setGame(data);
+          if (data.creator === userId) {
+            setIsCreator(true);
+            // le créateur est ajouté à la room socket
+            //sendMessage("player-joined-game", { room: gameId, userId });
+          }
+        } else {
+          console.error('Error fetching game:', data);
+        }
+      } catch (error) {
+        console.error('Network error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    getGame();
+  }, [gameId, token, userId]);
+
+  // rejoindre une partie si l'utilisateur n'est pas déjà dans la partie
+  useEffect(() => {
+    if (loading || userLoading || wsLoading || !gameId || !game || !token) return;
+
+    console.log('rejoindre partie', userId);
+
+    const player = game.players.find((player) => player.id === userId);
+    if (!player) {
+      if (game.players.length >= game.maxPlayers) {
+        navigate('/', {
+          state: { message: "La partie est pleine" }
+        });
+        return;
+      }
+      console.log('ajout nouveau du joueur à la partie');
+
+      const addPlayer = async () => {
+        await fetch(`${process.env.BACKEND_HOST}/game/join/${gameId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ userId }),
+        });
+      }
+      addPlayer();
+      sendMessage("player-joined-game", { room: gameId, userId });
+    }
+  }, [game, gameId, userId, sendMessage, userLoading, wsLoading, loading, navigate, token]);
+
+  useEffect(() => {
+    if (!gameId || !userId) return;
+    sendMessage("player-joined-game", { room: gameId, userId });
+  }, [gameId, userId, sendMessage]);
+
+  // Ecouter les événements de connexion/déconnexion du socket
   useEffect(() => {
     if (!socket || !isConnected) return;
     console.log('useEffect 1');
@@ -86,40 +122,35 @@ const WaitingRoom = () => {
       setGame(updatedGame);
     };
 
+    const handlePlayerLeft = (updatedGame: GameType) => {
+      console.log("Player left game:", updatedGame);
+      setGame(updatedGame);
+    }
+
     subscribeToEvent("player-joined-game", handlePlayerJoined);
+    subscribeToEvent("player-left-game", handlePlayerLeft);
+    subscribeToEvent("update-game-params", setGame);
 
     return () => {
       unsubscribeFromEvent("player-joined-game", handlePlayerJoined);
+      unsubscribeFromEvent("player-left-game", handlePlayerLeft);
+      unsubscribeFromEvent("update-game-params", setGame);
     };
 
   }, [socket, isConnected, subscribeToEvent, unsubscribeFromEvent]);
 
-  // rejoindre si on n'est pas déjà dans la liste des joueurs
-  useEffect(() => {
-    if (loading || userLoading || wsLoading || !gameId || !game) return;
-
-    console.log('useEffect 2', game.players);
-
-    const player = game.players.find((p) => p.id === userId);
-    if (!player) {
-      sendMessage("player-joined-game", { room: gameId, userId });
-    }
-
-  }, [game, gameId, userId, sendMessage, userLoading, wsLoading, loading]);
-
+  // copie de l'url du jeu dans le presse-papier
   const handleCopyToClipboard = () => {
     const url = `${window.location.origin}/game/${gameId}`;
     navigator.clipboard.writeText(url);
   }
 
-  const handleChangeMaxPlayers = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Mettre à jour le nombre de joueurs max
+  const handleChangeMaxPlayers = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!isCreator || !game) return;
     const value = parseInt(e.target.value);
-    setGame({
-      ...game,
-      maxPlayers: value
-    });
-    fetch(`${process.env.BACKEND_HOST}/game/${gameId}`, {
+    // Mettre à jour le nombre de joueurs max dans la base de données
+    await fetch(`${process.env.BACKEND_HOST}/game/${gameId}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -127,10 +158,20 @@ const WaitingRoom = () => {
       },
       body: JSON.stringify({ maxPlayers: value }),
     });
-
+    // avertir les autres joueurs du changement
+    sendMessage("update-game-params", { room: gameId });
   }
 
   const handleStartGame = () => {
+  }
+
+  if (wsLoading || !isConnected) {
+    return (
+      <div className="flex-1 grid grid-cols-3 gap-4 p-5">
+        <h1>Tentative de reconnexion en cours</h1>
+        <span className="loading loading-lg"></span>
+      </div>
+    )
   }
 
   if (loading) {
@@ -199,7 +240,7 @@ const WaitingRoom = () => {
         <div>
           <p>En attente de joueurs...</p>
         </div>
-        {isCreator &&
+        {isCreator && game &&
           <>
             <div className="divider"></div>
             <h3 className="text-xl">Paramètres de jeu</h3>
@@ -209,15 +250,16 @@ const WaitingRoom = () => {
                 <div>
                   <input
                     type="range"
-                    min={2} max="4"
-                    defaultValue={game?.maxPlayers || 3}
+                    min={Math.max(2, game.players.length)}
+                    max="4"
+                    defaultValue={game.maxPlayers || 4}
                     className="range"
                     step="1"
                     onChange={handleChangeMaxPlayers}
                   />
                   <div className="flex w-full justify-between px-2 text-xs">
-                    <span>2</span>
-                    <span>3</span>
+                    {game.players.length <= 2 && <span>2</span>}
+                    {game.players.length <= 3 && <span>3</span>}
                     <span>4</span>
                   </div>
                 </div>

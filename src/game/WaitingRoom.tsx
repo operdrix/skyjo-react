@@ -26,6 +26,11 @@ type GameType = {
   }
 }
 
+type ErrorType = {
+  code: number,
+  error: string
+}
+
 const WaitingRoom = () => {
   const { token, userId, loading: userLoading } = useUser();
   const { socket, isConnected, sendMessage, subscribeToEvent, unsubscribeFromEvent, loading: wsLoading } = useWebSocket()
@@ -66,6 +71,9 @@ const WaitingRoom = () => {
           }
         } else {
           console.error('Error fetching game:', data);
+          navigate('/', {
+            state: { message: data.error }
+          });
         }
       } catch (error) {
         console.error('Network error:', error);
@@ -74,7 +82,7 @@ const WaitingRoom = () => {
       }
     };
     getGame();
-  }, [gameId, token, userId]);
+  }, [gameId, token, userId, navigate]);
 
   // rejoindre une partie si l'utilisateur n'est pas déjà dans la partie
   useEffect(() => {
@@ -122,7 +130,13 @@ const WaitingRoom = () => {
       setGame(updatedGame);
     };
 
-    const handlePlayerLeft = (updatedGame: GameType) => {
+    const handlePlayerLeft = (updatedGame: GameType | ErrorType) => {
+      if (typeof updatedGame === 'object' && 'code' in updatedGame) {
+        navigate('/', {
+          state: { message: "La partie n'existe plus." }
+        });
+        return;
+      }
       console.log("Player left game:", updatedGame);
       setGame(updatedGame);
     }
@@ -137,7 +151,7 @@ const WaitingRoom = () => {
       unsubscribeFromEvent("update-game-params", setGame);
     };
 
-  }, [socket, isConnected, subscribeToEvent, unsubscribeFromEvent]);
+  }, [socket, isConnected, subscribeToEvent, unsubscribeFromEvent, navigate]);
 
   // copie de l'url du jeu dans le presse-papier
   const handleCopyToClipboard = () => {

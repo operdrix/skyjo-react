@@ -4,6 +4,7 @@ import { useEffect } from "react"
 import { Outlet, useNavigate } from "react-router-dom"
 import Footer from "../../components/nav/Footer"
 import Header from "../../components/nav/Header"
+import { GameProvider } from "../../context/GameContext"
 import { WebSocketProvider } from "../../context/WebSocketContext"
 import { useUser } from "../../hooks/User"
 
@@ -30,13 +31,13 @@ const GameLayout = () => {
 
   return (
     <WebSocketProvider url={(process.env.BACKEND_HOST as string)}>
-      <div className="flex flex-col min-h-screen font-kalam">
-        <Header />
-        <div className="flex-1 container mx-auto flex items-center">
+      <GameProvider>
+        <div className="flex flex-col min-h-screen font-kalam">
+          <Header />
           <Outlet />
+          <Footer />
         </div>
-        <Footer />
-      </div>
+      </GameProvider>
     </WebSocketProvider>
   )
 }

@@ -13,11 +13,11 @@ const Header = () => {
   }
 
   return (
-    <div className="navbar bg-base-100">
+    <header className="navbar bg-base-100">
       <div className="flex-1">
         <Link to={"/"} className="btn btn-ghost text-xl">Skyjo d'Olivier</Link>
       </div>
-      <div className="flex-none">
+      <nav className="flex-none">
         <ul className="menu menu-horizontal px-1">
           <li><NavLink to={'/'}>Accueil</NavLink></li>
           {loading ? (
@@ -37,8 +37,8 @@ const Header = () => {
           {theme === 'light' ? '🌞' : '🌙'}
         </button> */}
         <ToggleTheme />
-      </div>
-    </div>
+      </nav>
+    </header>
   )
 }
 

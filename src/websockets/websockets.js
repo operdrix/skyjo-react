@@ -141,13 +141,49 @@ function checkGame(gameData) {
 
   // phase endTurn
   if (gameData.currentStep === "endTurn") {
-    console.log("endTurn");
+
+    checkColumn(gameData);
     gameData.currentPlayer = nextPlayer(gameData);
     gameData.currentStep = "draw";
     return gameData;
   }
 
   return gameData;
+}
+
+
+// Fonction pour vérifier si une colonne contient les 3 mêmes cartes révélées
+// Si c'est le cas, on retourne défausse les 3 cartes
+function checkColumn(gameData) {
+  for (const cards of Object.values(gameData.playersCards)) {
+    //console.log("cards", cards);
+
+    const offset = cards.length / 3;
+    for (let i = 0; i < offset; i++) {
+      const card1 = cards[i];
+      const card2 = cards[i + offset];
+      const card3 = cards[i + offset * 2];
+
+      console.log("cards", cards);
+      console.log("card1", card1.value);
+      console.log("card2", card2.value);
+      console.log("card3", card3.value);
+
+      if (card1.revealed && card2.revealed && card3.revealed) {
+        if (card1.value === card2.value && card2.value === card3.value) {
+          gameData.discardPile.push(card1);
+          gameData.discardPile.push(card2);
+          gameData.discardPile.push(card3);
+
+          // on retire les cartes de la main du joueur
+          cards.splice(i, 1);
+          cards.splice(i + offset - 1, 1);
+          cards.splice(i + offset * 2 - 2, 1);
+          return;
+        }
+      }
+    }
+  }
 }
 
 /**

@@ -110,7 +110,7 @@ export async function startGame(socket, io) {
 // Un coup est joué
 export async function playMove(socket, io) {
   socket.on("play-move", async ({ room, gameData }) => {
-    console.log("play-move", room);
+    console.log("play-move", room, gameData.currentStep);
 
     const game = await getGame(room);
     if (!game) {
@@ -139,10 +139,11 @@ function checkGame(gameData) {
     return gameData;
   }
 
-  // phase draw
-  if (gameData.currentStep === "draw") {
-    console.log("draw");
-
+  // phase endTurn
+  if (gameData.currentStep === "endTurn") {
+    console.log("endTurn");
+    gameData.currentPlayer = nextPlayer(gameData);
+    gameData.currentStep = "draw";
     return gameData;
   }
 
@@ -179,7 +180,7 @@ function allPlayersHaveTwoRevealed(playerCards, turnOrder) {
  * @returns {string} playerId
  */
 function nextPlayer(gameData) {
-  const currentUserIndex = gameData.turnOrder.indexOf(gameData.currentUser);
+  const currentUserIndex = gameData.turnOrder.indexOf(gameData.currentPlayer);
   const nextPlayerIndex = (currentUserIndex + 1) % gameData.turnOrder.length;
   return gameData.turnOrder[nextPlayerIndex];
 }

@@ -128,13 +128,13 @@ export async function playMove(socket, io) {
 
 // Fonction de vérification du jeu en cours
 function checkGame(gameData) {
-  console.log("checkGame", gameData);
   // phase initialReveal
   if (gameData.currentStep === "initialReveal") {
     // Vérification que les joueurs ont révélé deux cartes
 
     if (allPlayersHaveTwoRevealed(gameData.playersCards, gameData.turnOrder)) {
       gameData.currentStep = "draw";
+      gameData.currentPlayer = determineFirstPlayer(gameData);
     }
     return gameData;
   }
@@ -153,7 +153,7 @@ function checkGame(gameData) {
  * Vérifie si tous les joueurs ont révélé 2 cartes
  * 
  * @param {*} playerCards 
- * @param {*} turnOrder 
+ * @param {Array} turnOrder 
  * @returns 
  */
 function allPlayersHaveTwoRevealed(playerCards, turnOrder) {
@@ -168,4 +168,53 @@ function allPlayersHaveTwoRevealed(playerCards, turnOrder) {
 
   // Si on a passé la boucle sans retourner false, tous les joueurs ont 2 cartes révélées
   return true;
+}
+
+// Fonction pour passer au joueur suivant
+// Si game.gameData.currentUser est null alors on prend le premier joueur de game.gameData.turnOrder
+// Sinon on prend le joueur suivant dans game.gameData.turnOrder après game.gameData.currentUser
+/**
+ * 
+ * @param {GameData} gameData 
+ * @returns {string} playerId
+ */
+function nextPlayer(gameData) {
+  const currentUserIndex = gameData.turnOrder.indexOf(gameData.currentUser);
+  const nextPlayerIndex = (currentUserIndex + 1) % gameData.turnOrder.length;
+  return gameData.turnOrder[nextPlayerIndex];
+}
+
+// Fonction pour déterminer quel joueur commence la partie
+// On compte le total des valeurs des cartes révélées de chaque joueur
+// Le joueur avec la valeur la plus haute commence
+// En cas d'égalité, on prend le joueur avec la carte révélée la plus haute
+/**
+ * 
+ * @param {GameData} gameData 
+ * @returns {string} playerId
+ */
+function determineFirstPlayer(gameData) {
+  let highestValue = 0;
+  let highestPlayer = null;
+
+  for (const playerId of gameData.turnOrder) {
+    const cards = gameData.playersCards[playerId].filter(card => card.revealed);
+    const totalValue = cards.reduce((total, card) => total + card.value, 0);
+    console.log("totalValue", totalValue);
+
+    if (totalValue > highestValue) {
+      highestValue = totalValue;
+      highestPlayer = playerId;
+    } else if (totalValue === highestValue) {
+      const highestCard = Math.max(...cards.map(card => card.value));
+      const playerCards = gameData.playersCards[highestPlayer].filter(card => card.revealed);
+      const highestPlayerCard = Math.max(...playerCards.map(card => card.value));
+
+      if (highestCard > highestPlayerCard) {
+        highestPlayer = playerId;
+      }
+    }
+  }
+
+  return highestPlayer;
 }

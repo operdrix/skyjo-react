@@ -4,7 +4,7 @@ import ToggleTheme from "./ToggleTheme";
 
 const Header = () => {
 
-  const { isAuthentified, logout, loading } = useUser();
+  const { isAuthentified, logout, loading, userName } = useUser();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -24,7 +24,10 @@ const Header = () => {
             <li><span className="loading loading-ring loading-md"></span></li>
           ) : (
             isAuthentified ? (
-              <li><button onClick={handleLogout}>Déconnexion</button></li>
+              <>
+                <li className="flex justify-center items-center mx-3">Bonjour {userName}</li>
+                <li><button onClick={handleLogout}>Déconnexion</button></li>
+              </>
             ) : (
               <>
                 <li><Link to={'/auth/login'}>Connexion</Link></li>

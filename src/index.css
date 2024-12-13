@@ -47,3 +47,7 @@
 .play-card {
   @apply border-2 border-black rounded flex justify-center items-center select-none h-12 w-8 md:h-16 md:w-12 text-2xl;
 }
+
+.play-card-discard {
+  @apply border-2 border-red-600 border-dashed bg-white rounded-md text-red-600;
+}

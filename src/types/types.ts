@@ -9,6 +9,7 @@ type Card = {
   value: number;
   color: 'negative' | 'green' | 'yellow' | 'zero' | 'red';
   revealed: boolean;
+  onHand: boolean;
 };
 
 type GameData = {
@@ -16,7 +17,7 @@ type GameData = {
   deckCards: Card[];
   discardPile: Card[];
   currentPlayer: string | null;
-  currentStep: 'initialReveal' | 'draw' | 'decide' | 'replace' | 'flip' | 'endTurn' | 'endGame';
+  currentStep: 'initialReveal' | 'draw' | 'replace-discard' | 'decide-deck' | 'replace-deck' | 'flip-deck' | 'endTurn' | 'endGame';
   turnOrder: string[];
 };
 

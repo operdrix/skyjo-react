@@ -236,5 +236,6 @@ export async function dealCards(gameId) {
     currentPlayer: null,
     currentStep: "initialReveal", // draw, decide, replace, flip, endTurn, endGame
     turnOrder: game.players.map(player => player.id),
+    lastTurn: false
   };
 }

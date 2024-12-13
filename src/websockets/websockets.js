@@ -117,11 +117,55 @@ export async function playMove(socket, io) {
       console.error("Game not found for room:", room);
       return;
     }
-
-    game.gameData = gameData;
+    const newGameData = checkGame(gameData);
+    game.gameData = newGameData;
     await game.save();
 
     // Émettre l'événement à tous les membres de la room
     io.to(room).emit("play-move", gameData);
   });
+}
+
+// Fonction de vérification du jeu en cours
+function checkGame(gameData) {
+  console.log("checkGame", gameData);
+  // phase initialReveal
+  if (gameData.currentStep === "initialReveal") {
+    // Vérification que les joueurs ont révélé deux cartes
+
+    if (allPlayersHaveTwoRevealed(gameData.playersCards, gameData.turnOrder)) {
+      gameData.currentStep = "draw";
+    }
+    return gameData;
+  }
+
+  // phase draw
+  if (gameData.currentStep === "draw") {
+    console.log("draw");
+
+    return gameData;
+  }
+
+  return gameData;
+}
+
+/**
+ * Vérifie si tous les joueurs ont révélé 2 cartes
+ * 
+ * @param {*} playerCards 
+ * @param {*} turnOrder 
+ * @returns 
+ */
+function allPlayersHaveTwoRevealed(playerCards, turnOrder) {
+  for (const playerId of turnOrder) {
+    const cards = playerCards[playerId] || [];
+    const revealedCount = cards.reduce((count, card) => count + (card.revealed ? 1 : 0), 0);
+
+    if (revealedCount < 2) {
+      return false; // Si un seul joueur n'a pas 2 cartes révélées, on retourne false immédiatement.
+    }
+  }
+
+  // Si on a passé la boucle sans retourner false, tous les joueurs ont 2 cartes révélées
+  return true;
 }

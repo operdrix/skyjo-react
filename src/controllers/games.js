@@ -180,32 +180,32 @@ export async function dealCards(gameId) {
   const cards = []
   // ajout des cartes -2
   for (let i = 0; i < 5; i++) {
-    cards.push({ id: 'card_' + cards.length, value: -2, color: 'negative', revealed: false });
+    cards.push({ id: 'card_' + cards.length, value: -2, color: 'negative', revealed: false, onHand: false });
   }
   // ajout des cartes -1
   for (let i = 0; i < 10; i++) {
-    cards.push({ id: 'card_' + cards.length, value: -1, color: 'negative', revealed: false });
+    cards.push({ id: 'card_' + cards.length, value: -1, color: 'negative', revealed: false, onHand: false });
   }
   // ajout des cartes 0
   for (let i = 0; i < 15; i++) {
-    cards.push({ id: 'card_' + cards.length, value: 0, color: 'zero', revealed: false });
+    cards.push({ id: 'card_' + cards.length, value: 0, color: 'zero', revealed: false, onHand: false });
   }
   // ajout des cartes de 1 à 4
   for (let i = 1; i <= 4; i++) {
     for (let j = 0; j < 10; j++) {
-      cards.push({ id: 'card_' + cards.length, value: i, color: 'green', revealed: false });
+      cards.push({ id: 'card_' + cards.length, value: i, color: 'green', revealed: false, onHand: false });
     }
   }
   // ajout des cartes de 5 à 8
   for (let i = 5; i <= 8; i++) {
     for (let j = 0; j < 10; j++) {
-      cards.push({ id: 'card_' + cards.length, value: i, color: 'yellow', revealed: false });
+      cards.push({ id: 'card_' + cards.length, value: i, color: 'yellow', revealed: false, onHand: false });
     }
   }
   // ajout des cartes de 9 à 12
   for (let i = 9; i <= 12; i++) {
     for (let j = 0; j < 10; j++) {
-      cards.push({ id: 'card_' + cards.length, value: i, color: 'red', revealed: false });
+      cards.push({ id: 'card_' + cards.length, value: i, color: 'red', revealed: false, onHand: false });
     }
   }
 

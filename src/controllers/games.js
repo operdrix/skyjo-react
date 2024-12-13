@@ -124,6 +124,7 @@ export async function updateGame(request) {
       }
 
       game.state = "playing";
+      game.gameData = await dealCards(gameId);
       break;
 
     case "finish":
@@ -159,4 +160,81 @@ export async function updateGameSettings(gameId, settings) {
 
   await game.update(settings);
   return game;
+}
+
+// Distribuer les cartes aux joueurs
+export async function dealCards(gameId) {
+  const game = await Game.findByPk(gameId, {
+    include: [{ model: User, as: "players" }]
+  });
+
+  if (!game) {
+    return { error: "La partie n'existe pas.", code: 404 };
+  }
+
+  if (game.players.length === 0) {
+    return { error: "Aucun joueur dans la partie.", code: 400 };
+  }
+
+  // Set de cartes du skyjo (5 cartes -2, 10 cartes -1, 15 cartes 0 et 10 cartes de chaque de 1 à 12)
+  const cards = []
+  // ajout des cartes -2
+  for (let i = 0; i < 5; i++) {
+    cards.push({ id: 'card_' + cards.length, value: -2, color: 'negative', revealed: false });
+  }
+  // ajout des cartes -1
+  for (let i = 0; i < 10; i++) {
+    cards.push({ id: 'card_' + cards.length, value: -1, color: 'negative', revealed: false });
+  }
+  // ajout des cartes 0
+  for (let i = 0; i < 15; i++) {
+    cards.push({ id: 'card_' + cards.length, value: 0, color: 'zero', revealed: false });
+  }
+  // ajout des cartes de 1 à 4
+  for (let i = 1; i <= 4; i++) {
+    for (let j = 0; j < 10; j++) {
+      cards.push({ id: 'card_' + cards.length, value: i, color: 'green', revealed: false });
+    }
+  }
+  // ajout des cartes de 5 à 8
+  for (let i = 5; i <= 8; i++) {
+    for (let j = 0; j < 10; j++) {
+      cards.push({ id: 'card_' + cards.length, value: i, color: 'yellow', revealed: false });
+    }
+  }
+  // ajout des cartes de 9 à 12
+  for (let i = 9; i <= 12; i++) {
+    for (let j = 0; j < 10; j++) {
+      cards.push({ id: 'card_' + cards.length, value: i, color: 'red', revealed: false });
+    }
+  }
+
+  // Mélanger les cartes plusieurs fois
+  cards.sort(() => Math.random() - 0.5);
+  cards.sort(() => Math.random() - 0.5);
+  cards.sort(() => Math.random() - 0.5);
+  cards.sort(() => Math.random() - 0.5);
+
+  // Distribuer les cartes aux joueurs
+  const playersCards = {};
+  for (const player of game.players) {
+    playersCards[player.id] = [];
+    for (let i = 0; i < 12; i++) {
+      playersCards[player.id].push(cards.pop());
+    }
+  }
+
+  // On retourne la première carte de la pioche qu'on met dans la défausse
+  const firstCard = cards.pop();
+  firstCard.revealed = true;
+
+  // On retourne un objet avec les cartes par joueurs, les cartes dans la pioche et les cartes défaussées
+  return {
+    playersCards,
+    deckCards: cards,
+    discardPile: [firstCard],
+    currentPlayer: null,
+    currentStep: "initialReveal", // draw, decide, replace, flip, endTurn, endGame
+    turnOrder: game.players.map(player => player.id),
+  };
 }

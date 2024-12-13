@@ -10,6 +10,7 @@ export async function websockets(app) {
     playerJoinedGame(socket, app.io);
     gameSettingsChanged(socket, app.io);
     startGame(socket, app.io);
+    playMove(socket, app.io);
 
     // Lorsqu'un joueur se déconnecte
     socket.on("disconnect", async () => {
@@ -103,5 +104,24 @@ export async function startGame(socket, io) {
 
     // Émettre l'événement à tous les membres de la room
     io.to(room).emit("start-game", game);
+  });
+}
+
+// Un coup est joué
+export async function playMove(socket, io) {
+  socket.on("play-move", async ({ room, gameData }) => {
+    console.log("play-move", room);
+
+    const game = await getGame(room);
+    if (!game) {
+      console.error("Game not found for room:", room);
+      return;
+    }
+
+    game.gameData = gameData;
+    await game.save();
+
+    // Émettre l'événement à tous les membres de la room
+    io.to(room).emit("play-move", gameData);
   });
 }

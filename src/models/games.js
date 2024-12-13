@@ -34,6 +34,11 @@ const Game = sequelize.define("game", {
 		allowNull: false,
 		defaultValue: 4,
 	},
+	gameData: {
+		type: DataTypes.JSON,
+		allowNull: false,
+		defaultValue: {},
+	},
 });
 
 // Définition du modèle GamePlayers pour la relation de jointure

@@ -151,16 +151,16 @@ const Game = () => {
 
   const playerCount = game.players.length;
   const turnOrder = game.gameData.turnOrder;
+  const positions = ["Top", "Left", "Right"];
 
-  if (playerCount > 1) {
-    playerIdTop = turnOrder[(playerIndex + 1) % playerCount];
-  }
-  if (playerCount > 2) {
-    playerIdLeft = turnOrder[(playerIndex + 2) % playerCount];
-  }
-  if (playerCount > 3) {
-    playerIdRight = turnOrder[(playerIndex + 3) % playerCount];
-  }
+  positions.forEach((position, index) => {
+    if (playerCount > index + 1) {
+      const playerId = turnOrder[(playerIndex + index + 1) % playerCount];
+      if (position === "Top") playerIdTop = playerId;
+      if (position === "Left") playerIdLeft = playerId;
+      if (position === "Right") playerIdRight = playerId;
+    }
+  });
 
   return (
     <>
@@ -177,7 +177,7 @@ const Game = () => {
         {/* Ligne 2 */}
 
         {/* Joueur à gauche */}
-        {game.players.length === 3 ? <PlayerSet playerId={playerIdLeft} /> : <div></div>}
+        {game.players.length >= 3 ? <PlayerSet playerId={playerIdLeft} /> : <div></div>}
 
         {/* Zone de pioche et défausse */}
         <div className="flex justify-center items-center h-full min-h-48 gap-9">

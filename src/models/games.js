@@ -67,7 +67,7 @@ const GamePlayers = sequelize.define("game_players", {
 	scoreByRound: {
 		type: DataTypes.JSON,
 		allowNull: false,
-		defaultValue: {},
+		defaultValue: [],
 	},
 	status: {
 		type: DataTypes.ENUM("connected", "disconnected"),

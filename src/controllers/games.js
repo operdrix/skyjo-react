@@ -128,7 +128,11 @@ export async function updateGame(request) {
       break;
 
     case "saveScore":
-      if (game.gameData.currentStep !== "endGame") {
+      const gameData = !request.body ? null : request.body.gameData;
+      if (!gameData) {
+        return { error: "Les données de la partie sont manquantes.", code: 400 };
+      }
+      if (gameData.currentStep !== "endGame") {
         return { error: "La manche n'est pas terminée.", code: 400 };
       }
 
@@ -138,9 +142,24 @@ export async function updateGame(request) {
 
       // on parcours les joueurs pour enregistrer leur score
       for (const player of game.players) {
-        const cards = game.gameData.playersCards[player.id];
+        const cards = gameData.playersCards[player.id];
         const score = countPoints(cards);
-        player.game_players.score += score;
+        const currentScore = player.game_players.score || 0;
+        const roundsScores = [...(player.game_players.scoreByRound || [])];
+
+        roundsScores.push(score);
+
+        try {
+          await player.game_players.update({
+            score: currentScore + score,
+            scoreByRound: roundsScores
+          });
+        } catch (error) {
+          console.error("Error saving player score:", error);
+          return { error: "Impossible de sauvegarder le score du joueur.", code: 500 };
+        }
+        console.log(`[game controller] Player ${player.id} score: ${score}`);
+        //console.log(player.game_players);
       }
 
     case "finish":

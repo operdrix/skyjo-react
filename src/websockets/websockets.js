@@ -118,15 +118,12 @@ export async function playMove(socket, io) {
       return;
     }
 
-    checkGame(gameData);
-    await game.update({ gameData });
+    game.gameData = gameData;
+    await checkGame(game);
 
-    // Fin de la manche
-    if (gameData.currentStep === "endGame") {
-      await updateGame({ params: { action: "saveScore", gameId: room }, body: { gameData } });
-    }
+    await game.save();
 
     // Émettre l'événement à tous les membres de la room
-    io.to(room).emit("play-move", gameData);
+    io.to(room).emit("play-move", game);
   });
 }

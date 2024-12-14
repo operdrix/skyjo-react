@@ -124,51 +124,19 @@ export async function updateGame(request) {
       }
 
       game.state = "playing";
+      game.roundNumber = game.roundNumber + 1;
       game.gameData = await dealCards(gameId);
       break;
 
-    case "saveScore":
-      const gameData = !request.body ? null : request.body.gameData;
-      if (!gameData) {
-        return { error: "Les données de la partie sont manquantes.", code: 400 };
-      }
-      if (gameData.currentStep !== "endGame") {
-        return { error: "La manche n'est pas terminée.", code: 400 };
-      }
-
-      const countPoints = (cards) => {
-        return cards.reduce((total, card) => total + card.value, 0);
-      }
-
-      // on parcours les joueurs pour enregistrer leur score
-      for (const player of game.players) {
-        const cards = gameData.playersCards[player.id];
-        const score = countPoints(cards);
-        const currentScore = player.game_players.score || 0;
-        const roundsScores = [...(player.game_players.scoreByRound || [])];
-
-        roundsScores.push(score);
-
-        try {
-          await player.game_players.update({
-            score: currentScore + score,
-            scoreByRound: roundsScores
-          });
-        } catch (error) {
-          console.error("Error saving player score:", error);
-          return { error: "Impossible de sauvegarder le score du joueur.", code: 500 };
-        }
-        console.log(`[game controller] Player ${player.id} score: ${score}`);
-        //console.log(player.game_players);
-      }
-
     case "finish":
-      if (!request.body.score || !request.body.winner) {
+      console.log("[game controller] finish game");
+
+      if (!request.body.winnerScore || !request.body.winner) {
         return { error: "Le score et le gagnant doivent être fournis.", code: 400 };
       }
 
       game.state = "finished";
-      game.winnerScore = request.body.score;
+      game.winnerScore = request.body.winnerScore;
       game.winner = request.body.winner;
       break;
 
@@ -276,7 +244,9 @@ export async function dealCards(gameId) {
 }
 
 // Fonction de vérification du jeu en cours
-export async function checkGame(gameData) {
+export async function checkGame(game) {
+
+  const gameData = game.gameData;
 
   // phase initialReveal
   // On attends que tous les joueurs aient révélé 2 cartes
@@ -296,10 +266,63 @@ export async function checkGame(gameData) {
 
     checkLastTurn(gameData);
 
+    if (gameData.lastTurn) {
+      revealAllCards(gameData, gameData.currentPlayer);
+    }
+
     checkEndGame(gameData);
   }
 
+  // Fin de la manche
+  if (gameData.currentStep === "endGame") {
+
+    // Sauvegarde des scores
+    await saveScore(game);
+
+    // Vérification du score maximum
+    await checkMaximumScore(game);
+
+    if (game.state === "finished") {
+      io.to(room).emit("finished", game);
+      return;
+    }
+  }
+
   return;
+}
+
+function revealAllCards(gameData, playerId) {
+  const cards = gameData.playersCards[playerId];
+  for (const card of cards) {
+    card.revealed = true;
+  }
+}
+
+async function saveScore(game) {
+  const gameData = game.gameData;
+  if (!gameData) return;
+  if (gameData.currentStep !== "endGame") return;
+
+  const countPoints = (cards) => {
+    return cards.reduce((total, card) => total + card.value, 0);
+  }
+
+  // on parcours les joueurs pour enregistrer leur score
+  for (const player of game.players) {
+    const cards = gameData.playersCards[player.id];
+    const score = countPoints(cards);
+    const currentScore = player.game_players.score || 0;
+    const roundsScores = [...(player.game_players.scoreByRound || [])];
+
+    roundsScores.push(score);
+
+    player.game_players.score = currentScore + score;
+    player.game_players.scoreByRound = roundsScores;
+    console.log(`[game controller] Player ${player.id} score: ${score}`);
+
+    await player.game_players.save();
+  }
+
 }
 
 // Fonction pour compter le nombre de cartes non révélées d'un joueur
@@ -417,4 +440,29 @@ function determineFirstPlayer(gameData) {
   }
   gameData.currentPlayer = highestPlayer;
   return;
+}
+
+// Fonction qui vérifie si un joueur a au moins 100 points dans son score
+async function checkMaximumScore(game) {
+
+  let finished = false;
+  let winnerScore = 0;
+  let winner = null;
+
+  for (const player of game.players) {
+    if (player.game_players.score >= 100) {
+      finished = true;
+    }
+    if (player.game_players.score < winnerScore || winnerScore === 0) {
+      winnerScore = player.game_players.score;
+      winner = player.game_players.userId;
+    }
+  }
+
+  if (finished) {
+    //await updateGame({ params: { action: "finish", gameId: game.id }, body: { winner, winnerScore } });
+    game.state = "finished";
+    game.winner = winner;
+    game.winnerScore = winnerScore;
+  }
 }

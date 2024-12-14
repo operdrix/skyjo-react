@@ -20,6 +20,7 @@ type GameData = {
   currentStep: 'initialReveal' | 'draw' | 'replace-discard' | 'decide-deck' | 'replace-deck' | 'flip-deck' | 'endTurn' | 'endGame';
   turnOrder: string[];
   lastTurn: boolean;
+  firstPlayerToEnd: string | null;
 };
 
 type GameType = {

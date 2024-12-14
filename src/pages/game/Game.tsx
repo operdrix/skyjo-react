@@ -82,6 +82,11 @@ const Game = () => {
   useEffect(() => {
     if (!socket || !isConnected || error) return;
 
+    const handleStartGame = (updatedGame: GameType) => {
+      console.log("Game started:", updatedGame);
+      setGame(updatedGame);
+    };
+
     const handlePlayerJoined = (updatedGame: GameType) => {
       console.log("Player joined game:", updatedGame);
       setGame(updatedGame);
@@ -97,12 +102,14 @@ const Game = () => {
       setGame(updatedGame);
     }
 
+    subscribeToEvent("start-game", handleStartGame);
     subscribeToEvent("player-joined-game", handlePlayerJoined);
     subscribeToEvent("player-left-game", handlePlayerLeft);
     subscribeToEvent("update-game-params", setGame);
     subscribeToEvent("play-move", handlePlayMove);
 
     return () => {
+      unsubscribeFromEvent("start-game", handleStartGame);
       unsubscribeFromEvent("player-joined-game", handlePlayerJoined);
       unsubscribeFromEvent("player-left-game", handlePlayerLeft);
       unsubscribeFromEvent("update-game-params", setGame);
@@ -221,9 +228,12 @@ const Game = () => {
 const ModalScore = () => {
   const { game } = useGame();
   const { sendMessage } = useWebSocket();
+  const { userId } = useUser();
+  const [loading, setLoading] = useState<boolean>(false);
 
   const handleNextRound = () => {
-    sendMessage("next-round", { room: game?.id });
+    setLoading(true);
+    sendMessage("start-game", { room: game?.id });
   }
   return (
     <>
@@ -234,7 +244,14 @@ const ModalScore = () => {
           <div className="modal-action">
             <form method="dialog">
               {/* if there is a button in form, it will close the modal */}
-              <button className="btn" onClick={handleNextRound}>Manche suivante</button>
+              <button
+                className="btn"
+                onClick={handleNextRound}
+                disabled={game?.creator !== userId || loading}
+              >
+                Manche suivante
+                {loading && <span className="loading loading-dots loading-xs"></span>}
+              </button>
             </form>
           </div>
         </div>

@@ -126,6 +126,18 @@ export async function playMove(socket, io) {
   });
 }
 
+// Fonction pour enregistrer le score d'un joueur dans game.players.scoreByRound
+function saveScore(game) {
+  const gameData = game.gameData;
+  if (gameData.currentStep !== "endGame") return;
+  for (const playerId of gameData.turnOrder) {
+    const cards = gameData.playersCards[playerId];
+    const score = countPoints(cards);
+    gameData.playersScore[playerId] = score;
+    gameData.playersScoreByRound[playerId].push(score);
+  }
+}
+
 // Fonction de vérification du jeu en cours
 function checkGame(gameData) {
   // phase initialReveal
@@ -134,40 +146,67 @@ function checkGame(gameData) {
 
     if (allPlayersHaveTwoRevealed(gameData.playersCards, gameData.turnOrder)) {
       gameData.currentStep = "draw";
-      gameData.currentPlayer = determineFirstPlayer(gameData);
+      determineFirstPlayer(gameData);
     }
-    return gameData;
   }
 
   // phase endTurn
   if (gameData.currentStep === "endTurn") {
 
     checkColumn(gameData);
-    gameData.currentPlayer = nextPlayer(gameData);
-    gameData.currentStep = "draw";
-    return gameData;
+    gameData.lastTurn = isLastTurn(gameData);
+    if (!checkEndGame(gameData)) {
+      nextPlayer(gameData);
+      gameData.currentStep = "draw";
+    } else {
+      gameData.currentStep = "endGame";
+    }
   }
 
   return gameData;
 }
 
+// Fonction pour compter les points d'un joueur
+function countPoints(cards) {
+  return cards.reduce((total, card) => total + card.value, 0);
+}
+
+// Fonction pour compter le nombre de cartes non révélées d'un joueur
+function countUnrevealedCards(cards) {
+  return cards.reduce((count, card) => count + (card.revealed ? 0 : 1), 0);
+}
+
+// Fonction pour vérifier si tous les joueurs ont révélé toutes leurs cartes
+function checkEndGame(gameData) {
+  for (const playerId of gameData.turnOrder) {
+    const cards = gameData.playersCards[playerId];
+    if (countUnrevealedCards(cards) > 0) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// fonction pour vérifier si on entre dans le dernier tour (au moins un joueur n'a plus de cartes non révélées)
+function isLastTurn(gameData) {
+  for (const playerId of gameData.turnOrder) {
+    const cards = gameData.playersCards[playerId];
+    if (countUnrevealedCards(cards) === 0) {
+      return true;
+    }
+  }
+  return false;
+}
 
 // Fonction pour vérifier si une colonne contient les 3 mêmes cartes révélées
 // Si c'est le cas, on retourne défausse les 3 cartes
 function checkColumn(gameData) {
   for (const cards of Object.values(gameData.playersCards)) {
-    //console.log("cards", cards);
-
     const offset = cards.length / 3;
     for (let i = 0; i < offset; i++) {
       const card1 = cards[i];
       const card2 = cards[i + offset];
       const card3 = cards[i + offset * 2];
-
-      console.log("cards", cards);
-      console.log("card1", card1.value);
-      console.log("card2", card2.value);
-      console.log("card3", card3.value);
 
       if (card1.revealed && card2.revealed && card3.revealed) {
         if (card1.value === card2.value && card2.value === card3.value) {
@@ -213,12 +252,13 @@ function allPlayersHaveTwoRevealed(playerCards, turnOrder) {
 /**
  * 
  * @param {GameData} gameData 
- * @returns {string} playerId
+ * @returns
  */
 function nextPlayer(gameData) {
   const currentUserIndex = gameData.turnOrder.indexOf(gameData.currentPlayer);
   const nextPlayerIndex = (currentUserIndex + 1) % gameData.turnOrder.length;
-  return gameData.turnOrder[nextPlayerIndex];
+  gameData.currentPlayer = gameData.turnOrder[nextPlayerIndex];
+  return;
 }
 
 // Fonction pour déterminer quel joueur commence la partie
@@ -228,7 +268,7 @@ function nextPlayer(gameData) {
 /**
  * 
  * @param {GameData} gameData 
- * @returns {string} playerId
+ * @returns
  */
 function determineFirstPlayer(gameData) {
   let highestValue = 0;
@@ -252,6 +292,6 @@ function determineFirstPlayer(gameData) {
       }
     }
   }
-
-  return highestPlayer;
+  gameData.currentPlayer = highestPlayer;
+  return;
 }

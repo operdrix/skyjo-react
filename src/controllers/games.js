@@ -127,6 +127,22 @@ export async function updateGame(request) {
       game.gameData = await dealCards(gameId);
       break;
 
+    case "saveScore":
+      if (game.gameData.currentStep !== "endGame") {
+        return { error: "La manche n'est pas terminée.", code: 400 };
+      }
+
+      const countPoints = (cards) => {
+        return cards.reduce((total, card) => total + card.value, 0);
+      }
+
+      // on parcours les joueurs pour enregistrer leur score
+      for (const player of game.players) {
+        const cards = game.gameData.playersCards[player.id];
+        const score = countPoints(cards);
+        player.game_players.score += score;
+      }
+
     case "finish":
       if (!request.body.score || !request.body.winner) {
         return { error: "Le score et le gagnant doivent être fournis.", code: 400 };

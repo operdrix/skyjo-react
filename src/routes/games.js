@@ -1,4 +1,4 @@
-import { createGame, dealCards, getGame, updateGame, updateGameSettings } from "../controllers/games.js";
+import { createGame, getGame, updateGame, updateGameSettings } from "../controllers/games.js";
 
 export function gamesRoutes(app) {
 	// Consulter une partie
@@ -34,16 +34,6 @@ export function gamesRoutes(app) {
 	// Changer les paramètres d'une partie
 	app.patch("/game/:gameId", { preHandler: [app.authenticate] }, async (request, reply) => {
 		const response = await updateGameSettings(request.params.gameId, request.body);
-		if (response.error) {
-			reply.status(response.code).send(response);
-		} else {
-			reply.send(response);
-		}
-	});
-
-	// Test de distribution des cartes
-	app.get("/game/deal/:gameId", async (request, reply) => {
-		const response = await dealCards(request.params.gameId);
 		if (response.error) {
 			reply.status(response.code).send(response);
 		} else {

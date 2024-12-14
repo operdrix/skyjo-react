@@ -19,6 +19,7 @@ type GameData = {
   currentPlayer: string | null;
   currentStep: 'initialReveal' | 'draw' | 'replace-discard' | 'decide-deck' | 'replace-deck' | 'flip-deck' | 'endTurn' | 'endGame';
   turnOrder: string[];
+  lastTurn: boolean;
 };
 
 type GameType = {

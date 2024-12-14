@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import OnlineStatus from "../../components/game/OnlineStatus";
 import { useUser } from "../../hooks/User";
 import { useWebSocket } from "../../hooks/WebSocket";
 
 const Create = () => {
-  const { token, userId, loading: userLoading } = useUser();
+  const { token, userId, logout, loading: userLoading } = useUser();
   const { socket, isConnected, loading: wbLoading } = useWebSocket()
   const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
@@ -27,6 +26,9 @@ const Create = () => {
           navigate(`/join/${data.gameId}`)
         } else {
           console.error('Error:', data);
+          if (response.status === 401) {
+            logout();
+          }
           setLoading(false);
         }
       } catch (error) {
@@ -44,20 +46,22 @@ const Create = () => {
 
   return (
     <div className="flex-1 flex items-center">
-      <div className="container mx-auto bg-base-300 flex-1 flex flex-col space-y-4 rounded-box p-5 min-h-[50vh]">
-        <div className="flex flex-row-reverse">
+      <div className="container mx-auto bg-base-300 flex flex-col justify-between sm:rounded-box p-5 min-h-[40vh]">
+        {/* <div className="flex flex-row-reverse">
           <OnlineStatus isConnected={isConnected} sockerId={socket?.id} className="absolute" />
+        </div> */}
+        <div className="flex-1 flex flex-col space-y-4 items-center justify-center">
+          <h1 className="text-4xl">Créez une partie !</h1>
+          <p>
+            Vous êtes prêt à jouer ? Cliquez sur le bouton ci-dessous pour créer une partie et inviter vos amis à vous rejoindre.
+          </p>
+          <p>
+            Vous pourrez commencer la partie dès que tous les joueurs seront prêts.
+          </p>
         </div>
-        <h1 className="text-4xl">Créez une partie !</h1>
-        <p>
-          Vous êtes prêt à jouer ? Cliquez sur le bouton ci-dessous pour créer une partie et inviter vos amis à vous rejoindre.
-        </p>
-        <p>
-          Vous pourrez commencer la partie dès que tous les joueurs seront prêts.
-        </p>
-        <div className="flex justify-center join">
+        <div className="flex justify-center gap-4 flex-wrap">
           <button
-            className="btn btn-primary text-md flex-1 join-item"
+            className="btn btn-primary text-md w-full md:w-5/12"
             disabled={loading}
             onClick={() => handleCreateGame(true)}
           >
@@ -70,7 +74,7 @@ const Create = () => {
             }
           </button>
           <button
-            className="btn btn-warning text-md flex-1 join-item"
+            className="btn btn-warning text-md w-full md:w-5/12"
             disabled={loading}
             onClick={() => handleCreateGame(false)}
           >

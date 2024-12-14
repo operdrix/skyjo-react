@@ -239,12 +239,17 @@ const Game = () => {
       {/* <pre>
         {JSON.stringify(game, null, 2)}
       </pre> */}
-      <section className="md:container md:mx-auto w-full grow grid grid-cols-3 gap-4">
+      <section className={`
+        md:container md:mx-auto w-full grow grid gap-4 p-4
+        ${game.players.length === 2 ? 'grid-cols-1' : game.players.length === 3 ? 'grid-cols-2' : 'grid-cols-3'}
+        `}>
         {/* Ligne 1 : joueur d'en face */}
 
-        <div></div>
-        <PlayerSet playerId={playerIdTop} />
-        <div></div>
+        <div className={game.players.length === 2 ? 'hidden' : ''}></div>
+        <div className={game.players.length === 3 ? 'col-span-2' : ''}>
+          <PlayerSet playerId={playerIdTop} />
+        </div>
+        <div className={game.players.length <= 3 ? 'hidden' : ''}></div>
 
         {/* Ligne 2 */}
 
@@ -253,8 +258,8 @@ const Game = () => {
 
         {/* Zone de pioche et défausse */}
         <div className="flex flex-col items-center justify-center gap-4">
-          <p className="text-xl text-center h-16">{playerMessage()}</p>
-          <div className="flex justify-center items-center gap-9">
+          <p className="text-sm md:text-xl lg:text-2xl text-center h-16">{playerMessage()}</p>
+          <div className="flex justify-center items-center gap-3 md:gap-9">
             {/* Défausse */}
             <GameCard
               disabled={!isDiscardSelectable()}
@@ -277,9 +282,11 @@ const Game = () => {
 
         {/* Ligne 3 : jour actuel */}
 
-        <div></div>
-        <PlayerSet playerId={userId} isCurrentPlayerSet />
-        <div></div>
+        <div className={game.players.length === 2 ? 'hidden' : ''}></div>
+        <div className={game.players.length === 3 ? 'col-span-2' : ''}>
+          <PlayerSet playerId={userId} isCurrentPlayerSet />
+        </div>
+        <div className={game.players.length <= 3 ? 'hidden' : ''}></div>
 
       </section>
     </>

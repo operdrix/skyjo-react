@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const ToggleTheme = () => {
+const ToggleTheme = ({ className }: { className?: string }) => {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
@@ -14,7 +14,7 @@ const ToggleTheme = () => {
   }, [theme]);
 
   return (
-    <label className="swap swap-rotate btn ml-5">
+    <label className={`swap swap-rotate btn ${className}`}>
       {/* this hidden checkbox controls the state */}
       <input type="checkbox" onChange={toggleTheme} checked={theme === 'light'} />
 

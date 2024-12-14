@@ -27,7 +27,13 @@ type GameType = {
   players: Array<{
     id: string,
     username: string,
-    game_players: undefined
+    game_players: {
+      userId: string,
+      gameId: string,
+      status: 'connected' | 'disconnected',
+      score: number,
+      scoreByRound: number[],
+    }
   }>,
   state: string,
   private: boolean,

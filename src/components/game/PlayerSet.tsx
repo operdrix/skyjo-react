@@ -85,9 +85,8 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
 
   return (
     <div className="flex flex-col justify-center items-center h-full min-h-48">
-      <h2 className="flex items-center gap-3 text-xl font-bold mb-2">
-        {player?.username}
-        {playerTurn && <span className="loading loading-dots loading-md"></span>}
+      <h2 className="indicator flex items-center gap-3 text-xl font-bold mb-2 pr-2">
+        {player?.username} <OnlineStatus status={player?.game_players?.status} />
       </h2>
       <div className={`grid gap-2 ${playerCards.length === 12 ? 'grid-cols-4' : playerCards.length === 9 ? 'grid-cols-3' : playerCards.length === 6 ? 'grid-cols-2' : 'grid-cols-1'}`}>
         {playerCards.map((card) => {
@@ -114,7 +113,15 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
             />)
         })}
       </div>
+      {playerTurn && <span className="loading loading-dots loading-md mt-2"></span>}
     </div>
+  )
+}
+
+const OnlineStatus = ({ status }: { status: 'connected' | 'disconnected' | undefined }) => {
+  if (!status) return null;
+  return (
+    <span className={`indicator-item loading loading-ring loading-xs ${status === 'connected' ? 'text-success' : 'text-error'}`}></span>
   )
 }
 

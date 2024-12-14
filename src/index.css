@@ -51,3 +51,16 @@
 .play-card-discard {
   @apply border-2 border-red-600 border-dashed !bg-white rounded-md text-red-600;
 }
+
+.perspective {
+  perspective: 1000px;
+}
+.transform-style-preserve-3d {
+  transform-style: preserve-3d;
+}
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+.backface-hidden {
+  backface-visibility: hidden;
+}

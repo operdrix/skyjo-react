@@ -17,7 +17,7 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
 
   const playerCards = game.gameData.playersCards[playerId];
   const player = game.players.find(player => player.id === playerId);
-  const playerTurn = (game.gameData.currentPlayer === playerId) || game.gameData.currentStep === 'initialReveal';
+  const playerTurn = (game.gameData.currentPlayer === playerId && game.gameData.currentStep !== 'endGame') || game.gameData.currentStep === 'initialReveal';
 
   const revealedCards = () => {
     if (!game || !userId) return 0;
@@ -113,7 +113,9 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
             />)
         })}
       </div>
-      {playerTurn && <span className="loading loading-dots loading-md mt-2"></span>}
+      <p className="h-6">
+        {playerTurn && <span className="loading loading-dots loading-md mt-2"></span>}
+      </p>
     </div>
   )
 }

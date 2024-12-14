@@ -9,7 +9,7 @@ import PlayerSet from "../../components/game/PlayerSet";
 import { useGame } from "../../hooks/Game";
 import { useUser } from "../../hooks/User";
 import { useWebSocket } from "../../hooks/WebSocket";
-import type { GameData, GameType } from "../../types/types";
+import type { GameType } from "../../types/types";
 
 const Game = () => {
   const { token, userId, loading: userLoading } = useUser();
@@ -92,10 +92,9 @@ const Game = () => {
       setGame(updatedGame);
     }
 
-    const handlePlayMove = (updatedGameData: GameData) => {
-      console.log("Play move:", updatedGameData);
-      if (!game) return;
-      setGame({ ...game, gameData: updatedGameData });
+    const handlePlayMove = (updatedGame: GameType) => {
+      console.log("Play move:", updatedGame.gameData);
+      setGame(updatedGame);
     }
 
     subscribeToEvent("player-joined-game", handlePlayerJoined);
@@ -168,9 +167,7 @@ const Game = () => {
 
   return (
     <>
-      {/* <pre>
-        {JSON.stringify(game, null, 2)}
-      </pre> */}
+      {game.gameData.currentStep === 'endGame' && <ModalScore />}
       <section className={`
         md:container md:mx-auto w-full grow grid gap-4 p-4
         ${game.players.length === 2 ? 'grid-cols-1' : game.players.length === 3 ? 'grid-cols-2' : 'grid-cols-3'}
@@ -217,6 +214,31 @@ const Game = () => {
         <div className={game.players.length <= 3 ? 'hidden' : ''}></div>
 
       </section>
+    </>
+  )
+}
+
+const ModalScore = () => {
+  const { game } = useGame();
+  const { sendMessage } = useWebSocket();
+
+  const handleNextRound = () => {
+    sendMessage("next-round", { room: game?.id });
+  }
+  return (
+    <>
+      <dialog id="modal-score" className="modal modal-bottom sm:modal-middle modal-open">
+        <div className="modal-box">
+          <h3 className="font-bold text-lg">Fin de la manche !</h3>
+          <p className="py-4">Press ESC key or click the button below to close</p>
+          <div className="modal-action">
+            <form method="dialog">
+              {/* if there is a button in form, it will close the modal */}
+              <button className="btn" onClick={handleNextRound}>Manche suivante</button>
+            </form>
+          </div>
+        </div>
+      </dialog>
     </>
   )
 }

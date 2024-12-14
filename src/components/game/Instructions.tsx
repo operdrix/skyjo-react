@@ -26,6 +26,9 @@ const Instructions = () => {
         return 'Retournez une de vos cartes non visible';
       }
     }
+    if (game.gameData.currentStep === 'endGame') {
+      return 'Fin de la manche';
+    }
     return 'Au tour de ' + game.players.find(player => player.id === game.gameData.currentPlayer)?.username;
   }
 

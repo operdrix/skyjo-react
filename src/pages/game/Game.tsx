@@ -350,6 +350,7 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
       // 4. On passe à l'étape suivante endTurn
 
       game.gameData.deckCards[0].onHand = false;
+      game.gameData.playersCards[userId][cardIndex].revealed = true;
       game.gameData.discardPile.push(game.gameData.playersCards[userId][cardIndex]);
       game.gameData.playersCards[userId][cardIndex] = game.gameData.deckCards[0];
       game.gameData.deckCards.shift();
@@ -460,11 +461,11 @@ const GameCard = ({
         <button
           className={`play-card 
         ${haveCardUnderInDeckOrDiscard() ? 'absolute' : ' '}
-        ${card.color === 'red' && card.revealed ? 'bg-card-red' : ' '}
-        ${card.color === 'green' && card.revealed ? 'bg-card-green' : ' '}
-        ${card.color === 'yellow' && card.revealed ? 'bg-card-yellow' : ' '}
-        ${card.color === 'zero' && card.revealed ? 'bg-card-zero' : ' '}
-        ${card.color === 'negative' && card.revealed ? 'bg-card-negative' : ' '}
+        ${card.color === 'red' && card.revealed ? '!bg-card-red' : ' '}
+        ${card.color === 'green' && card.revealed ? '!bg-card-green' : ' '}
+        ${card.color === 'yellow' && card.revealed ? '!bg-card-yellow' : ' '}
+        ${card.color === 'zero' && card.revealed ? '!bg-card-zero' : ' '}
+        ${card.color === 'negative' && card.revealed ? '!bg-card-negative' : ' '}
         ${!disabled ? 'animate-small-scale' : ' '}
         ${game.gameData.currentStep === 'decide-deck' && isDiscard ? 'play-card-discard' : ' '}
         ${card.onHand ? 'rotate-12' : ' '}

@@ -119,9 +119,9 @@ export async function updateGame(request) {
       break;
 
     case "start":
-      if (game.state !== "pending") {
-        return { error: "La partie a déjà commencé.", code: 400 };
-      }
+      // if (game.state !== "pending") {
+      //   return { error: "La partie a déjà commencé.", code: 400 };
+      // }
 
       game.state = "playing";
       game.roundNumber = game.roundNumber + 1;
@@ -239,7 +239,8 @@ export async function dealCards(gameId) {
     currentPlayer: null,
     currentStep: "initialReveal", // draw, decide, replace, flip, endTurn, endGame
     turnOrder: game.players.map(player => player.id),
-    lastTurn: false
+    lastTurn: false,
+    firstPlayerToEnd: null
   };
 }
 
@@ -303,6 +304,10 @@ async function saveScore(game) {
   if (!gameData) return;
   if (gameData.currentStep !== "endGame") return;
 
+  const playerScores = [];
+  const firstPlayerToEnd = gameData.firstPlayerToEnd;
+  let firstPlayerToEndScore = 0;
+
   const countPoints = (cards) => {
     return cards.reduce((total, card) => total + card.value, 0);
   }
@@ -314,11 +319,29 @@ async function saveScore(game) {
     const currentScore = player.game_players.score || 0;
     const roundsScores = [...(player.game_players.scoreByRound || [])];
 
+    // on enregistre les scores des joueurs sauf celui qui a terminé en premier
+    if (player.id !== firstPlayerToEnd) {
+      playerScores.push(score);
+    } else {
+      firstPlayerToEndScore = score;
+    }
+
     roundsScores.push(score);
 
     player.game_players.score = currentScore + score;
     player.game_players.scoreByRound = roundsScores;
-    console.log(`[game controller] Player ${player.id} score: ${score}`);
+
+    await player.game_players.save();
+  }
+
+  // on vérifie si le score du joueur qui a terminé en premier est inférieur à celui des autres joueurs
+  // Sinon on double son score
+  if (firstPlayerToEndScore >= Math.min(...playerScores)) {
+    const player = game.players.find(player => player.id === firstPlayerToEnd);
+    const currentTotalScore = player.game_players.score || 0;
+    const lastScore = player.game_players.scoreByRound.pop();
+    player.game_players.score = currentTotalScore + lastScore;
+    player.game_players.scoreByRound = [...player.game_players.scoreByRound, lastScore * 2];
 
     await player.game_players.save();
   }
@@ -350,6 +373,7 @@ function checkLastTurn(gameData) {
     const cards = gameData.playersCards[playerId];
     if (countUnrevealedCards(cards) === 0) {
       gameData.lastTurn = true;
+      gameData.firstPlayerToEnd = gameData.firstPlayerToEnd === null ? playerId : gameData.firstPlayerToEnd;
       return;
     }
   }

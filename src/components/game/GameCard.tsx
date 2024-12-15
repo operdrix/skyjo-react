@@ -33,20 +33,6 @@ const GameCard = ({
     return false;
   }
 
-  // const defaultValue = () => {
-  //   if (game.gameData.currentStep === 'decide-deck' && isDiscard) {
-  //     return (
-  //       <>
-  //         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-  //           <path strokeLinecap="round" strokeLinejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
-  //         </svg>
-  //       </>
-  //     )
-  //   }
-  //   if (card.revealed) return card.value;
-  //   return '?';
-  // }
-
   const handleOnClick = () => {
     onClick(card.id);
   };
@@ -61,42 +47,6 @@ const GameCard = ({
     return <NormalCard card={card} onClick={handleOnClick} disabled={disabled} />
   }
 
-  // return (
-  //   <div className={`${(isDeck || isDiscard) ? 'flex flex-col justify-center items-center gap-2' : ''}`}>
-  //     <div className={`${(haveCardUnderInDeckOrDiscard()) ? 'relative play-card border-none' : ''}`}>
-
-  //       {(haveCardUnderInDeckOrDiscard()) &&
-  //         <button
-  //           className={`play-card absolute`}
-  //           disabled={true}
-  //           onClick={() => onClick(card.id)}
-  //         >
-  //           {'?'}
-  //         </button>
-  //       }
-  //       <button
-  //         className={`play-card 
-  //           ${haveCardUnderInDeckOrDiscard() ? 'absolute' : ''}
-  //           ${card.color === 'red' && card.revealed ? '!bg-card-red' : ''}
-  //           ${card.color === 'green' && card.revealed ? '!bg-card-green' : ''}
-  //           ${card.color === 'yellow' && card.revealed ? '!bg-card-yellow' : ''}
-  //           ${card.color === 'zero' && card.revealed ? '!bg-card-zero' : ''}
-  //           ${card.color === 'negative' && card.revealed ? '!bg-card-negative' : ''}
-  //           ${!disabled ? 'animate-small-scale' : ''}
-  //           ${game.gameData.currentStep === 'decide-deck' && isDiscard ? 'play-card-discard' : ''}
-  //           ${card.onHand ? 'rotate-12' : ''}
-  //         `}
-  //         disabled={disabled}
-  //         onClick={() => onClick(card.id)}
-  //       >
-  //         {defaultValue()}
-  //       </button>
-  //     </div>
-  //     <FlipCard card={card} onClick={() => onClick(card.id)} disabled={disabled} />
-  //     {isDiscard && <span>défausse</span>}
-  //     {isDeck && <span>pioche</span>}
-  //   </div>
-  // )
 }
 
 function FlipCard({ card, onClick, disabled }: { card: Card; onClick?: () => void; disabled?: boolean }) {
@@ -149,7 +99,7 @@ function FlipCard({ card, onClick, disabled }: { card: Card; onClick?: () => voi
 // Carte derrière (ex: pour la pioche ou la défausse)
 function ExtraCardBehind() {
   return (
-    <div className="play-card absolute text-black bg-white top-0">
+    <div className="play-card border-2 border-black absolute text-black bg-white top-0">
       ?
     </div>
   );

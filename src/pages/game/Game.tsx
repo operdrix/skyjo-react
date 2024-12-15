@@ -39,7 +39,7 @@ const Game = () => {
     const getGame = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`${process.env.BACKEND_HOST}/game/${gameId}`, {
+        const response = await fetch(`${process.env.VITE_BACKEND_HOST}/game/${gameId}`, {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,

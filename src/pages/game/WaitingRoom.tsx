@@ -33,7 +33,7 @@ const WaitingRoom = () => {
     const getGame = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`${process.env.BACKEND_HOST}/game/${gameId}`, {
+        const response = await fetch(`${process.env.VITE_BACKEND_HOST}/game/${gameId}`, {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -77,7 +77,7 @@ const WaitingRoom = () => {
       console.log('ajout nouveau du joueur à la partie');
 
       const addPlayer = async () => {
-        await fetch(`${process.env.BACKEND_HOST}/game/join/${gameId}`, {
+        await fetch(`${process.env.VITE_BACKEND_HOST}/game/join/${gameId}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -147,7 +147,7 @@ const WaitingRoom = () => {
     if (!isCreator || !game) return;
     const value = parseInt(e.target.value);
     // Mettre à jour le nombre de joueurs max dans la base de données
-    await fetch(`${process.env.BACKEND_HOST}/game/${gameId}`, {
+    await fetch(`${process.env.VITE_BACKEND_HOST}/game/${gameId}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',

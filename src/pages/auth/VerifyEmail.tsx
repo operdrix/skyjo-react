@@ -12,7 +12,7 @@ const VerifyEmail = () => {
 
     const verifyEmail = async () => {
         try {
-            const response = await fetch(`http://localhost:3000/verify/${token}`)
+            const response = await fetch(`${process.env.VITE_BACKEND_HOST}/verify/${token}`)
             const data = await response.json()
             if (response.ok) {
                 console.log('Success:', data)

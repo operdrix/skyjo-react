@@ -44,7 +44,7 @@ function Register() {
     setLoading(true);
     try {
       console.log("Form values", values);
-      const response = await fetch(`${process.env.BACKEND_HOST}/register`, {
+      const response = await fetch(`${process.env.VITE_BACKEND_HOST}/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

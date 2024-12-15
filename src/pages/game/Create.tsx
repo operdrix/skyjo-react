@@ -13,7 +13,7 @@ const Create = () => {
     setLoading(true);
     if (socket && isConnected) {
       try {
-        const response = await fetch(`${process.env.BACKEND_HOST}/game`, {
+        const response = await fetch(`${process.env.VITE_BACKEND_HOST}/game`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

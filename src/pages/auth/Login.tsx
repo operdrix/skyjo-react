@@ -50,7 +50,7 @@ function Login() {
   const handleSubmit = async (values: typeof initialValues) => {
     console.log("Login: Form values", values);
     try {
-      const response = await fetch('http://localhost:3000/login', {
+      const response = await fetch(`${process.env.VITE_BACKEND_HOST}/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

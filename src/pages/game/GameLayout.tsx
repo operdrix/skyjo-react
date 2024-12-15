@@ -30,7 +30,7 @@ const GameLayout = () => {
   }, [isAuthentified, userLoading]);
 
   return (
-    <WebSocketProvider url={(process.env.BACKEND_HOST as string)}>
+    <WebSocketProvider url={(process.env.VITE_BACKEND_HOST as string)}>
       <GameProvider>
         <div className="flex flex-col min-h-screen font-kalam">
           <Header />

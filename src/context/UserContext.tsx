@@ -95,7 +95,7 @@ export const UserProvider = ({ children }: {
   const logout = useCallback(() => {
     // appel de l'api pour détruire le token
     try {
-      fetch(`${process.env.BACKEND_HOST}/logout`, {
+      fetch(`${process.env.VITE_BACKEND_HOST}/logout`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

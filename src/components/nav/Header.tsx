@@ -1,6 +1,6 @@
+import ToggleTheme from "@/components/nav/ToggleTheme";
+import { useUser } from "@/hooks/User";
 import { Link, useNavigate } from "react-router-dom";
-import { useUser } from "../../hooks/User";
-import ToggleTheme from "./ToggleTheme";
 
 const Header = () => {
 

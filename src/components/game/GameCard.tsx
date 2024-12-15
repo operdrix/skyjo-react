@@ -1,7 +1,7 @@
+import { useGame } from "@/hooks/Game";
+import { useUser } from "@/hooks/User";
+import { Card } from "@/types/types";
 import { useEffect, useRef, useState } from "react";
-import { useGame } from "../../hooks/Game";
-import { useUser } from "../../hooks/User";
-import { Card } from "../../types/types";
 
 const GameCard = ({
   card,

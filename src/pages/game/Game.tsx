@@ -1,18 +1,18 @@
+import Deck from "@/components/game/Deck";
+import Discard from "@/components/game/Discard";
+import Instructions from "@/components/game/Instructions";
+import ErrorMessage from "@/components/game/messages/ErrorMessage";
+import ModalScore from "@/components/game/messages/ModalScore";
+import ModalScoreEndGame from "@/components/game/messages/ModalScoreEndGame";
+import ReconnectMessage from "@/components/game/messages/ReconnectMessage";
+import WaitingDeal from "@/components/game/messages/WaitingDeal";
+import PlayerSet from "@/components/game/PlayerSet";
+import { useGame } from "@/hooks/Game";
+import { useUser } from "@/hooks/User";
+import { useWebSocket } from "@/hooks/WebSocket";
+import type { GameType } from "@/types/types";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import Deck from "../../components/game/Deck";
-import Discard from "../../components/game/Discard";
-import Instructions from "../../components/game/Instructions";
-import ErrorMessage from "../../components/game/messages/ErrorMessage";
-import ModalScore from "../../components/game/messages/ModalScore";
-import ModalScoreEndGame from "../../components/game/messages/ModalScoreEndGame";
-import ReconnectMessage from "../../components/game/messages/ReconnectMessage";
-import WaitingDeal from "../../components/game/messages/WaitingDeal";
-import PlayerSet from "../../components/game/PlayerSet";
-import { useGame } from "../../hooks/Game";
-import { useUser } from "../../hooks/User";
-import { useWebSocket } from "../../hooks/WebSocket";
-import type { GameType } from "../../types/types";
 
 const Game = () => {
   const { token, userId, loading: userLoading } = useUser();

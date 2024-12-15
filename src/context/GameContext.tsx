@@ -1,5 +1,5 @@
+import { GameType } from "@/types/types";
 import { createContext, useState } from "react";
-import { GameType } from "../types/types";
 
 type GameContextType = {
   gameId: string | null;

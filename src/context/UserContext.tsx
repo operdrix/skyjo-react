@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+import { verifyJwt } from "@/services/authService";
+import getUserIdFromToken from "@/utils/getUserIdFromToken";
 import { createContext, useCallback, useEffect, useState } from "react";
-import { verifyJwt } from "../services/authService";
-import getUserIdFromToken from "../utils/getUserIdFromToken";
 
 type UserContextType = {
   token: string | null;

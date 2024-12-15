@@ -1,12 +1,12 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 
+import Footer from "@/components/nav/Footer"
+import Header from "@/components/nav/Header"
+import { GameProvider } from "@/context/GameContext"
+import { WebSocketProvider } from "@/context/WebSocketContext"
+import { useUser } from "@/hooks/User"
 import { useEffect } from "react"
 import { Outlet, useNavigate } from "react-router-dom"
-import Footer from "../../components/nav/Footer"
-import Header from "../../components/nav/Header"
-import { GameProvider } from "../../context/GameContext"
-import { WebSocketProvider } from "../../context/WebSocketContext"
-import { useUser } from "../../hooks/User"
 
 const GameLayout = () => {
   const { isAuthentified, loading: userLoading } = useUser();

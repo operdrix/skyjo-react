@@ -1,5 +1,5 @@
-import { useGame } from "../../hooks/Game";
-import { useUser } from "../../hooks/User";
+import { useGame } from "@/hooks/Game";
+import { useUser } from "@/hooks/User";
 
 const Instructions = () => {
 

@@ -1,5 +1,5 @@
+import { useWebSocket } from "@/hooks/WebSocket";
 import { useEffect } from "react";
-import { useWebSocket } from "../../hooks/WebSocket";
 
 const JoinPublic = () => {
     const { socket, isConnected } = useWebSocket()

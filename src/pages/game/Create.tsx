@@ -1,7 +1,7 @@
+import { useUser } from "@/hooks/User";
+import { useWebSocket } from "@/hooks/WebSocket";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useUser } from "../../hooks/User";
-import { useWebSocket } from "../../hooks/WebSocket";
 
 const Create = () => {
   const { token, userId, logout, loading: userLoading } = useUser();

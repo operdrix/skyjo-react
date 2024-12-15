@@ -1,7 +1,7 @@
-import { useGame } from "../../hooks/Game";
-import { useUser } from "../../hooks/User";
-import { useWebSocket } from "../../hooks/WebSocket";
-import GameCard from "./GameCard";
+import GameCard from "@/components/game/GameCard";
+import { useGame } from "@/hooks/Game";
+import { useUser } from "@/hooks/User";
+import { useWebSocket } from "@/hooks/WebSocket";
 
 const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
   playerId: string;

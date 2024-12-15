@@ -1,9 +1,9 @@
+import CustomField from '@/components/forms/CustomField';
+import Modal from '@/components/Modal';
 import { Field, Form, Formik } from 'formik';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
-import CustomField from '../../components/forms/CustomField';
-import Modal from '../../components/Modal';
 
 function Register() {
 

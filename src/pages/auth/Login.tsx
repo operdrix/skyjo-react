@@ -1,10 +1,10 @@
+import CustomField from '@/components/forms/CustomField';
+import Modal, { MessageType } from '@/components/Modal';
+import { useUser } from '@/hooks/User';
 import { Field, Form, Formik } from 'formik';
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import * as yup from 'yup';
-import CustomField from '../../components/forms/CustomField';
-import Modal, { MessageType } from '../../components/Modal';
-import { useUser } from '../../hooks/User';
 
 
 function Login() {

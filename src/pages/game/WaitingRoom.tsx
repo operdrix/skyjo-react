@@ -1,11 +1,11 @@
+import ErrorMessage from "@/components/game/messages/ErrorMessage";
+import ReconnectMessage from "@/components/game/messages/ReconnectMessage";
+import OnlineStatus from "@/components/game/OnlineStatus";
+import { useUser } from "@/hooks/User";
+import { useWebSocket } from "@/hooks/WebSocket";
+import type { ErrorType, GameType } from "@/types/types";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import ErrorMessage from "../../components/game/messages/ErrorMessage";
-import ReconnectMessage from "../../components/game/messages/ReconnectMessage";
-import OnlineStatus from "../../components/game/OnlineStatus";
-import { useUser } from "../../hooks/User";
-import { useWebSocket } from "../../hooks/WebSocket";
-import type { ErrorType, GameType } from "../../types/types";
 
 const WaitingRoom = () => {
   const { token, userId, loading: userLoading } = useUser();

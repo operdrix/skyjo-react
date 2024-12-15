@@ -1,4 +1,4 @@
-import { useGame } from "../../../hooks/Game";
+import { useGame } from "@/hooks/Game";
 
 const ModalScore = () => {
   const { game } = useGame();

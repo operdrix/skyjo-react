@@ -10,5 +10,10 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [react()],
     base: '/',
+    resolve: {
+      alias: {
+        '@': '/src'
+      }
+    },
   }
 })

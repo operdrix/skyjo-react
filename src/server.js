@@ -15,6 +15,10 @@ import { websockets } from "./websockets/websockets.js";
 //bdd
 import { sequelize } from "./bdd.js";
 
+import dotenv from "dotenv";
+
+dotenv.config({ path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env' });
+
 //Test de la connexion
 try {
 	sequelize.authenticate(

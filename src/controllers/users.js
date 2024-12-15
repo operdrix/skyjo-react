@@ -5,6 +5,10 @@ import nodemailer from "nodemailer";
 import { Op } from "sequelize";
 import User from "../models/users.js";
 
+import dotenv from "dotenv";
+
+dotenv.config({ path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env' });
+
 function createTransporter() {
 	return nodemailer.createTransport({
 		service: 'gmail',
@@ -119,7 +123,7 @@ export async function registerUser(userDatas, bcrypt) {
 			from: 'olivperdrix@gmail.com',
 			to: newUser.email,
 			subject: 'Confirmation d\'inscription',
-			html: getMJMLTemplate(newUser.firstname, `http://localhost:5173/auth/verify/${newUser.verifiedtoken}`),
+			html: getMJMLTemplate(newUser.firstname, `${process.env.FRONTEND_HOST}/auth/verify/${newUser.verifiedtoken}`),
 		};
 
 		try {

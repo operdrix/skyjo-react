@@ -33,7 +33,7 @@ const Instructions = () => {
   }
 
   return (
-    <p className="text-sm md:text-xl lg:text-2xl text-center h-16">{playerMessage()}</p>
+    <p className="text-sm md:text-xl lg:text-2xl text-center py-4 md:h-16">{playerMessage()}</p>
   )
 }
 

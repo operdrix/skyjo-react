@@ -84,8 +84,9 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
   }
 
   return (
-    <div className="flex flex-col justify-center items-center h-full min-h-48">
+    <div className="flex flex-col justify-center items-center h-full min-h-44">
       <h2 className="indicator flex items-center gap-3 text-xl font-bold mb-2 pr-2">
+        {playerTurn && <span className="loading loading-dots loading-md mt-2"></span>}
         {player?.username} <OnlineStatus status={player?.game_players?.status} />
       </h2>
       <div className={`grid gap-2 ${playerCards.length === 12 ? 'grid-cols-4' : playerCards.length === 9 ? 'grid-cols-3' : playerCards.length === 6 ? 'grid-cols-2' : 'grid-cols-1'}`}>
@@ -113,9 +114,9 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
             />)
         })}
       </div>
-      <p className="h-6">
+      {/* <p className="h-6">
         {playerTurn && <span className="loading loading-dots loading-md mt-2"></span>}
-      </p>
+      </p> */}
     </div>
   )
 }

@@ -49,7 +49,8 @@ type GameType = {
     id: string,
     username: string
   },
-  gameData: GameData
+  gameData: GameData,
+  playersPlayAgain: string[];
 }
 export type { Card, ErrorType, GameData, GameType };
 

@@ -85,7 +85,7 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
 
   return (
     <div className="flex flex-col justify-center items-center h-full min-h-44">
-      <h2 className="indicator flex items-center gap-3 text-xl font-bold mb-2 pr-2">
+      <h2 className="indicator flex items-center gap-3 text-xl font-bold mb-2 pr-2 min-h-8">
         {playerTurn && <span className="loading loading-dots loading-md mt-2"></span>}
         {player?.username} <OnlineStatus status={player?.game_players?.status} />
       </h2>

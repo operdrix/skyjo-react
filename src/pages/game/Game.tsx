@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import Deck from "../../components/game/Deck";
 import Discard from "../../components/game/Discard";
 import Instructions from "../../components/game/Instructions";
@@ -17,6 +17,7 @@ const Game = () => {
   const { game, setGame } = useGame();
   const { gameId } = useParams<string>();
   const [loading, setLoading] = useState<boolean>(true);
+  const [waitingDeal, setWaitingDeal] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -82,9 +83,15 @@ const Game = () => {
   useEffect(() => {
     if (!socket || !isConnected || error) return;
 
+    const handleWaitingDeal = () => {
+      console.log("Waiting deal");
+      setWaitingDeal(true);
+    }
+
     const handleStartGame = (updatedGame: GameType) => {
       console.log("Game started:", updatedGame);
       setGame(updatedGame);
+      setWaitingDeal(false);
     };
 
     const handlePlayerJoined = (updatedGame: GameType) => {
@@ -102,6 +109,7 @@ const Game = () => {
       setGame(updatedGame);
     }
 
+    subscribeToEvent("waiting-deal", handleWaitingDeal);
     subscribeToEvent("start-game", handleStartGame);
     subscribeToEvent("player-joined-game", handlePlayerJoined);
     subscribeToEvent("player-left-game", handlePlayerLeft);
@@ -109,6 +117,7 @@ const Game = () => {
     subscribeToEvent("play-move", handlePlayMove);
 
     return () => {
+      unsubscribeFromEvent("waiting-deal", handleWaitingDeal);
       unsubscribeFromEvent("start-game", handleStartGame);
       unsubscribeFromEvent("player-joined-game", handlePlayerJoined);
       unsubscribeFromEvent("player-left-game", handlePlayerLeft);
@@ -153,6 +162,15 @@ const Game = () => {
     )
   }
 
+  if (waitingDeal) {
+    return (
+      <div className="flex flex-col justify-center items-center h-full">
+        <p className="text-xl font-bold">En attente du mélange des cartes...</p>
+        <div className="loading loading-lg"></div>
+      </div>
+    )
+  }
+
   // Assignation des identifiants des joueurs aux positions de la table
   const playerIndex = game.gameData.turnOrder.indexOf(userId);
   let playerIdTop = '';
@@ -193,9 +211,9 @@ const Game = () => {
               }}
             >
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" stroke="currentColor">
-                <path d="M17 8V6C17 4.11438 17 3.17157 16.4142 2.58579C15.8284 2 14.8856 2 13 2H11C9.11438 2 8.17157 2 7.58579 2.58579C7 3.17157 7 4.11438 7 6V8" stroke-width="1.5" />
-                <path d="M11.1459 12.0225C11.5259 11.3408 11.7159 11 12 11C12.2841 11 12.4741 11.3408 12.8541 12.0225L12.9524 12.1989C13.0603 12.3926 13.1143 12.4894 13.1985 12.5533C13.2827 12.6172 13.3875 12.641 13.5972 12.6884L13.7881 12.7316C14.526 12.8986 14.895 12.982 14.9828 13.2643C15.0706 13.5466 14.819 13.8407 14.316 14.429L14.1858 14.5812C14.0429 14.7483 13.9714 14.8319 13.9392 14.9353C13.9071 15.0387 13.9179 15.1502 13.9395 15.3733L13.9592 15.5763C14.0352 16.3612 14.0733 16.7536 13.8435 16.9281C13.6136 17.1025 13.2682 16.9435 12.5773 16.6254L12.3986 16.5431C12.2022 16.4527 12.1041 16.4075 12 16.4075C11.8959 16.4075 11.7978 16.4527 11.6014 16.5431L11.4227 16.6254C10.7318 16.9435 10.3864 17.1025 10.1565 16.9281C9.92674 16.7536 9.96476 16.3612 10.0408 15.5763L10.0605 15.3733C10.0821 15.1502 10.0929 15.0387 10.0608 14.9353C10.0286 14.8319 9.95713 14.7483 9.81418 14.5812L9.68403 14.429C9.18097 13.8407 8.92945 13.5466 9.01723 13.2643C9.10501 12.982 9.47396 12.8986 10.2119 12.7316L10.4028 12.6884C10.6125 12.641 10.7173 12.6172 10.8015 12.5533C10.8857 12.4894 10.9397 12.3926 11.0476 12.1989L11.1459 12.0225Z" stroke-width="1.5" />
-                <path d="M19.4286 16.975C19.7972 16.0553 20 15.0513 20 14C20 9.58172 16.4183 6 12 6C7.58172 6 4 9.58172 4 14C4 18.4183 7.58172 22 12 22C13.0513 22 14.0553 21.7972 14.975 21.4286" stroke-width="1.5" stroke-linecap="round" />
+                <path d="M17 8V6C17 4.11438 17 3.17157 16.4142 2.58579C15.8284 2 14.8856 2 13 2H11C9.11438 2 8.17157 2 7.58579 2.58579C7 3.17157 7 4.11438 7 6V8" strokeWidth="1.5" />
+                <path d="M11.1459 12.0225C11.5259 11.3408 11.7159 11 12 11C12.2841 11 12.4741 11.3408 12.8541 12.0225L12.9524 12.1989C13.0603 12.3926 13.1143 12.4894 13.1985 12.5533C13.2827 12.6172 13.3875 12.641 13.5972 12.6884L13.7881 12.7316C14.526 12.8986 14.895 12.982 14.9828 13.2643C15.0706 13.5466 14.819 13.8407 14.316 14.429L14.1858 14.5812C14.0429 14.7483 13.9714 14.8319 13.9392 14.9353C13.9071 15.0387 13.9179 15.1502 13.9395 15.3733L13.9592 15.5763C14.0352 16.3612 14.0733 16.7536 13.8435 16.9281C13.6136 17.1025 13.2682 16.9435 12.5773 16.6254L12.3986 16.5431C12.2022 16.4527 12.1041 16.4075 12 16.4075C11.8959 16.4075 11.7978 16.4527 11.6014 16.5431L11.4227 16.6254C10.7318 16.9435 10.3864 17.1025 10.1565 16.9281C9.92674 16.7536 9.96476 16.3612 10.0408 15.5763L10.0605 15.3733C10.0821 15.1502 10.0929 15.0387 10.0608 14.9353C10.0286 14.8319 9.95713 14.7483 9.81418 14.5812L9.68403 14.429C9.18097 13.8407 8.92945 13.5466 9.01723 13.2643C9.10501 12.982 9.47396 12.8986 10.2119 12.7316L10.4028 12.6884C10.6125 12.641 10.7173 12.6172 10.8015 12.5533C10.8857 12.4894 10.9397 12.3926 11.0476 12.1989L11.1459 12.0225Z" strokeWidth="1.5" />
+                <path d="M19.4286 16.975C19.7972 16.0553 20 15.0513 20 14C20 9.58172 16.4183 6 12 6C7.58172 6 4 9.58172 4 14C4 18.4183 7.58172 22 12 22C13.0513 22 14.0553 21.7972 14.975 21.4286" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
             </button>
           </div>
@@ -255,48 +273,126 @@ const Game = () => {
 }
 
 const ModalScoreEndGame = () => {
-  const { game } = useGame();
-  const { sendMessage } = useWebSocket();
+  const { game, setGame } = useGame();
+  const { sendMessage, subscribeToEvent, unsubscribeFromEvent } = useWebSocket();
   const { userId } = useUser();
   const [loading, setLoading] = useState<boolean>(false);
+  const [isCreator, setIsCreator] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!game || !userId) return;
+    setIsCreator(game.creator === userId)
+
+    const handlePlayAgain = (newGame: GameType) => {
+      setGame(newGame);
+    }
+
+    subscribeToEvent('play-again', handlePlayAgain)
+    return () => {
+      unsubscribeFromEvent('play-again', handlePlayAgain)
+    }
+  }, [game, setGame, subscribeToEvent, unsubscribeFromEvent, userId]);
 
   const handleNextRound = () => {
     setLoading(true);
-    sendMessage("start-game", { room: game?.id });
+    if (!game) return;
+    if (game.state === 'finished') {
+      sendMessage("restart-game", { room: game.id });
+    } else {
+      sendMessage("start-game", { room: game?.id });
+    }
   }
 
-  if (!game) return null;
+  const handleNewGame = () => {
+    if (!game || !userId) return;
+    const playersPlayAgain = game.playersPlayAgain || [];
+    playersPlayAgain.push(userId);
+    sendMessage("play-again", { room: game.id, playersPlayAgain });
+    return
+  }
+
+  if (!game || !userId) return null;
+
+  const finished = game.state === 'finished';
+  const playersPlayAgain = game.playersPlayAgain || [];
+
   return (
     <>
       <dialog id="modal-score-end-game" className={`modal modal-bottom sm:modal-middle modal-open`}>
-        <div className="modal-box">
-          <h3 className="font-bold text-lg">🎉 Fin de la manche {game.roundNumber} !</h3>
-          <p className="my-4">Fellicitations. Voici vos scores</p>
+        <div className="modal-box !max-w-2xl">
+          {finished ?
+            <h3 className="font-bold text-lg"><span className="text-4xl">🎉</span> Fin de la partie en {game.roundNumber} manches.</h3>
+            :
+            <h3 className="font-bold text-lg"><span className="text-4xl">🎉</span> Fin de la manche {game.roundNumber} !</h3>
+          }
+          <p className="my-4">Felicitations ! Voici vos scores :</p>
           {game.players
             .slice()
             .sort((a, b) => a.game_players.score - b.game_players.score)
-            .map(player => (
+            .map((player, index) => (
               <div key={player.id} className="flex justify-between">
-                <p className="font-bold text-xl">{player.username}</p>
+                <div className="font-bold text-xl">
+                  {finished && playersPlayAgain.includes(player.id) ?
+                    <div className="tooltip tooltip-right w-7" data-tip="Veut rejouer">✅</div>
+                    :
+                    <div className="tooltip tooltip-right w-7" data-tip="En attente"><span className="loading loading-dots loading-xs"></span></div>}
+                  {finished && index + 1} {player.username}<sup>{game.creator === player.id && '👑'}</sup>
+                </div>
                 <ul className="flex gap-3">
                   {player.game_players.scoreByRound.map((score, index) => (
-                    <li key={index}>{score}</li>
+                    <li className="w-5" key={index}>{score}</li>
                   ))}
-                  <li className="font-bold">{player.game_players.score}</li>
+                  <li className="font-mono">|</li>
+                  <li className="font-bold w-6">{player.game_players.score}</li>
                 </ul>
               </div>
             ))}
-          <div className="modal-action">
-            <form method="dialog">
-              {/* if there is a button in form, it will close the modal */}
-              <button
-                className="btn"
-                onClick={handleNextRound}
-                disabled={game.creator !== userId || loading}
-              >
-                Manche suivante
-                {loading && <span className="loading loading-dots loading-xs"></span>}
-              </button>
+          <div className="modal-action justify-start">
+            <form className="flex-1" method="dialog">
+              {finished ?
+                <div className="flex justify-between flex-wrap">
+                  <div className="flex items-center p-2">
+                    {isCreator && playersPlayAgain.length >= 2 ?
+                      <button
+                        className="btn btn-success"
+                        onClick={handleNextRound}
+                        disabled={loading}
+                      >
+                        🔁 Nouvelle partie
+                      </button>
+                      :
+                      <p>
+                        {isCreator ?
+                          "Attendez d'autres joueurs pour rejouer"
+                          :
+                          playersPlayAgain.includes(userId) ? "Attendez que le créateur lance une nouvelle partie" : "Voulez-vous rejouer ?"
+                        }
+                      </p>
+                    }
+                  </div>
+                  <div className="flex">
+                    <button
+                      className="btn btn-success"
+                      onClick={handleNewGame}
+                      disabled={playersPlayAgain.includes(userId) || loading}
+                    >
+                      {playersPlayAgain.includes(userId) ? '✅' : 'Ok pour rejouer'}
+                    </button>
+                    <button className="btn btn-ghost ml-2">
+                      <Link to={'/'}>Quitter</Link>
+                    </button>
+                  </div>
+                </div>
+                :
+                <button
+                  className="btn"
+                  onClick={handleNextRound}
+                  disabled={isCreator || loading}
+                >
+                  {isCreator ? 'Manche suivante' : 'En attente du créateur'}
+                  {loading && <span className="loading loading-dots loading-xs"></span>}
+                </button>
+              }
             </form>
           </div>
         </div>

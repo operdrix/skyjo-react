@@ -1,4 +1,4 @@
-import { checkGame, getGame, updateGame } from "../controllers/games.js";
+import { checkGame, createGame, getGame, updateGame } from "../controllers/games.js";
 
 export async function websockets(app) {
   await app.ready();
@@ -12,6 +12,7 @@ export async function websockets(app) {
     startGame(socket, app.io);
     playMove(socket, app.io);
     playerPlayAgain(socket, app.io);
+    restartGame(socket, app.io);
 
     // Lorsqu'un joueur se déconnecte
     socket.on("disconnect", async () => {
@@ -148,4 +149,37 @@ export async function playerPlayAgain(socket, io) {
   });
 }
 
-//
+// Une nouvelle partie est demandée
+// on créée une nouvelle partie avec les joueurs qui ont demandé à rejouer
+export async function restartGame(socket, io) {
+  socket.on("restart-game", async ({ room }) => {
+    console.log("restart-game", room);
+    io.to(room).emit("waiting-deal");
+
+    const game = await getGame(room);
+    if (!game) {
+      console.error("Game not found for room:", room);
+      return;
+    }
+
+    // Création d'une nouvelle partie
+    const { gameId } = await createGame(game.creator, true);
+    const newGame = await getGame(gameId);
+    game.playersPlayAgain.forEach(async (player) => {
+      await newGame.addPlayer(player);
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await updateGame({ params: { action: "start", gameId } });
+
+    const gameReady = await getGame(gameId);
+    if (!gameReady) {
+      console.error("Game not found for room:", gameId);
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // Émettre l'événement à tous les membres de la room
+    io.to(room).emit("go-to-new-game", { gameId: newGame.id, players: game.playersPlayAgain });
+  });
+}

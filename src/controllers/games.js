@@ -230,6 +230,7 @@ export async function dealCards(gameId) {
   // On retourne la première carte de la pioche qu'on met dans la défausse
   const firstCard = cards.pop();
   firstCard.revealed = true;
+  const turnOrder = game.players.map(player => player.id).sort(() => Math.random() - 0.5);
 
   // On retourne un objet avec les cartes par joueurs, les cartes dans la pioche et les cartes défaussées
   return {
@@ -238,7 +239,7 @@ export async function dealCards(gameId) {
     discardPile: [firstCard],
     currentPlayer: null,
     currentStep: "initialReveal", // draw, decide, replace, flip, endTurn, endGame
-    turnOrder: game.players.map(player => player.id),
+    turnOrder: turnOrder,
     lastTurn: false,
     firstPlayerToEnd: null,
   };

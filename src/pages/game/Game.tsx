@@ -57,6 +57,7 @@ const Game = () => {
         console.error('Network error:', error);
         setError("Une erreur réseau s'est produite.");
       } finally {
+        setWaitingDeal(false);
         setLoading(false);
       }
     };
@@ -109,12 +110,28 @@ const Game = () => {
       setGame(updatedGame);
     }
 
+    const handleGoToNewGame = ({ gameId, players }: {
+      gameId: string,
+      players: string[]
+    }) => {
+      if (!gameId || !players) return;
+      if (!userId) return;
+      console.log("Go to new game:", gameId, players);
+      if (players.includes(userId)) {
+        console.log(`Redirect to new game /game/${gameId}`);
+        navigate(`/game/${gameId}`);
+      } else {
+        navigate(`/`);
+      }
+    }
+
     subscribeToEvent("waiting-deal", handleWaitingDeal);
     subscribeToEvent("start-game", handleStartGame);
     subscribeToEvent("player-joined-game", handlePlayerJoined);
     subscribeToEvent("player-left-game", handlePlayerLeft);
     subscribeToEvent("update-game-params", setGame);
     subscribeToEvent("play-move", handlePlayMove);
+    subscribeToEvent("go-to-new-game", handleGoToNewGame);
 
     return () => {
       unsubscribeFromEvent("waiting-deal", handleWaitingDeal);
@@ -123,9 +140,10 @@ const Game = () => {
       unsubscribeFromEvent("player-left-game", handlePlayerLeft);
       unsubscribeFromEvent("update-game-params", setGame);
       unsubscribeFromEvent("play-move", handlePlayMove);
+      unsubscribeFromEvent("go-to-new-game", handleGoToNewGame);
     };
 
-  }, [socket, isConnected, gameId, subscribeToEvent, unsubscribeFromEvent, error, setGame, game]);
+  }, [socket, isConnected, gameId, subscribeToEvent, unsubscribeFromEvent, error, setGame, game, userId, navigate]);
 
   if (wsLoading || !isConnected) {
     return <ReconnectMessage />
@@ -164,11 +182,26 @@ const Game = () => {
 
   if (waitingDeal) {
     return (
-      <div className="flex flex-col justify-center items-center h-full">
-        <p className="text-xl font-bold">En attente du mélange des cartes...</p>
-        <div className="loading loading-lg"></div>
-      </div>
-    )
+      <div className="hero bg-base-200 min-h-[50vh] p-20">
+        <div className="hero-content flex-col lg:flex-row text-center">
+          <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" enableBackground="new 0 0 64 64" stroke="currentColor" className="size-96 max-w-sm text-success">
+            <polygon fill="none" strokeWidth="2" strokeMiterlimit="10" points="44,59 16,45 36,5 63,19 " />
+            <polyline fill="none" strokeWidth="2" strokeMiterlimit="10" points="31.899,14.004 28,6 1,20 19,59 32,52.964" />
+            <line fill="none" strokeWidth="2" strokeMiterlimit="10" x1="38" y1="9" x2="37" y2="11" />
+            <line fill="none" strokeWidth="2" strokeMiterlimit="10" x1="7" y1="23" x2="6" y2="21" />
+            <line fill="none" strokeWidth="2" strokeMiterlimit="10" x1="43" y1="53" x2="42" y2="55" />
+            <path fill="none" strokeWidth="2" strokeMiterlimit="10" d="M33,25c-2.848,5.281,3,15,3,15s11.151,0.28,14-5c1.18-2.188,1.377-5.718-1-7c-2.188-1.18-5.82-1.188-7,1c1.18-2.188,0.188-4.82-2-6C37.624,21.718,34.181,22.813,33,25z" />
+          </svg>
+          <div>
+            <h1 className="text-5xl font-bold">
+              Nouvelle manche
+            </h1>
+            <p className="py-6 text-xl">
+              Mélange des cartes en cours ... <br /><span className="loading loading-dots loading-lg text-success"></span>
+            </p>
+          </div>
+        </div>
+      </div>)
   }
 
   // Assignation des identifiants des joueurs aux positions de la table
@@ -303,7 +336,7 @@ const ModalScoreEndGame = () => {
     }
   }
 
-  const handleNewGame = () => {
+  const handleRequestNewGame = () => {
     if (!game || !userId) return;
     const playersPlayAgain = game.playersPlayAgain || [];
     playersPlayAgain.push(userId);
@@ -332,10 +365,17 @@ const ModalScoreEndGame = () => {
             .map((player, index) => (
               <div key={player.id} className="flex justify-between">
                 <div className="font-bold text-xl">
-                  {finished && playersPlayAgain.includes(player.id) ?
-                    <div className="tooltip tooltip-right w-7" data-tip="Veut rejouer">✅</div>
-                    :
-                    <div className="tooltip tooltip-right w-7" data-tip="En attente"><span className="loading loading-dots loading-xs"></span></div>}
+                  {finished &&
+                    <>
+                      {playersPlayAgain.includes(player.id) ?
+                        <div className="tooltip tooltip-right w-7" data-tip="Veut rejouer">✅</div>
+                        :
+                        <div className="tooltip tooltip-right w-7" data-tip="En attente">
+                          <span className="loading loading-dots loading-xs"></span>
+                        </div>
+                      }
+                    </>
+                  }
                   {finished && index + 1} {player.username}<sup>{game.creator === player.id && '👑'}</sup>
                 </div>
                 <ul className="flex gap-3">
@@ -351,7 +391,7 @@ const ModalScoreEndGame = () => {
             <form className="flex-1" method="dialog">
               {finished ?
                 <div className="flex justify-between flex-wrap">
-                  <div className="flex items-center p-2">
+                  <div className="flex items-center max-sm:p-2">
                     {isCreator && playersPlayAgain.length >= 2 ?
                       <button
                         className="btn btn-success"
@@ -370,10 +410,10 @@ const ModalScoreEndGame = () => {
                       </p>
                     }
                   </div>
-                  <div className="flex">
+                  <div className="flex max-sm:p-2">
                     <button
                       className="btn btn-success"
-                      onClick={handleNewGame}
+                      onClick={handleRequestNewGame}
                       disabled={playersPlayAgain.includes(userId) || loading}
                     >
                       {playersPlayAgain.includes(userId) ? '✅' : 'Ok pour rejouer'}
@@ -384,14 +424,16 @@ const ModalScoreEndGame = () => {
                   </div>
                 </div>
                 :
-                <button
-                  className="btn"
-                  onClick={handleNextRound}
-                  disabled={isCreator || loading}
-                >
-                  {isCreator ? 'Manche suivante' : 'En attente du créateur'}
-                  {loading && <span className="loading loading-dots loading-xs"></span>}
-                </button>
+                <div className="flex justify-end">
+                  <button
+                    className="btn"
+                    onClick={handleNextRound}
+                    disabled={!isCreator || loading}
+                  >
+                    {isCreator ? 'Manche suivante' : 'En attente du créateur'}
+                    {loading && <span className="loading loading-dots loading-xs"></span>}
+                  </button>
+                </div>
               }
             </form>
           </div>

@@ -34,6 +34,11 @@ const Game = sequelize.define("game", {
 		allowNull: false,
 		defaultValue: 4,
 	},
+	playersPlayAgain: {
+		type: DataTypes.JSON,
+		allowNull: false,
+		defaultValue: [],
+	},
 	gameData: {
 		type: DataTypes.JSON,
 		allowNull: false,

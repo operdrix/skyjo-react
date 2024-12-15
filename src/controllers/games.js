@@ -240,7 +240,7 @@ export async function dealCards(gameId) {
     currentStep: "initialReveal", // draw, decide, replace, flip, endTurn, endGame
     turnOrder: game.players.map(player => player.id),
     lastTurn: false,
-    firstPlayerToEnd: null
+    firstPlayerToEnd: null,
   };
 }
 
@@ -284,7 +284,7 @@ export async function checkGame(game) {
     await checkMaximumScore(game);
 
     if (game.state === "finished") {
-      io.to(room).emit("finished", game);
+      //io.to(room).emit("finished", game);
       return;
     }
   }

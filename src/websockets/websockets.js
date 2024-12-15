@@ -11,6 +11,7 @@ export async function websockets(app) {
     gameSettingsChanged(socket, app.io);
     startGame(socket, app.io);
     playMove(socket, app.io);
+    playerPlayAgain(socket, app.io);
 
     // Lorsqu'un joueur se déconnecte
     socket.on("disconnect", async () => {
@@ -91,6 +92,8 @@ export async function gameSettingsChanged(socket, io) {
 // on envoie à tous les joueurs de la partie les informations de la partie
 export async function startGame(socket, io) {
   socket.on("start-game", async ({ room }) => {
+    io.to(room).emit("waiting-deal");
+
     console.log("start-game", room);
     await updateGame({ params: { action: "start", gameId: room } });
 
@@ -99,8 +102,7 @@ export async function startGame(socket, io) {
       console.error("Game not found for room:", room);
       return;
     }
-
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
     // Émettre l'événement à tous les membres de la room
     io.to(room).emit("start-game", game);
@@ -127,3 +129,23 @@ export async function playMove(socket, io) {
     io.to(room).emit("play-move", game);
   });
 }
+
+// Joueurs prêts à rejouer
+export async function playerPlayAgain(socket, io) {
+  socket.on("play-again", async ({ room, playersPlayAgain }) => {
+    console.log("play-again", room, playersPlayAgain);
+
+    const game = await getGame(room);
+    if (!game) {
+      console.error("Game not found for room:", room);
+      return;
+    }
+    game.playersPlayAgain = playersPlayAgain;
+    await game.save();
+
+    // Émettre l'événement à tous les membres de la room
+    io.to(room).emit("play-again", game);
+  });
+}
+
+//

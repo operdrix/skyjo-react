@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Deck from "../../components/game/Deck";
 import Discard from "../../components/game/Discard";
 import Instructions from "../../components/game/Instructions";
 import ErrorMessage from "../../components/game/messages/ErrorMessage";
+import ModalScore from "../../components/game/messages/ModalScore";
+import ModalScoreEndGame from "../../components/game/messages/ModalScoreEndGame";
 import ReconnectMessage from "../../components/game/messages/ReconnectMessage";
+import WaitingDeal from "../../components/game/messages/WaitingDeal";
 import PlayerSet from "../../components/game/PlayerSet";
 import { useGame } from "../../hooks/Game";
 import { useUser } from "../../hooks/User";
@@ -181,27 +184,7 @@ const Game = () => {
   }
 
   if (waitingDeal) {
-    return (
-      <div className="hero bg-base-200 min-h-[50vh] p-20">
-        <div className="hero-content flex-col lg:flex-row text-center">
-          <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" enableBackground="new 0 0 64 64" stroke="currentColor" className="size-96 max-w-sm text-success">
-            <polygon fill="none" strokeWidth="2" strokeMiterlimit="10" points="44,59 16,45 36,5 63,19 " />
-            <polyline fill="none" strokeWidth="2" strokeMiterlimit="10" points="31.899,14.004 28,6 1,20 19,59 32,52.964" />
-            <line fill="none" strokeWidth="2" strokeMiterlimit="10" x1="38" y1="9" x2="37" y2="11" />
-            <line fill="none" strokeWidth="2" strokeMiterlimit="10" x1="7" y1="23" x2="6" y2="21" />
-            <line fill="none" strokeWidth="2" strokeMiterlimit="10" x1="43" y1="53" x2="42" y2="55" />
-            <path fill="none" strokeWidth="2" strokeMiterlimit="10" d="M33,25c-2.848,5.281,3,15,3,15s11.151,0.28,14-5c1.18-2.188,1.377-5.718-1-7c-2.188-1.18-5.82-1.188-7,1c1.18-2.188,0.188-4.82-2-6C37.624,21.718,34.181,22.813,33,25z" />
-          </svg>
-          <div>
-            <h1 className="text-5xl font-bold">
-              Nouvelle manche
-            </h1>
-            <p className="py-6 text-xl">
-              Mélange des cartes en cours ... <br /><span className="loading loading-dots loading-lg text-success"></span>
-            </p>
-          </div>
-        </div>
-      </div>)
+    return <WaitingDeal />
   }
 
   // Assignation des identifiants des joueurs aux positions de la table
@@ -301,182 +284,6 @@ const Game = () => {
         <div className={game.players.length <= 3 ? 'hidden' : ''}></div>
 
       </section>
-    </>
-  )
-}
-
-const ModalScoreEndGame = () => {
-  const { game, setGame } = useGame();
-  const { sendMessage, subscribeToEvent, unsubscribeFromEvent } = useWebSocket();
-  const { userId } = useUser();
-  const [loading, setLoading] = useState<boolean>(false);
-  const [isCreator, setIsCreator] = useState<boolean>(false);
-
-  useEffect(() => {
-    if (!game || !userId) return;
-    setIsCreator(game.creator === userId)
-
-    const handlePlayAgain = (newGame: GameType) => {
-      setGame(newGame);
-    }
-
-    subscribeToEvent('play-again', handlePlayAgain)
-    return () => {
-      unsubscribeFromEvent('play-again', handlePlayAgain)
-    }
-  }, [game, setGame, subscribeToEvent, unsubscribeFromEvent, userId]);
-
-  const handleNextRound = () => {
-    setLoading(true);
-    if (!game) return;
-    if (game.state === 'finished') {
-      sendMessage("restart-game", { room: game.id });
-    } else {
-      sendMessage("start-game", { room: game?.id });
-    }
-  }
-
-  const handleRequestNewGame = () => {
-    if (!game || !userId) return;
-    const playersPlayAgain = game.playersPlayAgain || [];
-    playersPlayAgain.push(userId);
-    sendMessage("play-again", { room: game.id, playersPlayAgain });
-    return
-  }
-
-  if (!game || !userId) return null;
-
-  const finished = game.state === 'finished';
-  const playersPlayAgain = game.playersPlayAgain || [];
-
-  return (
-    <>
-      <dialog id="modal-score-end-game" className={`modal modal-bottom sm:modal-middle modal-open`}>
-        <div className="modal-box !max-w-2xl">
-          {finished ?
-            <h3 className="font-bold text-lg"><span className="text-4xl">🎉</span> Fin de la partie en {game.roundNumber} manches.</h3>
-            :
-            <h3 className="font-bold text-lg"><span className="text-4xl">🎉</span> Fin de la manche {game.roundNumber} !</h3>
-          }
-          <p className="my-4">Felicitations ! Voici vos scores :</p>
-          {game.players
-            .slice()
-            .sort((a, b) => a.game_players.score - b.game_players.score)
-            .map((player, index) => (
-              <div key={player.id} className="flex justify-between">
-                <div className="font-bold text-xl">
-                  {finished &&
-                    <>
-                      {playersPlayAgain.includes(player.id) ?
-                        <div className="tooltip tooltip-right w-7" data-tip="Veut rejouer">✅</div>
-                        :
-                        <div className="tooltip tooltip-right w-7" data-tip="En attente">
-                          <span className="loading loading-dots loading-xs"></span>
-                        </div>
-                      }
-                    </>
-                  }
-                  {finished && index + 1} {player.username}<sup>{game.creator === player.id && '👑'}</sup>
-                </div>
-                <ul className="flex gap-3">
-                  {player.game_players.scoreByRound.map((score, index) => (
-                    <li className="w-5" key={index}>{score}</li>
-                  ))}
-                  <li className="font-mono">|</li>
-                  <li className="font-bold w-6">{player.game_players.score}</li>
-                </ul>
-              </div>
-            ))}
-          <div className="modal-action justify-start">
-            <form className="flex-1" method="dialog">
-              {finished ?
-                <div className="flex justify-between flex-wrap">
-                  <div className="flex items-center max-sm:p-2">
-                    {isCreator && playersPlayAgain.length >= 2 ?
-                      <button
-                        className="btn btn-success"
-                        onClick={handleNextRound}
-                        disabled={loading}
-                      >
-                        🔁 Nouvelle partie
-                      </button>
-                      :
-                      <p>
-                        {isCreator ?
-                          "Attendez d'autres joueurs pour rejouer"
-                          :
-                          playersPlayAgain.includes(userId) ? "Attendez que le créateur lance une nouvelle partie" : "Voulez-vous rejouer ?"
-                        }
-                      </p>
-                    }
-                  </div>
-                  <div className="flex max-sm:p-2">
-                    <button
-                      className="btn btn-success"
-                      onClick={handleRequestNewGame}
-                      disabled={playersPlayAgain.includes(userId) || loading}
-                    >
-                      {playersPlayAgain.includes(userId) ? '✅' : 'Ok pour rejouer'}
-                    </button>
-                    <button className="btn btn-ghost ml-2">
-                      <Link to={'/'}>Quitter</Link>
-                    </button>
-                  </div>
-                </div>
-                :
-                <div className="flex justify-end">
-                  <button
-                    className="btn"
-                    onClick={handleNextRound}
-                    disabled={!isCreator || loading}
-                  >
-                    {isCreator ? 'Manche suivante' : 'En attente du créateur'}
-                    {loading && <span className="loading loading-dots loading-xs"></span>}
-                  </button>
-                </div>
-              }
-            </form>
-          </div>
-        </div>
-      </dialog>
-    </>
-  )
-}
-
-const ModalScore = () => {
-  const { game } = useGame();
-
-  if (!game) return null;
-  return (
-    <>
-      <dialog id="modal-score" className={`modal modal-bottom sm:modal-middle`}>
-        <div className="modal-box">
-          <form method="dialog">
-            <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-          </form>
-          <h3 className="font-bold text-lg">Manche n°{game.roundNumber}</h3>
-          <p className="my-4">Voici vos scores</p>
-          {game.players
-            .slice()
-            .sort((a, b) => a.game_players.score - b.game_players.score)
-            .map(player => (
-              <div key={player.id} className="flex justify-between">
-                <p className="font-bold text-xl">{player.username}</p>
-                <ul className="flex gap-3">
-                  {player.game_players.scoreByRound.map((score, index) => (
-                    <li key={index}>{score}</li>
-                  ))}
-                  <li className="font-bold">{player.game_players.score}</li>
-                </ul>
-              </div>
-            ))}
-        </div>
-        <form method="dialog" className="modal-backdrop">
-          <button>
-            Fermer
-          </button>
-        </form>
-      </dialog>
     </>
   )
 }

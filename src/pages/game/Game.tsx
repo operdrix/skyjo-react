@@ -235,19 +235,35 @@ const ModalScore = () => {
     setLoading(true);
     sendMessage("start-game", { room: game?.id });
   }
+
+  if (!game) return null;
   return (
     <>
       <dialog id="modal-score" className="modal modal-bottom sm:modal-middle modal-open">
         <div className="modal-box">
-          <h3 className="font-bold text-lg">Fin de la manche !</h3>
-          <p className="py-4">Press ESC key or click the button below to close</p>
+          <h3 className="font-bold text-lg">🎉 Fin de la manche {game.roundNumber} !</h3>
+          <p className="my-4">Fellicitations. Voici vos scores</p>
+          {game.players
+            .slice()
+            .sort((a, b) => a.game_players.score - b.game_players.score)
+            .map(player => (
+              <div key={player.id} className="flex justify-between">
+                <p className="font-bold text-xl">{player.username}</p>
+                <ul className="flex gap-3">
+                  {player.game_players.scoreByRound.map((score, index) => (
+                    <li key={index}>{score}</li>
+                  ))}
+                  <li className="font-bold">{player.game_players.score}</li>
+                </ul>
+              </div>
+            ))}
           <div className="modal-action">
             <form method="dialog">
               {/* if there is a button in form, it will close the modal */}
               <button
                 className="btn"
                 onClick={handleNextRound}
-                disabled={game?.creator !== userId || loading}
+                disabled={game.creator !== userId || loading}
               >
                 Manche suivante
                 {loading && <span className="loading loading-dots loading-xs"></span>}

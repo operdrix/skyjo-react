@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'Kalam';
+  src: url('/fonts/Kalam-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Kalam';
+  src: url('/fonts/Kalam-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Kalam';
+  src: url('/fonts/Kalam-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Courgette';
+  src: url('/fonts/Courgette-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+.animate-small-scale {
+  animation: small-scale 1s cubic-bezier(0.55, 0.06, 0.68, 0.19) infinite;
+}
+
+@keyframes small-scale {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.play-card {
+  @apply text-black bg-white rounded flex justify-center items-center select-none h-8 w-6 sm:h-12 sm:w-8 md:h-16 md:w-12 text-xl sm:text-2xl;
+}
+
+.play-card-discard {
+  @apply border-2 border-red-600 border-dashed !bg-white rounded-md text-red-600;
+}
+
+.perspective {
+  perspective: 1000px;
+}
+.transform-style-preserve-3d {
+  transform-style: preserve-3d;
+}
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+.backface-hidden {
+  backface-visibility: hidden;
+}

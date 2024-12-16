@@ -31,7 +31,7 @@ services:
       MYSQL_USER: olivier
       MYSQL_PASSWORD: olivier
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - skyjo-mysql_data:/var/lib/mysql
     networks:

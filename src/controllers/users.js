@@ -7,7 +7,7 @@ import User from "../models/users.js";
 
 import dotenv from "dotenv";
 
-dotenv.config({ path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env' });
+dotenv.config();
 
 function createTransporter() {
 	return nodemailer.createTransport({

@@ -2,8 +2,7 @@ import { Sequelize } from "@sequelize/core";
 import { MySqlDialect } from "@sequelize/mysql";
 import dotenv from "dotenv";
 
-dotenv.config({ path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env' });
-console.log(process.env.NODE_ENV);
+dotenv.config();
 
 /**
  * Connexion à la base de données

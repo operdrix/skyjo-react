@@ -17,7 +17,7 @@ import { sequelize } from "./bdd.js";
 
 import dotenv from "dotenv";
 
-dotenv.config({ path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env' });
+dotenv.config();
 
 //Test de la connexion
 try {

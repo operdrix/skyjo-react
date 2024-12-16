@@ -1,4 +1,4 @@
-FROM node:18 as builder
+FROM node:23 as builder
 WORKDIR /app
 COPY . .
 RUN npm ci && npm run build

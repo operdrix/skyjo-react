@@ -20,18 +20,28 @@ import dotenv from "dotenv";
 dotenv.config();
 
 //Test de la connexion
-try {
-	sequelize.authenticate(
-		{
-			retry: {
-				max: 2,
-				timeout: 10000,
-			},
+const retrySequelizeConnection = async (retries = 10, delay = 5000) => {
+	while (retries > 0) {
+		try {
+			await sequelize.authenticate();
+			console.log(chalk.green("Connecté à la base de données MySQL!"));
+			return;
+		} catch (error) {
+			console.error(
+				chalk.red(`Erreur de connexion à MySQL, tentatives restantes : ${retries}`),
+				error.message
+			);
+			retries -= 1;
+			await new Promise((resolve) => setTimeout(resolve, delay)); // Attendre avant de réessayer
 		}
-	);
-	console.log(chalk.grey("Connecté à la base de données MySQL!"));
+	}
+	throw new Error("Impossible de se connecter à MySQL après plusieurs tentatives.");
+};
+try {
+	await retrySequelizeConnection();
 } catch (error) {
-	console.error("Impossible de se connecter, erreur suivante :", error);
+	console.error(chalk.red("Erreur critique :"), error.message);
+	process.exit(1); // Arrêter le processus en cas d'échec total
 }
 
 /**
@@ -140,7 +150,7 @@ const start = async () => {
 					error
 				);
 			});
-		await app.listen({ port: 3000 });
+		await app.listen({ port: 3000, host: '0.0.0.0' });
 		console.log(
 			"Serveur Fastify lancé sur " + chalk.blue("http://localhost:3000")
 		);

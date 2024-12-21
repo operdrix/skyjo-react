@@ -6,7 +6,7 @@ import {
 	verifyUser,
 } from "../controllers/users.js";
 export function usersRoutes(app, blacklistedTokens) {
-	app.post("/login", async (request, reply) => {
+	app.post("/api/login", async (request, reply) => {
 		const response = await loginUser(request.body, app);
 		if (response.error) {
 			reply.status(response.code).send(response);
@@ -14,7 +14,7 @@ export function usersRoutes(app, blacklistedTokens) {
 			reply.send(response);
 		}
 	}).post(
-		"/logout",
+		"/api/logout",
 		{ preHandler: [app.authenticate] },
 		async (request, reply) => {
 			const token = request.headers["authorization"].split(" ")[1]; // Récupérer le token depuis l'en-tête Authorization
@@ -26,7 +26,7 @@ export function usersRoutes(app, blacklistedTokens) {
 		}
 	);
 	//inscription
-	app.post("/register", async (request, reply) => {
+	app.post("/api/register", async (request, reply) => {
 		const response = await registerUser(request.body, app.bcrypt);
 		if (response.error) {
 			reply.status(response.code).send(response);
@@ -35,15 +35,15 @@ export function usersRoutes(app, blacklistedTokens) {
 		}
 	});
 	//récupération de la liste des utilisateurs
-	app.get("/users", async (request, reply) => {
+	app.get("/api/users", async (request, reply) => {
 		reply.send(await getUsers());
 	});
 	//récupération d'un utilisateur par son id
-	app.get("/users/:id", async (request, reply) => {
+	app.get("/api/users/:id", async (request, reply) => {
 		reply.send(await getUserById(request.params.id));
 	});
 	// Vérification de l'email de l'utilisateur via le token
-	app.get("/verify/:token", async (request, reply) => {
+	app.get("/api/verify/:token", async (request, reply) => {
 		const response = await verifyUser(request.params.token);
 		if (response.error) {
 			reply.status(response.code).send(response);
@@ -53,7 +53,7 @@ export function usersRoutes(app, blacklistedTokens) {
 	});
 
 	// Vérification du token jwt
-	app.get("/auth/verify", async (request, reply) => {
+	app.get("/api/auth/verify", async (request, reply) => {
 		const bearer = request.headers["authorization"];
 		if (!bearer) {
 			reply.status(401).send({ error: "Token manquant" });

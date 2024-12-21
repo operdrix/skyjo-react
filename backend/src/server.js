@@ -104,8 +104,9 @@ await app
 /**********
  * Routes
  **********/
-app.get("/", (request, reply) => {
-	reply.send({ documentationURL: "http://localhost:3000/documentation" });
+
+app.get("/api", (request, reply) => {
+	reply.send({ documentationURL: "http://localhost:3000/api/documentation" });
 });
 // Fonction pour décoder et vérifier le token
 app.decorate("authenticate", async (request, reply) => {

@@ -2,7 +2,7 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "8080:80"
+      - "80:80"
     container_name: skyjo-frontend
     depends_on:
       - backend
@@ -17,6 +17,7 @@ services:
       - DB_USER=olivier
       - DB_PASSWORD=olivier
       - DB_NAME=skyjo
+      - DB_PORT=3306
     depends_on:
       - mysql
     networks:

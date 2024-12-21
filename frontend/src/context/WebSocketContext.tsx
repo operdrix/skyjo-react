@@ -32,8 +32,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, 
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        const prefixedUrl = `/api${url}`;
         const socketInstance = io(
-            url,
+            prefixedUrl,
             { transports: ['websocket'], autoConnect: true }
         );
 

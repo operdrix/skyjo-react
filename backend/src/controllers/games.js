@@ -1,6 +1,40 @@
 import Game from "../models/games.js";
 import User from "../models/users.js";
 
+// Liste des parties avec filtres
+export async function getGames(query) {
+  const { userId, state, privateRoom } = query;
+
+  const where = {};
+  if (state) {
+    where.state = state;
+  }
+  if (privateRoom) {
+    where.private = privateRoom === 'true' ? true : false;
+  }
+  const games = await Game.findAll({
+    where,
+    include: [
+      {
+        model: User,
+        as: "players",
+        attributes: ["id", "username"]
+      },
+      {
+        model: User,
+        as: "creatorPlayer",
+        attributes: ["id", "username"]
+      }
+    ]
+  });
+
+  if (userId) {
+    return games.filter(game => game.players.some(player => player.id === userId));
+  }
+
+  return games;
+}
+
 // Consulter une partie
 export async function getGame(gameId) {
   const game = await Game.findByPk(gameId, {

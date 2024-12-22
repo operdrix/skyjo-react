@@ -1,6 +1,17 @@
-import { createGame, getGame, updateGame, updateGameSettings } from "../controllers/games.js";
+import { createGame, getGame, getGames, updateGame, updateGameSettings } from "../controllers/games.js";
 
 export function gamesRoutes(app) {
+
+	// Liste des parties
+	app.get("/api/games", async (request, reply) => {
+		const response = await getGames(request.query);
+		if (response.error) {
+			reply.status(response.code).send(response);
+		} else {
+			reply.send(response);
+		}
+	});
+
 	// Consulter une partie
 	app.get("/api/game/:gameId", async (request, reply) => {
 		const response = await getGame(request.params.gameId);

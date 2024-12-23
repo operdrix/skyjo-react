@@ -100,7 +100,6 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
           {playerTurn && <span className="loading loading-dots loading-md mt-2"></span>}
           {player?.username} <OnlineStatus status={player?.game_players?.status} />
         </h2>
-        <span>{playerCards.length}</span>
         <div className={`grid gap-1 md:gap-2 ${getGridColsClass(playerCards?.length || 0)}`}>
           {playerCards.map((card) => {
 

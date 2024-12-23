@@ -196,13 +196,13 @@ const Game = () => {
 
   const playerCount = game.players.length;
   const turnOrder = game.gameData.turnOrder;
-  const positions = ["Left", "Top", "Right"];
+  const positions = (playerCount === 4) ? ["Left", "Top", "Right"] : (playerCount === 3) ? ["Left", "Top"] : ["Top"];
 
   positions.forEach((position, index) => {
     if (playerCount > index + 1) {
       const playerId = turnOrder[(playerIndex + index + 1) % playerCount];
-      if (position === "Top") playerIdTop = playerId;
       if (position === "Left") playerIdLeft = playerId;
+      if (position === "Top") playerIdTop = playerId;
       if (position === "Right") playerIdRight = playerId;
     }
   });

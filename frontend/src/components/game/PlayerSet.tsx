@@ -84,7 +84,7 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
     }
   }
 
-  if (!player) return null;
+  if (!playerCards) return null;
 
   return (
     <>

@@ -16,7 +16,7 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
   if (!game || !userId) return null;
   if (!game.gameData) return null;
 
-  const playerCards = game.gameData.playersCards[playerId];
+  const playerCards = game.gameData.playersCards[playerId] || [];
   const player = game.players.find(player => player.id === playerId);
   const playerTurn = (game.gameData.currentPlayer === playerId && game.gameData.currentStep !== 'endGame') || game.gameData.currentStep === 'initialReveal';
 
@@ -83,6 +83,8 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
       sendMessage("play-move", { room: game.id, gameData: game.gameData });
     }
   }
+
+  if (!player) return null;
 
   return (
     <>

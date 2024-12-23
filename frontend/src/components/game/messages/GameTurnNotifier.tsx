@@ -7,8 +7,7 @@ function GameTurnNotifier({ isCurrentTurn }: { isCurrentTurn: boolean }) {
   }
 
   function vibrate() {
-    navigator.vibrate = navigator.vibrate || navigator.webkitVibrate || navigator.mozVibrate || navigator.msVibrate;
-    if (navigator.vibrate) {
+    if ("vibrate" in navigator) {
       // La durée en millisecondes, ex. 200ms
       navigator.vibrate(200);
     }

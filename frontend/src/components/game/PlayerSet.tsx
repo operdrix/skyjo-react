@@ -16,7 +16,7 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
   if (!game || !userId) return null;
   if (!game.gameData) return null;
 
-  const playerCards = game.gameData.playersCards[playerId] || [];
+  const playerCards = game.gameData?.playersCards?.[playerId] || [];
   const player = game.players.find(player => player.id === playerId);
   const playerTurn = (game.gameData.currentPlayer === playerId && game.gameData.currentStep !== 'endGame') || game.gameData.currentStep === 'initialReveal';
 
@@ -84,6 +84,13 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
     }
   }
 
+  const getGridColsClass = (length: number) => {
+    if (length === 12) return 'grid-cols-4';
+    if (length === 9) return 'grid-cols-3';
+    if (length === 6) return 'grid-cols-2';
+    return 'grid-cols-1';
+  };
+
   return (
     <>
       <GameTurnNotifier isCurrentTurn={playerTurn && isCurrentPlayerSet} />
@@ -94,7 +101,7 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
           {player?.username} <OnlineStatus status={player?.game_players?.status} />
         </h2>
         <span>{playerCards.length}</span>
-        <div className={`grid gap-1 md:gap-2 ${playerCards?.length === 12 ? 'grid-cols-4' : playerCards?.length === 9 ? 'grid-cols-3' : playerCards?.length === 6 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+        <div className={`grid gap-1 md:gap-2 ${getGridColsClass(playerCards?.length || 0)}`}>
           {playerCards.map((card) => {
 
             let disabled = false;

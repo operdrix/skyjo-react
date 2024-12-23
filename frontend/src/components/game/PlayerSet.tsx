@@ -95,6 +95,7 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
           {playerTurn && <span className="loading loading-dots loading-md mt-2"></span>}
           {player?.username} <OnlineStatus status={player?.game_players?.status} />
         </h2>
+        <span>{playerCards.length}</span>
         <div className={`grid gap-1 md:gap-2 ${playerCards.length === 12 ? 'grid-cols-4' : playerCards.length === 9 ? 'grid-cols-3' : playerCards.length === 6 ? 'grid-cols-2' : 'grid-cols-1'}`}>
           {playerCards.map((card) => {
 

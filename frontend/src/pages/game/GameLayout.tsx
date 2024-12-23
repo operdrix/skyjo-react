@@ -6,11 +6,12 @@ import { GameProvider } from "@/context/GameContext"
 import { WebSocketProvider } from "@/context/WebSocketContext"
 import { useUser } from "@/hooks/User"
 import { useEffect } from "react"
-import { Outlet, useNavigate } from "react-router-dom"
+import { Outlet, useLocation, useNavigate } from "react-router-dom"
 
 const GameLayout = () => {
   const { isAuthentified, loading: userLoading } = useUser();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Vérifier si l'utilisateur est connecté au site
   useEffect(() => {
@@ -20,7 +21,7 @@ const GameLayout = () => {
         state: {
           message: {
             type: 'info',
-            message: 'Vous devez être connecté pour accéder à cette page' + window.location.pathname,
+            message: 'Vous devez être connecté pour accéder à cette page', // + window.location.pathname,
             title: 'Connexion requise'
           },
           from: window.location.pathname
@@ -29,13 +30,15 @@ const GameLayout = () => {
     }
   }, [isAuthentified, userLoading]);
 
+  const isGamePage = location.pathname.startsWith('/game/');
+
   return (
     <WebSocketProvider url={(process.env.VITE_BACKEND_WS as string)}>
       <GameProvider>
         <div className="flex flex-col min-h-screen font-kalam">
-          <Header />
+          {!isGamePage && <Header />}
           <Outlet />
-          <Footer />
+          {!isGamePage && <Footer />}
         </div>
       </GameProvider>
     </WebSocketProvider>

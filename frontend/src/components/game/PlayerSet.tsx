@@ -84,8 +84,6 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
     }
   }
 
-  if (!playerCards) return null;
-
   return (
     <>
       <GameTurnNotifier isCurrentTurn={playerTurn && isCurrentPlayerSet} />

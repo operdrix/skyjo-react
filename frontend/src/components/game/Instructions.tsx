@@ -14,7 +14,7 @@ const Instructions = () => {
     }
     if (game.gameData.currentPlayer === userId) {
       if (game.gameData.currentStep === 'draw') {
-        return (<>Piochez une carte <br />(défausse ou pioche)</>);
+        return (<>Piochez une carte <br />(Pioche ou défausse)</>);
       }
       if (game.gameData.currentStep === 'replace-discard') {
         return 'Echangez avec une carte de votre jeu';
@@ -33,7 +33,7 @@ const Instructions = () => {
   }
 
   return (
-    <p className="text-sm md:text-xl lg:text-2xl text-center py-4 h-16">{playerMessage()}</p>
+    <p className="text-lg md:text-xl lg:text-2xl text-center py-4 h-20">{playerMessage()}</p>
   )
 }
 

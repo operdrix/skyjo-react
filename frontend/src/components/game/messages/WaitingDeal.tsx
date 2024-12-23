@@ -2,7 +2,7 @@ const WaitingDeal = () => {
   return (
     <div className="hero bg-base-200 min-h-[50vh] p-20">
       <div className="hero-content flex-col lg:flex-row text-center">
-        <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" enableBackground="new 0 0 64 64" stroke="currentColor" className="size-96 max-w-sm text-success">
+        <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" enableBackground="new 0 0 64 64" stroke="currentColor" className="md:size-96 max-w-sm text-success">
           <polygon fill="none" strokeWidth="2" strokeMiterlimit="10" points="44,59 16,45 36,5 63,19 " />
           <polyline fill="none" strokeWidth="2" strokeMiterlimit="10" points="31.899,14.004 28,6 1,20 19,59 32,52.964" />
           <line fill="none" strokeWidth="2" strokeMiterlimit="10" x1="38" y1="9" x2="37" y2="11" />

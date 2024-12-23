@@ -2,6 +2,7 @@ import GameCard from "@/components/game/GameCard";
 import { useGame } from "@/hooks/Game";
 import { useUser } from "@/hooks/User";
 import { useWebSocket } from "@/hooks/WebSocket";
+import GameTurnNotifier from "./messages/GameTurnNotifier";
 
 const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
   playerId: string;
@@ -84,47 +85,53 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
   }
 
   return (
-    <div className="flex flex-col justify-center items-center h-full min-h-44">
-      <h2 className="indicator flex items-center gap-3 text-xl font-bold mb-2 pr-2 min-h-8">
-        {playerTurn && <span className="loading loading-dots loading-md mt-2"></span>}
-        {player?.username} <OnlineStatus status={player?.game_players?.status} />
-      </h2>
-      <div className={`grid gap-2 ${playerCards.length === 12 ? 'grid-cols-4' : playerCards.length === 9 ? 'grid-cols-3' : playerCards.length === 6 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-        {playerCards.map((card) => {
+    <>
+      <GameTurnNotifier isCurrentTurn={playerTurn && isCurrentPlayerSet} />
 
-          let disabled = false;
-          if (!isCurrentPlayerSet || !playerTurn) {
-            disabled = true;
-          } else if (game.gameData.currentStep === 'initialReveal') {
-            disabled = revealedCards() >= 2;
-          } else if (game.gameData.currentStep === 'draw') {
-            disabled = true;
-          } else if (game.gameData.currentStep === 'replace-discard') {
-            disabled = false;
-          } else if (game.gameData.currentStep === 'flip-deck') {
-            disabled = card.revealed;
-          }
+      <div className="flex flex-col justify-center items-center h-full min-h-44">
+        <h2 className="indicator flex items-center gap-3 text-xl font-bold mb-2 pr-2 min-h-8">
+          {playerTurn && <span className="loading loading-dots loading-md mt-2"></span>}
+          {player?.username} <OnlineStatus status={player?.game_players?.status} />
+        </h2>
+        <div className={`grid gap-1 md:gap-2 ${playerCards.length === 12 ? 'grid-cols-4' : playerCards.length === 9 ? 'grid-cols-3' : playerCards.length === 6 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          {playerCards.map((card) => {
 
-          return (
-            <GameCard
-              key={card.id}
-              card={card}
-              disabled={disabled}
-              onClick={handleClickOnCard}
-            />)
-        })}
-      </div>
-      {/* <p className="h-6">
+            let disabled = false;
+            if (!isCurrentPlayerSet || !playerTurn) {
+              disabled = true;
+            } else if (game.gameData.currentStep === 'initialReveal') {
+              disabled = revealedCards() >= 2;
+            } else if (game.gameData.currentStep === 'draw') {
+              disabled = true;
+            } else if (game.gameData.currentStep === 'replace-discard') {
+              disabled = false;
+            } else if (game.gameData.currentStep === 'flip-deck') {
+              disabled = card.revealed;
+            }
+
+            return (
+              <GameCard
+                key={card.id}
+                card={card}
+                disabled={disabled}
+                onClick={handleClickOnCard}
+              />)
+          })}
+        </div>
+        {/* <p className="h-6">
         {playerTurn && <span className="loading loading-dots loading-md mt-2"></span>}
       </p> */}
-    </div>
+      </div>
+    </>
   )
 }
 
 const OnlineStatus = ({ status }: { status: 'connected' | 'disconnected' | undefined }) => {
   if (!status) return null;
   return (
-    <span className={`indicator-item loading loading-ring loading-xs ${status === 'connected' ? 'text-success' : 'text-error'}`}></span>
+    // <span className={`indicator-item loading loading-ring loading-xs ${status === 'connected' ? 'text-success' : 'text-error'}`}></span>
+    // <span className={`indicator-item text-xl ${status === 'connected' ? 'text-success' : 'text-error'}`}>•</span>
+    <sup className={`text-xl font-mono ${status === 'connected' ? 'text-success' : 'text-error'}`}>&bull;</sup>
   )
 }
 

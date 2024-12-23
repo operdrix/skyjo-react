@@ -7,6 +7,7 @@ import ModalScoreEndGame from "@/components/game/messages/ModalScoreEndGame";
 import ReconnectMessage from "@/components/game/messages/ReconnectMessage";
 import WaitingDeal from "@/components/game/messages/WaitingDeal";
 import PlayerSet from "@/components/game/PlayerSet";
+import ToggleTheme from "@/components/nav/ToggleTheme";
 import { useGame } from "@/hooks/Game";
 import { useUser } from "@/hooks/User";
 import { useWebSocket } from "@/hooks/WebSocket";
@@ -195,7 +196,7 @@ const Game = () => {
 
   const playerCount = game.players.length;
   const turnOrder = game.gameData.turnOrder;
-  const positions = ["Top", "Left", "Right"];
+  const positions = ["Left", "Top", "Right"];
 
   positions.forEach((position, index) => {
     if (playerCount > index + 1) {
@@ -215,7 +216,27 @@ const Game = () => {
         ${game.players.length === 2 ? 'grid-cols-1' : game.players.length === 3 ? 'grid-cols-2' : 'grid-cols-3'}
         `}>
 
-        <div className="flex flex-col gap-4 absolute p-2">
+        <div className="flex flex-col gap-4 absolute p-2 mt-10">
+          <div className="tooltip tooltip-right" data-tip="Retour à l'accueil">
+            <button
+              className="btn btn-circle"
+              onClick={() => navigate('/')}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          {/* Bouton pour afficher les scores */}
           <div className="tooltip tooltip-right" data-tip="Tableau des scores">
             <button
               className="btn btn-circle"
@@ -233,13 +254,15 @@ const Game = () => {
               </svg>
             </button>
           </div>
-          <div className="tooltip tooltip-right" data-tip="Règles du jeu">
+          {/* Bouton pour afficher les règles */}
+          {/* <div className="tooltip tooltip-right" data-tip="Règles du jeu">
             <button className="btn btn-circle">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
               </svg>
             </button>
-          </div>
+          </div> */}
+          <ToggleTheme className="btn-circle" />
         </div>
 
         {/* Ligne 1 : joueur d'en face */}
@@ -259,11 +282,11 @@ const Game = () => {
         <div className="flex flex-col items-center justify-center md:gap-4">
           <Instructions />
           <div className="flex justify-center items-center gap-3 md:gap-9">
-            {/* Défausse */}
-            <Discard />
-
             {/* Pioche */}
             <Deck />
+
+            {/* Défausse */}
+            <Discard />
           </div>
           <p
             className="text-sm md:text-xl lg:text-2xl text-center text-warning animate-bounce"

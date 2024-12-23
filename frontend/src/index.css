@@ -45,11 +45,11 @@
 }
 
 .play-card {
-  @apply text-black bg-white rounded flex justify-center items-center select-none h-8 w-6 sm:h-12 sm:w-8 md:h-16 md:w-12 text-xl sm:text-2xl;
+  @apply bg-base-200 rounded flex justify-center items-center select-none h-12 w-8 md:h-16 md:w-12 text-xl md:text-2xl;
 }
 
 .play-card-discard {
-  @apply border-2 border-red-600 border-dashed !bg-white rounded-md text-red-600;
+  @apply border-2 border-red-600 border-dashed !bg-base-200 rounded-md text-red-600;
 }
 
 .perspective {

@@ -64,14 +64,14 @@ function FlipCard({ card, onClick, disabled }: { card: Card; onClick?: () => voi
   }, [card.revealed]);
 
   function getCardColorClass(color: string, revealed: boolean) {
-    if (!revealed) return 'bg-white';
+    if (!revealed) return 'bg-base-200 text-base-content';
     switch (color) {
-      case 'red': return 'bg-card-red';
-      case 'green': return 'bg-card-green';
-      case 'yellow': return 'bg-card-yellow';
-      case 'zero': return 'bg-card-zero';
-      case 'negative': return 'bg-card-negative';
-      default: return 'bg-white';
+      case 'red': return 'bg-card-red text-black';
+      case 'green': return 'bg-card-green text-black';
+      case 'yellow': return 'bg-card-yellow text-black';
+      case 'zero': return 'bg-card-zero text-black';
+      case 'negative': return 'bg-card-negative text-black';
+      default: return 'bg-base-200  text-base-content';
     }
   }
 
@@ -83,7 +83,7 @@ function FlipCard({ card, onClick, disabled }: { card: Card; onClick?: () => voi
       <div className="perspective">
         <div className={`play-card transform transform-style-preserve-3d ${shouldAnimate ? 'transition-transform duration-500' : ''} ${isFlipped ? 'rotate-y-180' : ''}`}>
           {/* Face avant (cachée) */}
-          <div className="absolute w-full h-full flex justify-center items-center rounded border-2 border-black backface-hidden ${cardColorClass}">
+          <div className={`absolute w-full h-full flex justify-center items-center rounded border-2 border-black backface-hidden ${cardColorClass}`}>
             ?
           </div>
           {/* Face arrière (révélée) */}

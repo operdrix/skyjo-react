@@ -96,7 +96,7 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
       <GameTurnNotifier isCurrentTurn={playerTurn && isCurrentPlayerSet} />
 
       <div className="flex flex-col justify-center items-center h-full min-h-44">
-        <h2 className="indicator flex items-center gap-3 text-xl font-bold mb-2 pr-2 min-h-8">
+        <h2 className="indicator flex items-center gap-3 text-xl font-bold mb-2 min-h-8">
           {playerTurn && <span className="loading loading-dots loading-md mt-2"></span>}
           {player?.username} <OnlineStatus status={player?.game_players?.status} />
         </h2>
@@ -138,7 +138,7 @@ const OnlineStatus = ({ status }: { status: 'connected' | 'disconnected' | undef
   return (
     // <span className={`indicator-item loading loading-ring loading-xs ${status === 'connected' ? 'text-success' : 'text-error'}`}></span>
     // <span className={`indicator-item text-xl ${status === 'connected' ? 'text-success' : 'text-error'}`}>•</span>
-    <sup className={`text-xl font-mono ${status === 'connected' ? 'text-success' : 'text-error'}`}>&bull;</sup>
+    <sup className={`text-base font-mono -left-2 ${status === 'connected' ? 'text-success' : 'text-error'}`}>&bull;</sup>
   )
 }
 

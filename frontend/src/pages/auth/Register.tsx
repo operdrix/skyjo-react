@@ -89,29 +89,29 @@ function Register() {
           <Form>
             <h1 className="font-bold text-center text-2xl mb-5">S'inscrire au jeu</h1>
             <div className="bg-base-200 shadow w-full rounded-lg divide-y divide-base-100">
-              <div className="px-5 py-7">
+              <div className="px-5 py-7 grid sm:grid-cols-2 gap-2">
                 <Field component={CustomField} name="firstname" label="Prénom" type='text' />
                 <Field component={CustomField} name="lastname" label="Nom" type='text' />
-                <Field component={CustomField} name="username" label="Nom d'utilisateur" type='text' />
+                <Field component={CustomField} name="username" label="Pseudo" type='text' />
                 <Field component={CustomField} name="email" label="E-mail" type='text' />
                 <Field component={CustomField} name="password" label="Mot de passe" type='password' />
                 <Field component={CustomField} name="passwordConfirm" label="Confirmer le mot de passe" type='password' />
-
-                <button
-                  type="submit"
-                  className="btn btn-primary w-full py-2.5 text-sm shadow-sm hover:shadow-md font-semibold text-center inline-block"
-                  disabled={loading}
-                >
-                  <span className="inline-block mr-2">Créer mon compte</span>
-                  {loading ?
-                    <span className="loading loading-ring loading-sm align-middle"></span>
-                    :
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4 inline-block">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                  }
-                </button>
-
+                <div className='sm:col-span-2'>
+                  <button
+                    type="submit"
+                    className="btn btn-primary w-full py-2.5 text-sm shadow-sm hover:shadow-md font-semibold text-center inline-block"
+                    disabled={loading}
+                  >
+                    <span className="inline-block mr-2">Créer mon compte</span>
+                    {loading ?
+                      <span className="loading loading-ring loading-sm align-middle"></span>
+                      :
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4 inline-block">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    }
+                  </button>
+                </div>
               </div>
               <div className="py-5">
                 <div className="grid grid-cols-2 gap-1">

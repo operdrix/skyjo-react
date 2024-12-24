@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 
+import Drawer from "@/components/Drawer"
 import Footer from "@/components/nav/Footer"
 import Header from "@/components/nav/Header"
 import { GameProvider } from "@/context/GameContext"
@@ -35,11 +36,13 @@ const GameLayout = () => {
   return (
     <WebSocketProvider url={(process.env.VITE_BACKEND_WS as string)}>
       <GameProvider>
-        <div className="flex flex-col min-h-screen font-kalam">
-          {!isGamePage && <Header />}
-          <Outlet />
-          {!isGamePage && <Footer />}
-        </div>
+        <Drawer>
+          <div className="flex flex-col min-h-screen font-kalam">
+            {!isGamePage && <Header />}
+            <Outlet />
+            {!isGamePage && <Footer />}
+          </div>
+        </Drawer>
       </GameProvider>
     </WebSocketProvider>
   )

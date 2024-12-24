@@ -2,7 +2,7 @@
   <mj-body background-color="#F4F4F4" color="#55575d" font-family="Arial, sans-serif">
     <mj-section background-color="#C1272D" background-repeat="repeat" padding="20px 0" text-align="center" vertical-align="top">
       <mj-column>
-        <mj-image align="center" padding="10px 25px" src="https://i.postimg.cc/brF9qpMP/logo-color.png" width="128px"></mj-image>
+        <mj-image align="center" padding="10px 25px" src="https://labodolivier.com/images/logo-color.png" width="128px"></mj-image>
       </mj-column>
     </mj-section>
     <mj-section>

@@ -93,9 +93,9 @@ function Register() {
                 <Field component={CustomField} name="firstname" label="Prénom" type='text' />
                 <Field component={CustomField} name="lastname" label="Nom" type='text' />
                 <Field component={CustomField} name="username" label="Pseudo" type='text' />
-                <Field component={CustomField} name="email" label="E-mail" type='text' />
-                <Field component={CustomField} name="password" label="Mot de passe" type='password' />
-                <Field component={CustomField} name="passwordConfirm" label="Confirmer le mot de passe" type='password' />
+                <Field component={CustomField} name="email" label="E-mail" type='email' autocomplete="username" />
+                <Field component={CustomField} name="password" label="Mot de passe" type='password' autocomplete="new-password" />
+                <Field component={CustomField} name="passwordConfirm" label="Confirmer le mot de passe" type='password' autocomplete="new-password" />
                 <div className='sm:col-span-2'>
                   <button
                     type="submit"

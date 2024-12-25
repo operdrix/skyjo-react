@@ -93,8 +93,8 @@ function Login() {
             <h1 className="font-bold text-center text-2xl mb-5">Connexion au jeu</h1>
             <div className="bg-base-200 shadow w-full rounded-lg divide-y divide-base-100">
               <div className="px-5 py-7">
-                <Field component={CustomField} name="email" label="E-mail" type='text' />
-                <Field component={CustomField} name="password" label="Mot de passe" type='password' />
+                <Field component={CustomField} name="email" label="E-mail" type='email' autocomplete="username" />
+                <Field component={CustomField} name="password" label="Mot de passe" type='password' autocomplete="current-password" />
                 <button
                   type="submit"
                   className="btn btn-primary w-full py-2.5 text-sm shadow-sm hover:shadow-md font-semibold text-center inline-block"

@@ -2,6 +2,7 @@ import GameCard from "@/components/game/GameCard";
 import { useGame } from "@/hooks/Game";
 import { useUser } from "@/hooks/User";
 import { useWebSocket } from "@/hooks/WebSocket";
+import { useState } from "react";
 import GameTurnNotifier from "./messages/GameTurnNotifier";
 
 const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
@@ -12,6 +13,7 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
   const { game } = useGame();
   const { userId } = useUser();
   const { sendMessage } = useWebSocket();
+  const [loading, setLoading] = useState(false);
 
   if (!game || !userId) return null;
   if (!game.gameData) return null;
@@ -26,9 +28,10 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
     return playerCards.filter(card => card.revealed).length;
   };
 
-  const handleClickOnCard = (cardId: string) => {
+  const handleClickOnCard = async (cardId: string) => {
 
     if (!isCurrentPlayerSet) return; // si ce ne sont pas les cartes du joueur actuel, on ne fait rien
+    setLoading(true);
     const cardIndex = playerCards.findIndex((c) => c.id === cardId);
 
     if (game.gameData.currentStep === 'initialReveal') {
@@ -41,6 +44,8 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
 
       // Envoyer un message pour révéler la carte
       sendMessage("play-move", { room: game.id, gameData: game.gameData });
+      await new Promise(resolve => setTimeout(resolve, 500)); // petite tempo pour pas cliquer trop vite et bloquer le jeu
+      setLoading(false);
     }
 
     if (game.gameData.currentStep === 'replace-discard') {
@@ -120,7 +125,7 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
               <GameCard
                 key={card.id}
                 card={card}
-                disabled={disabled}
+                disabled={disabled || loading}
                 onClick={handleClickOnCard}
               />)
           })}

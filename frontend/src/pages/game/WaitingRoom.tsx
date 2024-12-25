@@ -1,4 +1,5 @@
 import ErrorMessage from "@/components/game/messages/ErrorMessage";
+import GameTurnNotifier from "@/components/game/messages/GameTurnNotifier";
 import ReconnectMessage from "@/components/game/messages/ReconnectMessage";
 import OnlineStatus from "@/components/game/OnlineStatus";
 import { useUser } from "@/hooks/User";
@@ -16,6 +17,7 @@ const WaitingRoom = () => {
   const [isCreator, setIsCreator] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [creationLoading, setCreationLoading] = useState<boolean>(false);
+  const [beep, setBeep] = useState<boolean>(false);
   const navigate = useNavigate();
 
   // Rediriger vers la création de partie si gameId n'est pas défini dans l'URL
@@ -101,9 +103,12 @@ const WaitingRoom = () => {
   useEffect(() => {
     if (!socket || !isConnected || error) return;
 
-    const handlePlayerJoined = (updatedGame: GameType) => {
+    const handlePlayerJoined = async (updatedGame: GameType) => {
       console.log("Player joined game:", updatedGame);
+      setBeep(true);
       setGame(updatedGame);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setBeep(false);
     };
 
     const handlePlayerLeft = (updatedGame: GameType | ErrorType) => {
@@ -206,11 +211,11 @@ const WaitingRoom = () => {
   }
 
   return (
-    <div className="flex-1 flex items-center">
+    <div className="flex-1 flex items-center container mx-auto">
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 p-5 min-h-[50vh]">
         <div className="bg-base-300 lg:col-span-2 flex flex-col space-y-4 rounded-box p-5">
           <div className="flex justify-between items-start">
-            <h1 className="text-2xl">Salle d'attente</h1>
+            <h1 className="text-2xl text-title">Salle d'attente</h1>
             {game.private ?
               <div
                 className="tooltip tooltip-top cursor-help"
@@ -241,9 +246,10 @@ const WaitingRoom = () => {
             <p>Salon créé par {game.creatorPlayer.username}</p>
           }
           <div className="divider"></div>
+          <h3 className="text-xl">Partage cet URL à tes amis</h3>
           <div className="flex">
             <label className="input input-bordered flex items-center gap-2 flex-1 mr-2">
-              Partage cet URL
+              Lien
               <input
                 type="text"
                 className="grow"
@@ -259,9 +265,6 @@ const WaitingRoom = () => {
                 </svg>
               </button>
             </div>
-          </div>
-          <div>
-            <p className="mt-4">En attente de joueurs...</p>
           </div>
           {isCreator && game &&
             <>
@@ -290,7 +293,7 @@ const WaitingRoom = () => {
               </div>
               <div className="flex flex-1 items-end justify-center">
                 <button
-                  className="btn btn-warning text-xl w-full"
+                  className="btn btn-neutral bg-card-red border-card-red text-base-100 text-xl w-full"
                   onClick={handleStartGame}
                   disabled={game.players.length < 2 || creationLoading}
                 >
@@ -307,6 +310,9 @@ const WaitingRoom = () => {
           <div className="flex justify-between items-start">
             <h2 className="text-2xl">Joueurs {game?.players.length}/{game?.maxPlayers}</h2>
             <OnlineStatus isConnected={isConnected} />
+            {beep &&
+              <GameTurnNotifier isCurrentTurn={true} />
+            }
           </div>
           <div className="divider"></div>
           <ul className="flex flex-col space-y-2">
@@ -324,6 +330,9 @@ const WaitingRoom = () => {
               </li>
             ))}
           </ul>
+          <div>
+            <p className="mt-4">En attente de joueurs...</p>
+          </div>
         </div>
       </div>
     </div>

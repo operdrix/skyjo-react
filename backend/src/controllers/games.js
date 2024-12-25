@@ -138,9 +138,9 @@ export async function updateGame(request) {
         await game.removePlayer(userId);
         // Supprimer la partie si le créateur la quitte ou si tous les joueurs la quittent
         if (game.creator === userId || game.players.length === 0) {
-          console.log("[game controller] destroy game");
-          await game.destroy();
-          return { gameDestroyed: true };
+          // console.log("[game controller] destroy game");
+          //await game.destroy();
+          // return { gameDestroyed: true };
         }
       } else {
         // Marquer le joueur comme déconnecté

@@ -77,7 +77,7 @@ export async function registerUser(userDatas, bcrypt) {
 		return { error: "Aucune donnée à enregistrer", code: 400 };
 	}
 	const { firstname, lastname, username, email, password, avatar } = userDatas;
-	if (!firstname || !lastname || !username || !email || !password || !avatar) {
+	if (!firstname || !lastname || !username || !email || !password) {
 		return { error: "Tous les champs sont obligatoires", code: 400 };
 	}
 	//vérification que l'email n'est pas déjà utilisé

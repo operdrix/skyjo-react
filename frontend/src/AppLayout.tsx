@@ -8,15 +8,11 @@ const AppLayout = () => {
 
   return (
     <Drawer>
-
       <div className="flex flex-col min-h-screen font-kalam">
         <Header />
-        <div className="flex-1 container mx-auto flex items-center">
-          <Outlet />
-        </div>
+        <Outlet />
         <Footer />
       </div>
-
     </Drawer>
   )
 }

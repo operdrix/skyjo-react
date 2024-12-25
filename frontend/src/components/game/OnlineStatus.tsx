@@ -1,13 +1,12 @@
 
-const OnlineStatus = ({ isConnected, sockerId, className }: {
+const OnlineStatus = ({ isConnected, className }: {
     isConnected: boolean,
-    sockerId?: string,
     className?: string
 }) => {
     return (
         <>
             {isConnected &&
-                <div className={`tooltip ${className}`} data-tip={sockerId}>
+                <div className={`tooltip ${className}`} data-tip="Vous êtes bien connecté au serveur.">
                     <div className="badge badge-success bg-green-500 text-white gap-2">
                         <span className="loading loading-ring loading-xs"></span>
                         En ligne

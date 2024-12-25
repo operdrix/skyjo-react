@@ -14,7 +14,7 @@ function App() {
                 className="mx-auto"
               />
               <h1
-                className="text-5xl font-bold text-[#ff5630] font-courgette py-4"
+                className="text-5xl font-bold text-title font-courgette py-4"
               >
                 Bienvenue sur le Skyjo d'Olivier !
               </h1>

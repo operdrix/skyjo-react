@@ -306,7 +306,7 @@ const WaitingRoom = () => {
         <div className="bg-base-300 flex flex-col space-y-4 rounded-box p-5">
           <div className="flex justify-between items-start">
             <h2 className="text-2xl">Joueurs {game?.players.length}/{game?.maxPlayers}</h2>
-            <OnlineStatus isConnected={isConnected} sockerId={socket?.id} />
+            <OnlineStatus isConnected={isConnected} />
           </div>
           <div className="divider"></div>
           <ul className="flex flex-col space-y-2">

@@ -170,6 +170,18 @@ const WaitingRoom = () => {
     }, 5000);
   }
 
+  if (error) {
+    return (
+      <ErrorMessage
+        error={error}
+        button={{
+          label: "Retour à l'accueil",
+          action: () => navigate('/')
+        }}
+      />
+    )
+  }
+
   if (wsLoading || !isConnected) {
     return <ReconnectMessage />
   }
@@ -190,18 +202,6 @@ const WaitingRoom = () => {
           <div className="skeleton h-4 w-full"></div>
         </div>
       </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <ErrorMessage
-        error={error}
-        button={{
-          label: "Retour à l'accueil",
-          action: () => navigate('/')
-        }}
-      />
     )
   }
 

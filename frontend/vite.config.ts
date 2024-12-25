@@ -15,5 +15,11 @@ export default defineConfig(({ mode }) => {
         '@': '/src'
       }
     },
+    build: {
+      minify: 'esbuild',
+    },
+    esbuild: {
+      drop: ['console', 'debugger']
+    }
   }
 })

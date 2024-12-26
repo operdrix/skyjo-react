@@ -2,25 +2,28 @@ import CustomField from '@/components/forms/CustomField';
 import { MessageType } from '@/components/Modal';
 import { Field, Form, Formik } from 'formik';
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import * as yup from 'yup';
 
 
-function RequestResetPassword() {
-
+function ResetPassword() {
+  const { token } = useParams<string>();
   const [message, setMessage] = useState<MessageType | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [initialValues] = useState({ email: "" });
+  const [initialValues] = useState({ newPassword: "" });
   const [loading, setLoading] = useState<boolean>(false);
 
   const validationSchema = yup.object().shape({
-    email: yup.string().email().required("L'email est requis"),
+    newPassword: yup.string().required("Le mot de passe est requis"),
+    passwordConfirm: yup.string()
+      .oneOf([yup.ref("newPassword")], "Les mots de passe ne correspondent pas")
+      .required("La confirmation du mot de passe est requise"),
   });
 
   const handleSubmit = async (values: typeof initialValues) => {
     setLoading(true);
     try {
-      const response = await fetch(`${process.env.VITE_BACKEND_HOST}/password-reset-request`, {
+      const response = await fetch(`${process.env.VITE_BACKEND_HOST}/password-reset/${token}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -29,7 +32,14 @@ function RequestResetPassword() {
       });
       await response.json();
 
-      setMessage({ title: 'Mail envoyé', message: 'Un mail de réinitialisation de mot de passe vous a été envoyé', type: 'success' });
+      if (response.ok) {
+        setMessage({
+          title: 'Mot de passe réinitialisé',
+          message: 'Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.'
+        });
+      } else {
+        setErrorMessage('La réinitialisation du mot de passe a échoué. Veuillez redemander un lien de réinitialisation.');
+      }
 
     } catch (error) {
       console.error('Error serveur:', error);
@@ -55,8 +65,8 @@ function RequestResetPassword() {
               <p className="py-6 text-xl">
                 {message.message}
               </p>
-              <Link to={'/'} className="btn bg-card-green border-card-green text-base-100">
-                Retour à l'accueil
+              <Link to={'/auth/login'} className="btn bg-card-green border-card-green text-base-100">
+                Me connecter
               </Link>
             </div>
           </div>
@@ -80,8 +90,8 @@ function RequestResetPassword() {
               <p className="py-6 text-xl">
                 {errorMessage}
               </p>
-              <Link to={'/auth/login'} className="btn bg-card-red border-card-red text-base-100">
-                Retour à la page de login
+              <Link to={'/auth/request-reset-password'} className="btn bg-card-red border-card-red text-base-100">
+                Demander un nouveau mot de passe
               </Link>
             </div>
           </div>
@@ -99,16 +109,17 @@ function RequestResetPassword() {
           onSubmit={handleSubmit}
         >
           <Form className='w-full max-w-lg'>
-            <h1 className="font-bold text-center text-2xl mb-5">Mot de passe perdu ! 🤷‍♂️</h1>
+            <h1 className="font-bold text-center text-2xl mb-5">Réinitialisez votre mot de passe</h1>
             <div className="bg-base-200 shadow w-full md:rounded-lg divide-y divide-base-100">
               <div className="px-5 py-7">
-                <Field component={CustomField} name="email" label="E-mail" type='email' autoComplete="username" />
+                <Field component={CustomField} name="newPassword" label="Nouveau mot de passe" type='password' autocomplete="new-password" />
+                <Field component={CustomField} name="passwordConfirm" label="Confirmer le mot de passe" type='password' autocomplete="new-password" />
                 <button
                   type="submit"
                   className="btn btn-primary w-full py-2.5 text-sm shadow-sm hover:shadow-md font-semibold text-center inline-block space-x-4"
                   disabled={loading}
                 >
-                  <span>Envoyer de mail de réinitialisation</span>
+                  <span>Valider le nouveau mot de passe</span>
                   {loading && <span className="loading loading-spinner loading-sm"></span>}
                 </button>
               </div>
@@ -161,4 +172,4 @@ function RequestResetPassword() {
   );
 }
 
-export default RequestResetPassword;
+export default ResetPassword;

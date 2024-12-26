@@ -39,6 +39,16 @@ function getMJMLTemplateResetPassword(username, confirmLink) {
 	return html;
 }
 
+function getMJMLTemplateResetPasswordConfirm(firstname, confirmLink) {
+	const mjmlFilePath = "./src/templates/reset-password-confirm.mjml";
+	const emailTemplate = fs.readFileSync(mjmlFilePath, "utf8");
+	const mjmlTemplate = emailTemplate
+		.replace(/{{firstname}}/g, firstname)
+		.replace(/{{confirmLink}}/g, confirmLink);
+	const { html } = mjml2html(mjmlTemplate);
+	return html;
+}
+
 async function generateID(id) {
 	const { count } = await findAndCountAllUsersById(id);
 	if (count > 0) {
@@ -260,5 +270,23 @@ export async function resetPassword(token, newPassword, bcrypt) {
 	user.resetPasswordExpires = null;
 	await user.save();
 
-	return { message: "Mot de passe réinitialisé avec succès.", code: 200 };
+	// Envoyer l'email avec le lien de réinitialisation
+	const transporter = createTransporter();
+	const resetLink = `${process.env.FRONTEND_HOST}/auth/login`;
+	const mailOptions = {
+		from: 'olivperdrix@gmail.com',
+		to: user.email,
+		subject: "Mot de passe réinitialisé",
+		html: getMJMLTemplateResetPasswordConfirm(user.firstname, resetLink),
+	};
+
+	try {
+		await transporter.sendMail(mailOptions);
+		return { message: "Mot de passe réinitialisé avec succès.", code: 200 };
+	} catch (error) {
+		console.error("Erreur lors de l'envoi de l'email :", error);
+		return { error: "Impossible d'envoyer l'email.", code: 500 };
+	}
+
+
 };

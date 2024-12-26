@@ -14,6 +14,7 @@ import WaitingRoom from '@/pages/game/WaitingRoom.tsx'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import RequestResetPassword from './pages/auth/RequestResetPassword'
+import ResetPassword from './pages/auth/ResetPassword'
 
 const router = createBrowserRouter([
   {
@@ -73,6 +74,10 @@ const router = createBrowserRouter([
       {
         path: '/auth/request-reset-password',
         element: <RequestResetPassword />
+      },
+      {
+        path: '/auth/password-reset/:token',
+        element: <ResetPassword />
       }
     ]
   }

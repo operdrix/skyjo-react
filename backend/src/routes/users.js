@@ -89,7 +89,7 @@ export function usersRoutes(app, blacklistedTokens) {
 	app.post("/api/password-reset/:token", async (request, reply) => {
 		const { token } = request.params;
 		const { newPassword } = request.body;
-		const response = await resetPassword(token, password, app.bcrypt);
+		const response = await resetPassword(token, newPassword, app.bcrypt);
 		if (response.error) {
 			reply.status(response.code).send(response);
 		} else {

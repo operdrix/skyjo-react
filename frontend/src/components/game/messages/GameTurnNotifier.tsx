@@ -13,7 +13,7 @@ function GameTurnNotifier({ isCurrentTurn }: { isCurrentTurn: boolean }) {
     }
   }
   function playSound() {
-    const beepAudio = new Audio('/sounds/beep.wav');
+    const beepAudio = new Audio('/sounds/notif.wav');
     // Chemin vers ton petit son
     beepAudio.play().catch(err => {
       console.error('Impossible de jouer le son :', err);

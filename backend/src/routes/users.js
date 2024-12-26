@@ -38,11 +38,11 @@ export function usersRoutes(app, blacklistedTokens) {
 		}
 	});
 	//récupération de la liste des utilisateurs
-	app.get("/api/users", async (request, reply) => {
+	app.get("/api/users", { preHandler: [app.authenticate] }, async (request, reply) => {
 		reply.send(await getUsers());
 	});
 	//récupération d'un utilisateur par son id
-	app.get("/api/users/:id", async (request, reply) => {
+	app.get("/api/users/:id", { preHandler: [app.authenticate] }, async (request, reply) => {
 		reply.send(await getUserById(request.params.id));
 	});
 	// Vérification de l'email de l'utilisateur via le token

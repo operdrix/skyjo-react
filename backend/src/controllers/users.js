@@ -60,10 +60,14 @@ async function generateID(id) {
 }
 
 export async function getUsers() {
-	return await User.findAll();
+	return await User.findAll({
+		attributes: ['id', 'username', 'firstname', 'lastname', 'email', 'bestScrore', 'avatar']
+	});
 }
 export async function getUserById(id) {
-	return await User.findByPk(id);
+	return await User.findByPk(id, {
+		attributes: ['id', 'username', 'firstname', 'lastname', 'email', 'bestScrore', 'avatar']
+	});
 }
 export async function findAndCountAllUsersById(id) {
 	return await User.findAndCountAll({

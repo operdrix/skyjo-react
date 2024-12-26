@@ -1,6 +1,6 @@
 <mjml version="3.3.3">
-  <mj-body background-color="#F4F4F4" color="#55575d" font-family="Arial, sans-serif">
-    <mj-section background-color="#C1272D" background-repeat="repeat" padding="20px 0" text-align="center" vertical-align="top">
+  <mj-body background-color="#F4F4F4">
+    <mj-section background-color="#ff5630" background-repeat="repeat" padding="20px 0" text-align="center">
       <mj-column>
         <mj-image align="center" padding="10px 25px" src="https://labodolivier.com/images/logo-color.png" width="128px"></mj-image>
       </mj-column>
@@ -9,7 +9,7 @@
       <mj-column>
         <mj-text align="center" color="#55575d" font-family="Arial, sans-serif" font-size="14px" line-height="28px" padding="0px 25px 0px 25px">Merci pour votre inscription {{firstname}}.</mj-text>
         <mj-text align="center" color="#55575d" font-family="Arial, sans-serif" font-size="14px" line-height="28px" padding="0px 25px 0px 25px">Pour confirmer votre inscription, merci de cliquer sur le lien suivant : </mj-text>
-        <mj-button background-color="#C1272D" color="#ffffff" font-family="Arial, sans-serif" font-size="13px" font-weight="bold" href="{{confirmLink}}" padding="15px 30px" text-transform="uppercase">Confirmer mon email</mj-button>
+        <mj-button background-color="#ff5630" color="#ffffff" font-family="Arial, sans-serif" font-size="13px" font-weight="bold" href="{{confirmLink}}" padding="15px 30px" text-transform="uppercase">Confirmer mon email</mj-button>
         <mj-text align="center" color="#55575d" font-family="Arial, sans-serif" font-size="14px" line-height="28px" padding="0px 25px 0px 25px">Ou copiez l'URL suivant dans votre navigateur {{confirmLink}}</mj-text>
 
       </mj-column>

@@ -3,8 +3,11 @@ import {
 	getUsers,
 	loginUser,
 	registerUser,
+	requestPasswordReset,
+	resetPassword,
 	verifyUser,
 } from "../controllers/users.js";
+
 export function usersRoutes(app, blacklistedTokens) {
 	app.post("/api/login", async (request, reply) => {
 		const response = await loginUser(request.body, app);
@@ -70,6 +73,27 @@ export function usersRoutes(app, blacklistedTokens) {
 			reply.send(decoded);
 		} catch (error) {
 			reply.status(401).send({ error: "Token invalide" });
+		}
+	});
+
+	app.post("/api/password-reset-request", async (request, reply) => {
+		const { email } = request.body;
+		const response = await requestPasswordReset(email);
+		if (response.error) {
+			reply.status(response.code).send(response);
+		} else {
+			reply.send(response);
+		}
+	});
+
+	app.post("/api/password-reset/:token", async (request, reply) => {
+		const { token } = request.params;
+		const { newPassword } = request.body;
+		const response = await resetPassword(token, password, app.bcrypt);
+		if (response.error) {
+			reply.status(response.code).send(response);
+		} else {
+			reply.send(response);
 		}
 	});
 }

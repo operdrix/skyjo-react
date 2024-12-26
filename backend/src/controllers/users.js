@@ -29,6 +29,16 @@ function getMJMLTemplate(firstname, confirmLink) {
 	return html;
 }
 
+function getMJMLTemplateResetPassword(username, confirmLink) {
+	const mjmlFilePath = "./src/templates/reset-password.mjml";
+	const emailTemplate = fs.readFileSync(mjmlFilePath, "utf8");
+	const mjmlTemplate = emailTemplate
+		.replace(/{{username}}/g, username)
+		.replace(/{{confirmLink}}/g, confirmLink);
+	const { html } = mjml2html(mjmlTemplate);
+	return html;
+}
+
 async function generateID(id) {
 	const { count } = await findAndCountAllUsersById(id);
 	if (count > 0) {
@@ -196,3 +206,59 @@ export async function verifyUser(token) {
 	await user.save();
 	return user;
 }
+
+export async function requestPasswordReset(email) {
+	// Vérifier si l'utilisateur existe
+	const user = await User.findOne({ where: { email } });
+	if (!user) {
+		return { error: "Aucun utilisateur trouvé avec cet email.", code: 400 };
+	}
+
+	// Générer un token et une date d'expiration
+	const resetToken = crypto.randomBytes(32).toString("hex");
+	user.resetPasswordToken = resetToken;
+	user.resetPasswordExpires = Date.now() + 3600000; // 1 heure
+	await user.save();
+
+	// Envoyer l'email avec le lien de réinitialisation
+	const transporter = createTransporter();
+	const resetLink = `${process.env.FRONTEND_HOST}/auth/password-reset/${resetToken}`;
+	const mailOptions = {
+		from: 'olivperdrix@gmail.com',
+		to: user.email,
+		subject: "Réinitialisation de mot de passe",
+		html: getMJMLTemplateResetPassword(user.username, resetLink),
+	};
+
+	try {
+		await transporter.sendMail(mailOptions);
+		return { message: "Email de réinitialisation envoyé avec succès.", code: 200 };
+	} catch (error) {
+		console.error("Erreur lors de l'envoi de l'email :", error);
+		return { error: "Impossible d'envoyer l'email.", code: 500 };
+	}
+}
+
+export async function resetPassword(token, newPassword, bcrypt) {
+
+	// Trouver l'utilisateur avec le token et vérifier son expiration
+	const user = await User.findOne({
+		where: {
+			resetPasswordToken: token,
+			resetPasswordExpires: { [Op.gt]: Date.now() },
+		},
+	});
+
+	if (!user) {
+		return { error: "Token invalide ou expiré.", code: 400 };
+	}
+
+	// Hasher le nouveau mot de passe
+	const hashedPassword = await bcrypt.hash(newPassword);
+	user.password = hashedPassword;
+	user.resetPasswordToken = null;
+	user.resetPasswordExpires = null;
+	await user.save();
+
+	return { message: "Mot de passe réinitialisé avec succès.", code: 200 };
+};

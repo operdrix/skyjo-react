@@ -97,9 +97,9 @@ function FlipCard({ card, onClick, disabled }: { card: Card; onClick?: () => voi
 }
 
 // Carte derrière (ex: pour la pioche ou la défausse)
-function ExtraCardBehind() {
+function ExtraCardBehind({ border = true }: { border?: boolean }) {
   return (
-    <div className="play-card border-2 border-black absolute text-black bg-white top-0">
+    <div className={`play-card ${border && 'border-2 border-black'} absolute text-black bg-white top-0`}>
       ?
     </div>
   );
@@ -136,7 +136,7 @@ function DeckCard({ card, onClick, disabled, showBehind }: { card: Card; onClick
 function DiscardCard({ card, onClick, disabled, showBehind, showBin }: { card: Card; onClick?: () => void; disabled?: boolean; showBehind: boolean; showBin: boolean }) {
   return (
     <div className="relative flex flex-col justify-center items-center gap-2">
-      {showBehind && <ExtraCardBehind />}
+      {showBehind && <ExtraCardBehind border={!showBin} />}
       {showBin ? (
         <button className="play-card play-card-discard z-0" disabled={disabled} onClick={onClick}>
           <DiscardBin />

@@ -62,7 +62,7 @@ const Create = () => {
               <p className="py-6 text-xl">
                 Vous pourrez commencer la partie dès que tous les joueurs seront prêts.
               </p>
-              <p className="flex flex-wrap justify-center gap-4">
+              <div className="flex flex-wrap justify-center gap-4">
                 <div className="tooltip w-full sm:w-auto" data-tip="Partagez le lien avec vos amis seulement">
                   <button
                     className="btn btn-neutral w-full sm:w-auto bg-card-negative border-card-negative text-base-100"
@@ -93,7 +93,7 @@ const Create = () => {
                     }
                   </button>
                 </div>
-              </p>
+              </div>
             </div>
           </div>
         </div>

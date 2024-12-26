@@ -31,10 +31,10 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
   const handleClickOnCard = async (cardId: string) => {
 
     if (!isCurrentPlayerSet) return; // si ce ne sont pas les cartes du joueur actuel, on ne fait rien
-    setLoading(true);
     const cardIndex = playerCards.findIndex((c) => c.id === cardId);
 
     if (game.gameData.currentStep === 'initialReveal') {
+      setLoading(true);
       // Révéler la carte cliquée par le joueur actuel dans la limite de deux cartes
       if (revealedCards() <= 1) {
         game.gameData.playersCards[userId][cardIndex].revealed = true;

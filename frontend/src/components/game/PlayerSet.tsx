@@ -44,8 +44,11 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
 
       // Envoyer un message pour révéler la carte
       sendMessage("play-move", { room: game.id, gameData: game.gameData });
-      await new Promise(resolve => setTimeout(resolve, 500)); // petite tempo pour pas cliquer trop vite et bloquer le jeu
-      setLoading(false);
+      // petite tempo pour pas cliquer trop vite et bloquer le jeu
+      setTimeout(() => {
+        setLoading(false);
+      }, 300);
+
     }
 
     if (game.gameData.currentStep === 'replace-discard') {

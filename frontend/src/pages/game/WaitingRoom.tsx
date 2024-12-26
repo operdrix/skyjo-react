@@ -1,10 +1,10 @@
 import ErrorMessage from "@/components/game/messages/ErrorMessage";
-import GameTurnNotifier from "@/components/game/messages/GameTurnNotifier";
 import ReconnectMessage from "@/components/game/messages/ReconnectMessage";
 import OnlineStatus from "@/components/game/OnlineStatus";
 import { useUser } from "@/hooks/User";
 import { useWebSocket } from "@/hooks/WebSocket";
 import type { ErrorType, GameType } from "@/types/types";
+import notify from "@/utils/notify";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -17,7 +17,6 @@ const WaitingRoom = () => {
   const [isCreator, setIsCreator] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [creationLoading, setCreationLoading] = useState<boolean>(false);
-  const [beep, setBeep] = useState<boolean>(false);
   const navigate = useNavigate();
 
   // Rediriger vers la création de partie si gameId n'est pas défini dans l'URL
@@ -60,7 +59,7 @@ const WaitingRoom = () => {
       }
     };
     if (!error) getGame();
-  }, [gameId, token, userId, error]);
+  }, [gameId, token, userId, error, setGame]);
 
   // Cas de l'utilisateur qui rejoint la partie
   useEffect(() => {
@@ -105,10 +104,9 @@ const WaitingRoom = () => {
 
     const handlePlayerJoined = async (updatedGame: GameType) => {
       console.log("Player joined game:", updatedGame);
-      setBeep(true);
+      notify('join');
       setGame(updatedGame);
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      setBeep(false);
     };
 
     const handlePlayerLeft = (updatedGame: GameType | ErrorType) => {
@@ -139,7 +137,7 @@ const WaitingRoom = () => {
       unsubscribeFromEvent("start-game", handleStartGame);
     };
 
-  }, [socket, isConnected, subscribeToEvent, unsubscribeFromEvent, navigate, error, gameId]);
+  }, [socket, isConnected, subscribeToEvent, unsubscribeFromEvent, navigate, error, gameId, setGame]);
 
   // copie de l'url du jeu dans le presse-papier
   const handleCopyToClipboard = () => {
@@ -310,9 +308,6 @@ const WaitingRoom = () => {
           <div className="flex justify-between items-start">
             <h2 className="text-2xl">Joueurs {game?.players.length}/{game?.maxPlayers}</h2>
             <OnlineStatus isConnected={isConnected} />
-            {beep &&
-              <GameTurnNotifier isCurrentTurn={true} />
-            }
           </div>
           <div className="divider"></div>
           <ul className="flex flex-col space-y-2">

@@ -2,15 +2,15 @@ import GameCard from "@/components/game/GameCard";
 import { useGame } from "@/hooks/Game";
 import { useUser } from "@/hooks/User";
 import { useWebSocket } from "@/hooks/WebSocket";
+import notify from "@/utils/notify";
 import { useState } from "react";
-import GameTurnNotifier from "./messages/GameTurnNotifier";
 
 const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
   playerId: string;
   isCurrentPlayerSet?: boolean;
 }) => {
 
-  const { game } = useGame();
+  const { game, sound } = useGame();
   const { userId } = useUser();
   const { sendMessage } = useWebSocket();
   const [loading, setLoading] = useState(false);
@@ -37,6 +37,7 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
       setLoading(true);
       // Révéler la carte cliquée par le joueur actuel dans la limite de deux cartes
       if (revealedCards() <= 1) {
+        notify('turnCard', !sound);
         game.gameData.playersCards[userId][cardIndex].revealed = true;
       }
 
@@ -55,6 +56,7 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
       // On récupère la carte de la défausse (la dernière carte qui est normalement onHand = true)
       // On la remplace par la carte cliquée par le joueur actuel
       // On la remet dans le jeu du joueur actuel au même endroit que la carte cliquée
+      notify('turnCard', !sound);
       const discardCard = game.gameData.discardPile[game.gameData.discardPile.length - 1];
       const playerCard = playerCards[cardIndex];
       discardCard.onHand = false;
@@ -74,7 +76,7 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
       // 2. On remplace la carte cliquée par la carte du dessus de la pioche
       // 3. On retire la carte du dessus de la pioche
       // 4. On passe à l'étape suivante endTurn
-
+      notify('turnCard', !sound);
       game.gameData.deckCards[0].onHand = false;
       game.gameData.playersCards[userId][cardIndex].revealed = true;
       game.gameData.discardPile.push(game.gameData.playersCards[userId][cardIndex]);
@@ -86,6 +88,7 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
 
     if (game.gameData.currentStep === 'flip-deck') {
       // Retourner la carte cliquée par le joueur actuel
+      notify('turnCard', !sound);
       game.gameData.playersCards[userId][cardIndex].revealed = true;
       game.gameData.currentStep = 'endTurn';
       sendMessage("play-move", { room: game.id, gameData: game.gameData });
@@ -101,7 +104,7 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
 
   return (
     <>
-      <GameTurnNotifier isCurrentTurn={playerTurn && isCurrentPlayerSet} />
+      {/* <GameTurnNotifier isCurrentTurn={playerTurn && isCurrentPlayerSet} /> */}
 
       <div className="flex flex-col justify-center items-center h-full min-h-44">
         <h2 className="indicator flex items-center gap-3 text-xl font-bold mb-2 min-h-8">

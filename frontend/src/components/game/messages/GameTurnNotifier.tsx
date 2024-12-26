@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 
-function GameTurnNotifier({ isCurrentTurn }: { isCurrentTurn: boolean }) {
+function GameTurnNotifier_old({ isCurrentTurn }: { isCurrentTurn: boolean }) {
 
   function isMobileDevice() {
     return /Mobi|Android/i.test(navigator.userAgent);
@@ -39,4 +39,4 @@ function GameTurnNotifier({ isCurrentTurn }: { isCurrentTurn: boolean }) {
   return null; // Pas d'affichage, on s'occupe juste de la notif
 }
 
-export default GameTurnNotifier;
+export default GameTurnNotifier_old;

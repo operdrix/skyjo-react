@@ -2,12 +2,13 @@ import GameCard from "@/components/game/GameCard";
 import { useGame } from "@/hooks/Game";
 import { useUser } from "@/hooks/User";
 import { useWebSocket } from "@/hooks/WebSocket";
+import notify from "@/utils/notify";
 
 const Discard = () => {
 
   const { userId } = useUser();
   const { sendMessage } = useWebSocket()
-  const { game } = useGame();
+  const { game, sound } = useGame();
 
   // Détermination si la défausse est sélectionnable
   const isDiscardSelectable = () => {
@@ -26,6 +27,7 @@ const Discard = () => {
 
     if (game.gameData.currentStep === 'decide-deck') {
       // on déplace la carte en main de la pioche vers la défausse
+      notify('turnCard', !sound);
       game.gameData.deckCards[0].onHand = false;
       game.gameData.discardPile.push(game.gameData.deckCards[0]);
       game.gameData.deckCards.shift();
@@ -33,7 +35,7 @@ const Discard = () => {
       sendMessage("play-move", { room: game.id, gameData: game.gameData });
       return;
     }
-
+    notify('turnCard', !sound);
     game.gameData.discardPile[game.gameData.discardPile.length - 1].onHand = true;
     game.gameData.currentStep = 'replace-discard';
     sendMessage("play-move", { room: game.id, gameData: game.gameData });

@@ -12,13 +12,14 @@ import { useGame } from "@/hooks/Game";
 import { useUser } from "@/hooks/User";
 import { useWebSocket } from "@/hooks/WebSocket";
 import type { GameType } from "@/types/types";
-import { useEffect, useState } from "react";
+import notify from "@/utils/notify";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 const Game = () => {
   const { token, userId, loading: userLoading } = useUser();
   const { socket, isConnected, sendMessage, subscribeToEvent, unsubscribeFromEvent, loading: wsLoading } = useWebSocket()
-  const { game, setGame } = useGame();
+  const { game, setGame, sound, setSound } = useGame();
   const { gameId } = useParams<string>();
   const [loading, setLoading] = useState<boolean>(true);
   const [waitingDeal, setWaitingDeal] = useState<boolean>(false);
@@ -149,6 +150,31 @@ const Game = () => {
 
   }, [socket, isConnected, gameId, subscribeToEvent, unsubscribeFromEvent, error, setGame, game, userId, navigate]);
 
+  // Notification de l'utilisateur si c'est son tour
+  const notifyPlayerTurn = useCallback(() => {
+    if (!game || !userId) return;
+    const playerTurn = (game.gameData.currentPlayer === userId && game.gameData.currentStep === 'draw');
+    if (playerTurn) {
+      notify('play', !sound);
+    }
+  }, [game, sound, userId]);
+
+  useEffect(() => {
+    notifyPlayerTurn();
+  }, [notifyPlayerTurn]);
+
+  if (error) {
+    return (
+      <ErrorMessage
+        error={error}
+        button={{
+          label: "Retour à l'accueil",
+          action: () => navigate('/')
+        }}
+      />
+    )
+  }
+
   if (wsLoading || !isConnected) {
     return <ReconnectMessage />
   }
@@ -169,18 +195,6 @@ const Game = () => {
           <div className="skeleton h-4 w-full"></div>
         </div>
       </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <ErrorMessage
-        error={error}
-        button={{
-          label: "Retour à l'accueil",
-          action: () => navigate('/')
-        }}
-      />
     )
   }
 
@@ -206,6 +220,11 @@ const Game = () => {
       if (position === "Right") playerIdRight = playerId;
     }
   });
+
+  // Notification de fin de partie
+  if (game.gameData.currentStep === 'endGame') {
+    notify('end', !sound);
+  }
 
   return (
     <>
@@ -263,6 +282,18 @@ const Game = () => {
             </button>
           </div> */}
           <ToggleTheme className="btn-circle" />
+          <label className="swap swap-rotate btn btn-circle">
+            <input type="checkbox" checked={sound} onChange={() => setSound(!sound)} />
+            {/* volume on icon */}
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-5 w-5 swap-on">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
+            </svg>
+
+            {/* volume off icon */}
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-5 w-5 swap-off">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 9.75 19.5 12m0 0 2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6 4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
+            </svg>
+          </label>
         </div>
 
         {/* Ligne 1 : joueur d'en face */}

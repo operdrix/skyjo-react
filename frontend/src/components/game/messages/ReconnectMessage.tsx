@@ -1,4 +1,11 @@
+import notify from "@/utils/notify";
+import { useEffect } from "react";
+
 export default function ReconnectMessage({ reconnect = true }: { reconnect?: boolean }) {
+  useEffect(() => {
+    notify('warning');
+  }, []);
+
   return (
     <div className="flex-1 container mx-auto flex items-center">
       <div className="hero bg-base-200 min-h-[50vh] p-20">

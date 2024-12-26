@@ -1,3 +1,6 @@
+import { useGame } from "@/hooks/Game";
+import notify from "@/utils/notify";
+import { useEffect } from "react";
 
 type ErrorMessageProps = {
   error: string;
@@ -12,6 +15,13 @@ export default function ErrorMessage({
   button,
 }: ErrorMessageProps
 ) {
+
+  const { sound } = useGame();
+
+  useEffect(() => {
+    notify('error', !sound);
+  }, [sound]);
+
   return (
     <div className="flex-1 container mx-auto flex items-center">
       <div className="hero bg-base-200 min-h-[50vh] p-20">

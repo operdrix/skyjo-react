@@ -304,6 +304,7 @@ export async function checkGame(game) {
 
     if (gameData.lastTurn) {
       revealAllCards(gameData, gameData.currentPlayer);
+      checkColumn(gameData);
     }
 
     checkEndGame(gameData);

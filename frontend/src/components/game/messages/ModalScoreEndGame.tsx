@@ -11,6 +11,7 @@ const ModalScoreEndGame = () => {
   const { userId } = useUser();
   const [loading, setLoading] = useState<boolean>(false);
   const [isCreator, setIsCreator] = useState<boolean>(false);
+  const [position, setPosition] = useState<number>(1);
 
   useEffect(() => {
     if (!game || !userId) return;
@@ -44,6 +45,18 @@ const ModalScoreEndGame = () => {
     return
   }
 
+  const handleChangePosition = () => {
+    if (position === 1) { // middle
+      setPosition(2);
+    } else if (position === 2) { // bottom
+      setPosition(3);
+    } else if (position === 3) { // middle
+      setPosition(4);
+    } else { // top
+      setPosition(1);
+    }
+  }
+
   if (!game || !userId) return null;
 
   const finished = game.state === 'finished';
@@ -51,8 +64,55 @@ const ModalScoreEndGame = () => {
 
   return (
     <>
-      <dialog id="modal-score-end-game" className={`modal modal-bottom sm:modal-middle modal-open`}>
-        <div className="modal-box !max-w-2xl">
+      <dialog
+        id="modal-score-end-game"
+        className={`
+        modal 
+        modal-open 
+        ${position === 1 || position === 3 ? 'modal-bottom' : 'modal-top'} 
+        ${position === 1 || position === 3 ? 'sm:modal-middle' : position === 2 ? 'sm:modal-bottom' : 'sm:modal-top'}
+        `}>
+        <div className="modal-box !max-w-2xl glass">
+          <div className="tooltip tooltip-left absolute right-2 top-2" data-tip="Déplacer">
+            <button
+              className="btn btn-sm btn-circle btn-ghost"
+              onClick={handleChangePosition}
+            >
+              {/* Flèche vers le haut */}
+              {(position === 2 || position === 3) &&
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"
+                  className="size-6 hidden sm:block"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 18.75 7.5-7.5 7.5 7.5" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 7.5-7.5 7.5 7.5" />
+                </svg>
+              }
+              {(position === 1 || position === 3) &&
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"
+                  className="size-6 sm:hidden"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 18.75 7.5-7.5 7.5 7.5" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 7.5-7.5 7.5 7.5" />
+                </svg>
+              }
+
+              {/* Flèche vers le bas */}
+              {(position === 1 || position === 4) &&
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"
+                  className="size-6 hidden sm:block"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 5.25 7.5 7.5 7.5-7.5m-15 6 7.5 7.5 7.5-7.5" />
+                </svg>
+              }
+              {(position === 2 || position === 4) &&
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"
+                  className="size-6 sm:hidden"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 5.25 7.5 7.5 7.5-7.5m-15 6 7.5 7.5 7.5-7.5" />
+                </svg>
+              }
+            </button>
+          </div>
           {finished ?
             <h3 className="font-bold text-lg"><span className="text-4xl">🎉</span> Fin de la partie en {game.roundNumber} manches.</h3>
             :
@@ -63,7 +123,10 @@ const ModalScoreEndGame = () => {
             .slice()
             .sort((a, b) => a.game_players.score - b.game_players.score)
             .map((player, index) => (
-              <div key={player.id} className="flex justify-between">
+              <div
+                key={player.id}
+                className="flex justify-between items-center flex-wrap gap-2 border-l-2 border-base-content -ml-3 pl-3 py-1 mb-1 bg-base-100/15 rounded-r-lg"
+              >
                 <div className="font-bold text-xl">
                   {finished &&
                     <>
@@ -76,9 +139,9 @@ const ModalScoreEndGame = () => {
                       }
                     </>
                   }
-                  {finished && index + 1} {player.username}<sup>{game.creator === player.id && '👑'}</sup>
+                  {finished && index + 1} {player.username}<sup className="text-xs">{game.creator === player.id && '👑'}</sup>
                 </div>
-                <ul className="flex gap-3">
+                <ul className="flex-grow flex gap-3 justify-end flex-wrap">
                   {player.game_players.scoreByRound.map((score, index) => (
                     <li className="w-5" key={index}>{score}</li>
                   ))}
@@ -110,7 +173,7 @@ const ModalScoreEndGame = () => {
                       </p>
                     }
                   </div>
-                  <div className="flex max-sm:p-2">
+                  <div className="flex flex-grow justify-end max-sm:p-2">
                     <button
                       className="btn btn-success"
                       onClick={handleRequestNewGame}
@@ -126,7 +189,7 @@ const ModalScoreEndGame = () => {
                 :
                 <div className="flex justify-end">
                   <button
-                    className="btn"
+                    className={`btn ${isCreator ? 'btn-success' : 'btn-ghost'}`}
                     onClick={handleNextRound}
                     disabled={!isCreator || loading}
                   >

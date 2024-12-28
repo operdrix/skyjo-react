@@ -64,3 +64,14 @@
 .backface-hidden {
   backface-visibility: hidden;
 }
+
+@media (min-width: 640px) {
+  .sm\:modal-bottom {
+    place-items: end center !important;
+  }
+}
+@media (min-width: 640px) {
+  .sm\:modal-top {
+    place-items: start center !important;
+  }
+}

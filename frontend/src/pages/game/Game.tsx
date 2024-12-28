@@ -231,7 +231,7 @@ const Game = () => {
       {(game.gameData.currentStep === 'endGame') && <ModalScoreEndGame />}
       <ModalScore />
       <section className={`relative
-        md:container md:mx-auto w-full grow grid md:gap-4 p-4
+        md:container md:mx-auto w-full grow grid md:gap-4 px-4 p-8 sm:p-4
         ${game.players.length === 2 ? 'grid-cols-1' : game.players.length === 3 ? 'grid-cols-2' : 'grid-cols-3'}
         `}>
 

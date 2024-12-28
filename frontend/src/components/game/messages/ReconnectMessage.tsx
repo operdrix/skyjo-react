@@ -8,7 +8,7 @@ export default function ReconnectMessage({ reconnect = true }: { reconnect?: boo
 
   return (
     <div className="flex-1 container mx-auto flex items-center">
-      <div className="hero bg-base-200 min-h-[50vh] p-20">
+      <div className="hero bg-base-200 min-h-[50vh] sm:p-20">
         <div className="hero-content flex-col lg:flex-row text-center">
           {reconnect &&
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="md:size-96 max-w-sm text-warning">

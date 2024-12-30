@@ -17,6 +17,7 @@ const WaitingRoom = () => {
   const [isCreator, setIsCreator] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [creationLoading, setCreationLoading] = useState<boolean>(false);
+  const [validateCopy, setValidateCopy] = useState<boolean>(false);
   const navigate = useNavigate();
 
   // Rediriger vers la création de partie si gameId n'est pas défini dans l'URL
@@ -143,6 +144,10 @@ const WaitingRoom = () => {
   const handleCopyToClipboard = () => {
     const url = `${window.location.origin}/join/${gameId}`;
     navigator.clipboard.writeText(url);
+    setValidateCopy(true);
+    setTimeout(() => {
+      setValidateCopy(false);
+    }, 2000);
   }
 
   // Mettre à jour le nombre de joueurs max
@@ -256,12 +261,15 @@ const WaitingRoom = () => {
                 readOnly
               />
             </label>
-            <div className="tooltip" data-tip="Copier l'url">
-              <button className="btn btn-square" onClick={handleCopyToClipboard}>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+            <div className={`tooltip ${validateCopy && 'tooltip-success'}`} data-tip={validateCopy ? 'Copié !' : 'Copier dans le presse-papier'}>
+              <label className={`btn btn-square swap swap-rotate ${validateCopy && 'swap-active'}`} onClick={handleCopyToClipboard}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="swap-off size-6">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />
                 </svg>
-              </button>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="swap-on size-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                </svg>
+              </label>
             </div>
           </div>
           {isCreator && game &&
@@ -310,24 +318,26 @@ const WaitingRoom = () => {
             <OnlineStatus isConnected={isConnected} />
           </div>
           <div className="divider"></div>
-          <ul className="flex flex-col space-y-2">
+          <div>
+            <p className="mt-4">
+              {game.players.length === game.maxPlayers ? "La partie va bientôt commencer..." : "En attente de joueurs..."}
+            </p>
+          </div>
+          <ul className="flex flex-wrap gap-4">
             {game?.players.map((player, index) => (
               <li key={index} className="flex items-center gap-2">
                 <div className="avatar online placeholder">
-                  <div className="bg-neutral text-neutral-content w-12 rounded-full">
+                  <div className="bg-neutral text-neutral-content w-12 mask mask-squircle">
                     <span className="text-xl">{player?.username.charAt(0)}</span>
                   </div>
                 </div>
                 <div>
                   <h2 className="text-lg">{player?.username}</h2>
-                  <p className="text-sm text-gray-500">En attente</p>
+                  {player.id === game.creatorPlayer.id && <p className="text-sm text-gray-500">Créateur de la partie</p>}
                 </div>
               </li>
             ))}
           </ul>
-          <div>
-            <p className="mt-4">En attente de joueurs...</p>
-          </div>
         </div>
       </div>
     </div>

@@ -15,6 +15,7 @@ import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import RequestResetPassword from './pages/auth/RequestResetPassword'
 import ResetPassword from './pages/auth/ResetPassword'
+import Dashboard from './pages/dashboard/Dashboard'
 
 const router = createBrowserRouter([
   {
@@ -78,6 +79,16 @@ const router = createBrowserRouter([
       {
         path: '/auth/password-reset/:token',
         element: <ResetPassword />
+      }
+    ]
+  },
+  {
+    path: '/dashboard',
+    element: <AppLayout />,
+    children: [
+      {
+        path: '/dashboard',
+        element: <Dashboard />
       }
     ]
   }

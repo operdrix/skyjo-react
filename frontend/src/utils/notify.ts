@@ -6,7 +6,6 @@ function isMobileDevice() {
 
 function vibrate() {
   if ("vibrate" in navigator) {
-    // La durée en millisecondes, ex. 200ms
     navigator.vibrate([300, 30, 200]); // Vibration longue, pause, vibration courte
   }
 }
@@ -26,7 +25,7 @@ function playSound(notificationType: NotifyType) {
   } else {
     beepAudio = new Audio('/sounds/error.wav');
   }
-  // Chemin vers ton petit son
+
   beepAudio.play().catch(err => {
     console.error('Impossible de jouer le son :', err);
   });
@@ -36,7 +35,7 @@ function notify(notificationType: NotifyType, silence = false) {
   console.log('Beep beep !', notificationType);
   if (!silence) playSound(notificationType);
 
-  if (isMobileDevice()) vibrate();
+  if (isMobileDevice() && notificationType === 'play' && !silence) vibrate();
 }
 
 export default notify;

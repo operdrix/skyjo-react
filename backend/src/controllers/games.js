@@ -3,7 +3,7 @@ import User from "../models/users.js";
 
 // Liste des parties avec filtres
 export async function getGames(query) {
-  const { userId, state, privateRoom } = query;
+  const { userId, state, privateRoom, creatorId } = query;
 
   const where = {};
   if (state) {
@@ -11,6 +11,9 @@ export async function getGames(query) {
   }
   if (privateRoom) {
     where.private = privateRoom === 'true' ? true : false;
+  }
+  if (creatorId) {
+    where.creator = creatorId;
   }
   const games = await Game.findAll({
     where,

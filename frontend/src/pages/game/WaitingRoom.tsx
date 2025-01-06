@@ -64,7 +64,7 @@ const WaitingRoom = () => {
       }
     };
     if (!error) getGame();
-  }, [gameId, token, userId, error, setGame]);
+  }, [gameId, token, userId, error, setGame, game?.state, navigate]);
 
   // Cas de l'utilisateur qui rejoint la partie
   useEffect(() => {

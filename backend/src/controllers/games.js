@@ -478,7 +478,7 @@ function nextPlayer(gameData) {
  * @returns
  */
 function determineFirstPlayer(gameData) {
-  let highestValue = 0;
+  let highestValue = -10;
   let highestPlayer = null;
 
   for (const playerId of gameData.turnOrder) {

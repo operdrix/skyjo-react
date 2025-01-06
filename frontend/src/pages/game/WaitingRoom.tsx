@@ -47,6 +47,10 @@ const WaitingRoom = () => {
           if (data.creator === userId) {
             setIsCreator(true);
           }
+          if (game?.state === 'started') {
+            // Rediriger vers la page de jeu si la partie a déjà commencé
+            navigate(`/game/${gameId}`);
+          }
         } else {
           // la partie n'existe pas
           console.error('Error fetching game:', data);

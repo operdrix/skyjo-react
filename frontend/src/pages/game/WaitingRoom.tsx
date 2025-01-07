@@ -47,7 +47,7 @@ const WaitingRoom = () => {
           if (data.creator === userId) {
             setIsCreator(true);
           }
-          if (game?.state !== 'pending') {
+          if (game?.state === 'playing' || game?.state === 'finished') {
             // Rediriger vers la page de jeu si la partie a déjà commencé
             navigate(`/game/${gameId}`);
           }

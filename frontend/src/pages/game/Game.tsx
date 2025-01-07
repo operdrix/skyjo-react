@@ -50,8 +50,8 @@ const Game = () => {
         const data = await response.json();
         if (response.ok) {
           setGame(data);
-          if (data.creator === userId) {
-            //setIsCreator(true);
+          if (data.state === 'pending') {
+            navigate(`/join/${gameId}`);
           }
         } else {
           // la partie n'existe pas
@@ -67,7 +67,7 @@ const Game = () => {
       }
     };
     if (!error) getGame();
-  }, [gameId, token, userId, error, setGame]);
+  }, [gameId, token, userId, error, setGame, navigate]);
 
   // Rediriger vers la salle d'attente si la partie est en attente de joueurs
   useEffect(() => {

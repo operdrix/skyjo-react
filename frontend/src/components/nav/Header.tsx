@@ -84,6 +84,7 @@ const Header = () => {
                 </ul>
               </details>
             </li>
+            {isAuthentified && <li><Link to={'/dashboard'}>Mon historique</Link></li>}
           </ul>
         </div>
         <div className="navbar-end gap-2">

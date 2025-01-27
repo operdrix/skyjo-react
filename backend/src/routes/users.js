@@ -1,3 +1,4 @@
+import { getUserGames } from "../controllers/games.js";
 import {
 	getUserById,
 	getUsers,
@@ -44,6 +45,10 @@ export function usersRoutes(app, blacklistedTokens) {
 	//récupération d'un utilisateur par son id
 	app.get("/api/users/:id", { preHandler: [app.authenticate] }, async (request, reply) => {
 		reply.send(await getUserById(request.params.id));
+	});
+	//Récupération des parties d'un utilisateur
+	app.get("/api/users/:id/games", async (request, reply) => {
+		reply.send(await getUserGames(request.params.id));
 	});
 	// Vérification de l'email de l'utilisateur via le token
 	app.get("/api/verify/:token", async (request, reply) => {

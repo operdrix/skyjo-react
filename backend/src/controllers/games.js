@@ -13,7 +13,7 @@ export async function getGames(query) {
     where.private = privateRoom === 'true' ? true : false;
   }
   if (creatorId) {
-    where.creator = creatorId;
+    where['$players.id$'] = creatorId;
   }
   const games = await Game.findAll({
     where,
@@ -21,6 +21,7 @@ export async function getGames(query) {
       {
         model: User,
         as: "players",
+        where: userId ? { id: userId } : null,
         attributes: ["id", "username"]
       },
       {
@@ -36,6 +37,51 @@ export async function getGames(query) {
   }
 
   return games;
+}
+
+// liste des parties d'un User
+export async function getUserGames(userId) {
+  try {
+    // Récupérer l'utilisateur avec la liste des games associées
+    const user = await User.findByPk(userId, {
+      include: [
+        {
+          model: Game,
+          as: "games",
+          // On peut choisir les attributs qu'on veut renvoyer
+          // attributes: ["id", "state", "private", "roundNumber", ...],
+          // Ou tout renvoyer
+          attributes: { exclude: ["gameData"] },
+          // Pour ne pas inclure les colonnes de la table pivot (game_players)
+          through: { attributes: [] },
+          include: [
+            {
+              model: User,
+              as: "players",
+              attributes: ["id", "username"]
+            },
+            {
+              model: User,
+              as: "creatorPlayer",
+              attributes: ["id", "username"]
+            }
+          ]
+
+        }
+      ]
+    });
+
+    if (!user) {
+      return { error: "L'utilisateur n'existe pas.", code: 404 };
+    }
+
+    // user.games contient toutes les parties
+    return user.games;
+
+  } catch (error) {
+    console.error("Erreur lors de la récupération des parties du joueur :", error);
+    return { error: "Impossible de récupérer les parties du joueur.", code: 500 };
+  }
 }
 
 // Consulter une partie

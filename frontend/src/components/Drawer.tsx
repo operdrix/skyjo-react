@@ -45,6 +45,7 @@ const Drawer = ({ children }: {
           </li>
           {isAuthentified ? (
             <>
+              {isAuthentified && <li><Link to={'/dashboard'}>Mon historique</Link></li>}
               <li><button onClick={handleLogout}>Déconnexion</button></li>
             </>
           ) : (

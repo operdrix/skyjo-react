@@ -5,9 +5,10 @@ import { useWebSocket } from "@/hooks/WebSocket";
 import notify from "@/utils/notify";
 import { useState } from "react";
 
-const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
+const PlayerSet = ({ playerId, isCurrentPlayerSet = false, smallSet = false }: {
   playerId: string;
   isCurrentPlayerSet?: boolean;
+  smallSet?: boolean;
 }) => {
 
   const { game, sound } = useGame();
@@ -20,13 +21,16 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
 
   const playerCards = game.gameData?.playersCards?.[playerId] || [];
   const player = game.players.find(player => player.id === playerId);
-  const playerTurn = (game.gameData.currentPlayer === playerId && game.gameData.currentStep !== 'endGame') || game.gameData.currentStep === 'initialReveal';
-
   const revealedCards = () => {
     if (!game || !userId) return 0;
-    const playerCards = game.gameData.playersCards[userId];
+    const playerCards = game.gameData.playersCards[playerId];
     return playerCards.filter(card => card.revealed).length;
   };
+  const playerTurn = (
+    game.gameData.currentPlayer === playerId && game.gameData.currentStep !== 'endGame'
+  ) || (
+      game.gameData.currentStep === 'initialReveal' && revealedCards() < 2
+    );
 
   const handleClickOnCard = async (cardId: string) => {
 
@@ -106,9 +110,9 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false }: {
     <>
       {/* <GameTurnNotifier isCurrentTurn={playerTurn && isCurrentPlayerSet} /> */}
 
-      <div className="flex flex-col justify-center items-center h-full min-h-44">
+      <div className={`flex flex-col justify-center items-center ${smallSet ? 'small-set' : ''}`}>
         <h2 className="indicator flex items-center gap-3 text-xl font-bold mb-2 min-h-8">
-          {playerTurn && <span className="loading loading-dots loading-md mt-2"></span>}
+          {playerTurn && <span className="loading loading-spinner loading-md mt-2"></span>}
           {player?.username} <OnlineStatus status={player?.game_players?.status} />
         </h2>
         <div className={`grid gap-1 md:gap-2 ${getGridColsClass(playerCards?.length || 0)}`}>

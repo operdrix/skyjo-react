@@ -206,7 +206,7 @@ const Dashboard = () => {
             <div
               key={opponent.id}
               className={`
-                bg-white shadow-md rounded-lg p-4 glass w-full text-black cursor-pointer
+                shadow-md rounded-lg p-4 glass w-full text-black cursor-pointer
                 ${opponentFilter === opponent.id ? 'bg-red-400' : 'bg-white'}`}
               onClick={() => {
                 if (opponentFilter === opponent.id) {

@@ -11,7 +11,7 @@ const Dashboard = () => {
   const [games, setGames] = useState<GameType[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-
+  const [opponentFilter, setOpponentFilter] = useState<string | null>(null);
 
   // Vérifier si l'utilisateur est connecté au site
   useEffect(() => {
@@ -203,7 +203,19 @@ const Dashboard = () => {
           .sort((a, b) => b.games - a.games)
           .filter(opponent => opponent.games > 0)
           .map(opponent => (
-            <div key={opponent.id} className="bg-white shadow-md rounded-lg p-4 glass w-full text-black">
+            <div
+              key={opponent.id}
+              className={`
+                bg-white shadow-md rounded-lg p-4 glass w-full text-black cursor-pointer
+                ${opponentFilter === opponent.id ? 'bg-red-400' : 'bg-white'}`}
+              onClick={() => {
+                if (opponentFilter === opponent.id) {
+                  setOpponentFilter(null);
+                  return;
+                }
+                setOpponentFilter(opponent.id);
+              }}
+            >
               <h3 className="text-lg font-bold">{opponent.username}</h3>
               <p>
                 {`${opponent.games} parties: `}
@@ -216,54 +228,59 @@ const Dashboard = () => {
           ))}
       </div>
 
-      <h2 className="text-2xl font-bold mt-4">Tes parties</h2>
+      <h2 className="text-2xl font-bold mt-4">
+        Tes parties
+        {opponentFilter && " contre " + opponents[opponentFilter].username}
+      </h2>
       {games.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 my-4">
-          {games.map((game) => (
-            <div key={game.id} className={
-              `${game.winner === userId ? "bg-green-600" : game.winner ? "bg-red-600" : "bg-blue-500"}
+          {games
+            .filter(game => !opponentFilter || game.players?.find(player => player.id === opponentFilter))
+            .map((game) => (
+              <div key={game.id} className={
+                `${game.winner === userId ? "bg-green-600" : game.winner ? "bg-red-600" : "bg-blue-500"}
               shadow-md rounded-lg p-4 glass w-full text-black
               flex justify-between
               `
-            }>
-              <div className="flex flex-col justify-between">
-                <div>
-                  <h2 className="text-lg font-bold">
-                    {game.winner === userId
-                      ? "🥳 Victoire !"
-                      : game.winner
-                        ? "😭 Défaite"
-                        : "🔄 Partie en cours."}
-                  </h2>
-                  <p>
-                    {`${game.players?.length} joueurs: `}
-                    {
-                      game.players?.map((player, index) => (
-                        <span key={player.id}>
-                          {player.username}{index < game.players.length - 2 ? ', ' : index === game.players.length - 2 ? ' et ' : ''}
-                        </span>
-                      ))
-                    }
+              }>
+                <div className="flex flex-col justify-between">
+                  <div>
+                    <h2 className="text-lg font-bold">
+                      {game.winner === userId
+                        ? "🥳 Victoire !"
+                        : game.winner
+                          ? "😭 Défaite"
+                          : "🔄 Partie en cours."}
+                    </h2>
+                    <p>
+                      {`${game.players?.length} joueurs: `}
+                      {
+                        game.players?.map((player, index) => (
+                          <span key={player.id}>
+                            {player.username}{index < game.players.length - 2 ? ', ' : index === game.players.length - 2 ? ' et ' : ''}
+                          </span>
+                        ))
+                      }
+                    </p>
+                  </div>
+                  <p className="text-xs">{new Date(game.createdAt).toLocaleDateString(
+                    'fr-FR'
+                  )}
                   </p>
                 </div>
-                <p className="text-xs">{new Date(game.createdAt).toLocaleDateString(
-                  'fr-FR'
-                )}
-                </p>
+                <div className="flex flex-col justify-between">
+                  <p className="text-center">
+                    <span className="text-4xl"><strong>{game.roundNumber}</strong></span><br /> manches
+                  </p>
+                  <button
+                    onClick={() => navigate(`/game/${game.id}`)}
+                    className="btn btn-xs btn-neutral"
+                  >
+                    Consulter
+                  </button>
+                </div>
               </div>
-              <div className="flex flex-col justify-between">
-                <p className="text-center">
-                  <span className="text-4xl"><strong>{game.roundNumber}</strong></span><br /> manches
-                </p>
-                <button
-                  onClick={() => navigate(`/game/${game.id}`)}
-                  className="btn btn-xs btn-neutral"
-                >
-                  Consulter
-                </button>
-              </div>
-            </div>
-          ))}
+            ))}
         </div>
       ) : (
         <div className="flex-1 flex items-center justify-center">

@@ -112,8 +112,8 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false, smallSet = false }: {
       {/* <GameTurnNotifier isCurrentTurn={playerTurn && isCurrentPlayerSet} /> */}
 
       <div className={`flex flex-col justify-center items-center ${smallSet ? 'small-set' : ''}`}>
-        <h2 className="indicator flex items-center gap-3 text-xl font-bold mb-2 min-h-8">
-          {playerTurn && <span className="loading loading-spinner loading-md mt-2"></span>}
+        <h2 className="indicator items-center gap-3 text-xl font-bold mb-2 min-h-8">
+          {playerTurn && <span className="loading loading-spinner loading-md"></span>}
           {player?.username} <OnlineStatus status={player?.game_players?.status} />
         </h2>
         <div className={`grid gap-1 md:gap-2 ${getGridColsClass(playerCards?.length || 0)}`}>

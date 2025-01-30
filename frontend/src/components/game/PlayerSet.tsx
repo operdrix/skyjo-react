@@ -48,7 +48,8 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false, smallSet = false }: {
       console.log('Cartes révélées:', game.gameData.playersCards[userId]);
 
       // Envoyer un message pour révéler la carte
-      sendMessage("play-move", { room: game.id, gameData: game.gameData });
+      sendMessage("initial-turn-card", { room: game.id, playerId, cardId });
+      //sendMessage("play-move", { room: game.id, gameData: game.gameData });
       // petite tempo pour pas cliquer trop vite et bloquer le jeu
       setTimeout(() => {
         setLoading(false);

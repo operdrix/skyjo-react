@@ -112,6 +112,34 @@ export async function startGame(socket, io) {
 
 // Un coup est joué
 export async function playMove(socket, io) {
+  socket.on("initial-turn-card", async ({ room, playerId, cardId }) => {
+    console.log("initial-turn-card", room, playerId, cardId);
+
+    const game = await getGame(room);
+    if (!game) {
+      console.error("Game not found for room:", room);
+      return;
+    }
+
+    // Cloner entièrement gameData pour changer sa référence
+    let gameData = JSON.parse(JSON.stringify(game.gameData));
+
+    // Trouver la carte et la modifier
+    const cardIndex = gameData.playersCards[playerId].findIndex((c) => c.id === cardId);
+    if (cardIndex === -1) {
+      console.error("Card not found for player:", playerId);
+      return;
+    }
+
+    gameData.playersCards[playerId][cardIndex].revealed = true;
+    game.gameData = gameData;
+    await checkGame(game);
+
+    await game.save({ fields: ["gameData"] });
+
+    io.to(room).emit("play-move", game);
+  });
+
   socket.on("play-move", async ({ room, gameData }) => {
     console.log("play-move", room, gameData.currentStep);
 

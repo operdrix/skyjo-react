@@ -20,7 +20,7 @@ const Footer = () => {
         </p>
       </aside>
       <nav>
-        <h6 className="footer-title">Social</h6>
+        <h6 className="footer-title">Réseaux sociaux</h6>
         <div className="grid grid-flow-col gap-4">
           <a href="https://x.com/ESGI">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 50 50" className="fill-current">
@@ -50,6 +50,12 @@ const Footer = () => {
             </svg>
           </a>
         </div>
+      </nav>
+      <nav>
+        <h6 className="footer-title">
+          Légal
+        </h6>
+        <a href="/privacy" className="link link-hover">Politique de confidentialité</a>
       </nav>
     </footer>
   )

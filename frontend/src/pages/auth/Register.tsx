@@ -1,5 +1,6 @@
 import CustomField from '@/components/forms/CustomField';
 import Modal from '@/components/Modal';
+import PrivacyPolicy from '@/components/nav/PrivacyPolicy';
 import { Field, Form, Formik } from 'formik';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -10,6 +11,7 @@ function Register() {
   const [error, setError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState<boolean>(false);
 
   const navigate = useNavigate()
 
@@ -78,6 +80,21 @@ function Register() {
   };
   return (
     <>
+      <dialog id="modal-privacy" className="modal">
+        <div className="modal-box w-11/12 max-w-5xl">
+          <PrivacyPolicy />
+          <div className="modal-action">
+            <form method="dialog">
+              {/* if there is a button in form, it will close the modal */}
+              <button className="btn">Fermer</button>
+            </form>
+          </div>
+        </div>
+        <form method="dialog" className="modal-backdrop">
+          <button>Fermer</button>
+        </form>
+      </dialog>
+
       <div className="flex-1 flex flex-col items-center justify-center">
         <Modal id="error_modal" title="Oups ! Il semblerait qu'il y ait un problème" message={errorMessage} type="error" />
 
@@ -96,11 +113,28 @@ function Register() {
                 <Field component={CustomField} name="email" label="E-mail" type='email' autoComplete="username" />
                 <Field component={CustomField} name="password" label="Mot de passe" type='password' autoComplete="new-password" />
                 <Field component={CustomField} name="passwordConfirm" label="Confirmer le mot de passe" type='password' autoComplete="new-password" />
+              </div>
+
+              <div className="px-5 py-4">
+                <label className="flex items-center space-x-2 text-sm">
+                  <input
+                    type="checkbox"
+                    className="checkbox checkbox-primary"
+                    checked={acceptedPrivacy}
+                    onChange={(e) => setAcceptedPrivacy(e.target.checked)}
+                  />
+                  <span>
+                    J'accepte la <Link to="#" onClick={() => (document.getElementById('modal-privacy') as HTMLDialogElement)?.showModal()} className="text-primary underline">Politique de Confidentialité</Link>
+                  </span>
+                </label>
+              </div>
+
+              <div className="px-5 py-4">
                 <div className='sm:col-span-2'>
                   <button
                     type="submit"
                     className="btn btn-primary w-full py-2.5 text-sm shadow-sm hover:shadow-md font-semibold text-center inline-block"
-                    disabled={loading}
+                    disabled={!acceptedPrivacy || loading}
                   >
                     <span className="inline-block mr-2">Créer mon compte</span>
                     {loading ?

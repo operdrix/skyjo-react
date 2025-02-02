@@ -1,6 +1,54 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useUser } from "./hooks/User";
 
 function App() {
+
+  const { token, userId, logout, loading: userLoading, isAuthentified } = useUser();
+  const [loading, setLoading] = useState<boolean>(false);
+  const navigate = useNavigate();
+
+  const handleCreateGame = async () => {
+    if (!userLoading && !isAuthentified) {
+      console.log('Game Layout: User not authentified');
+      navigate('/auth/login', {
+        state: {
+          message: {
+            type: 'info',
+            message: 'Vous devez être connecté pour créer une partie !', // + window.location.pathname,
+            title: 'Connexion requise'
+          },
+          from: window.location.pathname
+        }
+      });
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${process.env.VITE_BACKEND_HOST}/game`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ userId: userId, privateRoom: true }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        navigate(`/join/${data.gameId}`)
+      } else {
+        console.error('Error:', data);
+        if (response.status === 401) {
+          logout();
+        }
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setLoading(false);
+    }
+    setLoading(false);
+  }
 
   return (
     <div className="flex-1 container mx-auto flex items-center">
@@ -33,19 +81,24 @@ function App() {
                 Bienvenue sur le Skyjo d'Olivier !
               </h1>
               <p className="py-6 text-xl">
-                Jouez avec vos amis à SkyJo en ligne, gratuitement.<br />Des heures de fun en perspective !
+                Joue avec tes amis à SkyJo en ligne, gratuitement.<br />Des heures de fun en perspective !
               </p>
+              <p className="py-6 text-xl">
+                Prêt à jouer ? Clique sur le bouton ci-dessous pour créer une partie et invite tes amis à te rejoindre ou trouve une partie publique.
+              </p>
+
               <p className="flex flex-wrap justify-center gap-4">
-                <Link
-                  to={'/create'}
-                  className="btn btn-neutral w-full sm:w-auto"
+                <button
+                  onClick={handleCreateGame}
+                  className="btn bg-card-green text-black w-full sm:w-auto"
+                  disabled={loading}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                   </svg>
 
                   Créer une partie
-                </Link>
+                </button>
                 <Link
                   to={'/public-rooms'}
                   className="btn btn-neutral w-full sm:w-auto"

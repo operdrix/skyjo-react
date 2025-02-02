@@ -17,11 +17,25 @@ export default {
         'card-yellow': '#f3e948', // Yellow
         'card-red': '#f56e6e', // Red
         'title': '#ff5630',
+        'logo-text': '#001f3f',
       },
     },
   },
   plugins: [require('daisyui')],
   daisyui: {
-    themes: ["light", "dark"],
+    themes: [
+      {
+        light: {
+          ...require("daisyui/src/theming/themes")["light"],
+          "logo-text": "#001f3f",
+        }
+      },
+      {
+        dark: {
+          ...require("daisyui/src/theming/themes")["dark"],
+          "logo-text": "#4692e1",
+        }
+      }
+    ],
   }
 }

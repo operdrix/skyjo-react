@@ -17,7 +17,6 @@ export default {
         'card-yellow': '#f3e948', // Yellow
         'card-red': '#f56e6e', // Red
         'title': '#ff5630',
-        'logo-text': '#001f3f',
       },
     },
   },

@@ -109,21 +109,23 @@ const JoinPublic = () => {
                 </tr>
               </thead>
               <tbody>
-                {games.map((game) => (
-                  <tr key={game.id}>
-                    <td>{game.id}</td>
-                    <td>{game.creatorPlayer.username}</td>
-                    <td>{game.players.length}/{game.maxPlayers}</td>
-                    <td>
-                      <button
-                        className="btn btn-primary btn-sm"
-                        onClick={() => navigate(`/join/${game.id}`)}
-                      >
-                        Rejoindre
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {games
+                  .filter((game) => game.players.length < game.maxPlayers && game.players.length > 0)
+                  .map((game) => (
+                    <tr key={game.id}>
+                      <td>{game.id}</td>
+                      <td>{game.creatorPlayer.username}</td>
+                      <td>{game.players.length}/{game.maxPlayers}</td>
+                      <td>
+                        <button
+                          className="btn btn-primary btn-sm"
+                          onClick={() => navigate(`/join/${game.id}`)}
+                        >
+                          Rejoindre
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>

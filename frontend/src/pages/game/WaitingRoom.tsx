@@ -144,6 +144,23 @@ const WaitingRoom = () => {
 
   }, [socket, isConnected, subscribeToEvent, unsubscribeFromEvent, navigate, error, gameId, setGame]);
 
+  const handleSwitchPrivate = async () => {
+    if (!isCreator || !game) return;
+    const updatedGame = { ...game, private: !game.private };
+    setGame(updatedGame);
+    await fetch(`${process.env.VITE_BACKEND_HOST}/game/${gameId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ private: !game.private }),
+    });
+
+    // avertir les autres joueurs du changement
+    sendMessage("update-game-params", { room: gameId });
+  }
+
   // copie de l'url du jeu dans le presse-papier
   const handleCopyToClipboard = () => {
     const url = `${window.location.origin}/join/${gameId}`;
@@ -225,10 +242,13 @@ const WaitingRoom = () => {
             <h1 className="text-2xl text-title">Salle d'attente</h1>
             {game.private ?
               <div
-                className="tooltip tooltip-top cursor-help"
+                className="tooltip tooltip-top cursor-pointer"
                 data-tip='Seuls les joueurs ayant l&apos;URL peuvent rejoindre ce salon'
               >
-                <div className='badge badge-neutral gap-2'>
+                <div
+                  className='badge badge-neutral gap-2'
+                  onClick={handleSwitchPrivate}
+                >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-3">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
                   </svg>
@@ -237,10 +257,13 @@ const WaitingRoom = () => {
               </div>
               :
               <div
-                className="tooltip tooltip-top cursor-help"
+                className="tooltip tooltip-top cursor-pointer"
                 data-tip='Salon visible dans la liste des salons publics'
               >
-                <div className='badge badge-accent gap-2'>
+                <div
+                  className='badge badge-accent gap-2'
+                  onClick={handleSwitchPrivate}
+                >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-3">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
                   </svg>

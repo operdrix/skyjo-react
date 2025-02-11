@@ -7,6 +7,7 @@ import ModalScoreEndGame from "@/components/game/messages/ModalScoreEndGame";
 import ReconnectMessage from "@/components/game/messages/ReconnectMessage";
 import WaitingDeal from "@/components/game/messages/WaitingDeal";
 import PlayerSet from "@/components/game/PlayerSet";
+import Rules from "@/components/game/Rules";
 import ToggleTheme from "@/components/nav/ToggleTheme";
 import { useGame } from "@/hooks/Game";
 import { useUser } from "@/hooks/User";
@@ -230,10 +231,20 @@ const Game = () => {
     <>
       {(game.gameData.currentStep === 'endGame') && <ModalScoreEndGame />}
       <ModalScore />
-      {/* <section className={`relative
-        md:container md:mx-auto w-full grow grid md:gap-4 px-4 p-8 sm:p-4
-        ${game.players.length === 2 ? 'grid-cols-1' : game.players.length === 3 ? 'grid-cols-2' : 'grid-cols-3'}
-        `}> */}
+
+      {/* Modal d'affichage des règles */}
+      <dialog id="modalRules" className="modal">
+        <div className="modal-box">
+          <Rules />
+          <div className="modal-action">
+            <form method="dialog">
+              {/* if there is a button in form, it will close the modal */}
+              <button className="btn">Fermer</button>
+            </form>
+          </div>
+        </div>
+      </dialog>
+
       {/* Boutons de gauche */}
       <div className="flex flex-col gap-4 absolute p-2 mt-8 sm:mt-4">
         <div className="tooltip tooltip-right" data-tip="Retour à l'accueil">
@@ -275,11 +286,19 @@ const Game = () => {
         </div>
         {/* Bouton pour afficher les règles */}
         <div className="tooltip tooltip-right" data-tip="Règles du jeu">
-          <a className="btn btn-circle" href="https://www.youtube.com/watch?v=4BJv_vDqou8" target="_blank" rel="noreferrer">
+          <button
+            className="btn btn-circle"
+            onClick={() => {
+              const modal = document.getElementById('modalRules');
+              if (modal) {
+                (modal as HTMLDialogElement).showModal();
+              }
+            }}
+          >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
             </svg>
-          </a>
+          </button>
         </div>
       </div>
 

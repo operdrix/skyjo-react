@@ -1,6 +1,7 @@
 import ErrorMessage from "@/components/game/messages/ErrorMessage";
 import ReconnectMessage from "@/components/game/messages/ReconnectMessage";
 import OnlineStatus from "@/components/game/OnlineStatus";
+import Rules from "@/components/game/Rules";
 import { useUser } from "@/hooks/User";
 import { useWebSocket } from "@/hooks/WebSocket";
 import type { ErrorType, GameType } from "@/types/types";
@@ -366,7 +367,11 @@ const WaitingRoom = () => {
             ))}
           </ul>
         </div>
+        <div className="col-span-3">
+          <Rules />
+        </div>
       </div>
+
     </div>
   )
 }

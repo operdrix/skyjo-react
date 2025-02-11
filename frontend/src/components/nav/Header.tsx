@@ -76,7 +76,7 @@ const Header = () => {
           <ul className="menu menu-horizontal px-1">
             <li><Link to={'/'}>Accueil</Link></li>
             <li>
-              <details>
+              <details className="z-50">
                 <summary>Jouer</summary>
                 <ul className="p-2 w-52">
                   <li><Link to={'/create'}>Créer une partie</Link></li>

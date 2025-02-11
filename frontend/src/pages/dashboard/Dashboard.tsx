@@ -2,7 +2,7 @@ import ErrorMessage from "@/components/game/messages/ErrorMessage"
 import { useUser } from "@/hooks/User"
 import { GameType } from "@/types/types"
 import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 
 const Dashboard = () => {
 
@@ -100,7 +100,7 @@ const Dashboard = () => {
   const defeats: number = games.filter(game => game.winner && game.winner !== userId).length;
   const finishedGames: number = games.filter(game => game.state === 'finished').length;
   const totalGames: number = games.filter(game => game.creator === userId).length;
-  const victoryRate: number = Math.round((victories / finishedGames) * 100);
+  const victoryRate: number = finishedGames ? Math.round((victories / finishedGames) * 100) : 0;
   const totalRounds: number = games.reduce((acc, game) => acc + game.roundNumber, 0);
   const maxRounds: number = games.reduce((acc, game) => Math.max(acc, game.roundNumber), 0);
   // tableau des adversaires du joueur (nombre de parties jouées, nombre de victoires, nombre de défaites, nombre de manches jouées)
@@ -196,97 +196,103 @@ const Dashboard = () => {
           <div className="stat-title">de victoires</div>
         </div>
       </div>
-
-      <h2 className="text-2xl font-bold mt-4">Tes adversaires <span className="text-xs">(Parties terminées)</span></h2>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 my-4">
-        {Object.values(opponents)
-          .sort((a, b) => b.games - a.games)
-          .filter(opponent => opponent.games > 0)
-          .map(opponent => (
-            <div
-              key={opponent.id}
-              className={`
+      {finishedGames === 0 && (
+        <div className="flex-1 flex items-center justify-center flex-col space-y-3">
+          <p>Vous n'avez pas encore terminé de partie.</p>
+          <p>
+            <Link to="/create" className="btn btn-primary ml-4">Créer une partie</Link>
+          </p>
+        </div>
+      )}
+      {finishedGames > 0 && (
+        <>
+          <h2 className="text-2xl font-bold mt-4">Tes adversaires <span className="text-xs">(Parties terminées)</span></h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 my-4">
+            {Object.values(opponents)
+              .sort((a, b) => b.games - a.games)
+              .filter(opponent => opponent.games > 0)
+              .map(opponent => (
+                <div
+                  key={opponent.id}
+                  className={`
                 shadow-md rounded-lg p-4 glass w-full text-black cursor-pointer
                 ${opponentFilter === opponent.id ? 'bg-red-400' : 'bg-white'}`}
-              onClick={() => {
-                if (opponentFilter === opponent.id) {
-                  setOpponentFilter(null);
-                  return;
-                }
-                setOpponentFilter(opponent.id);
-              }}
-            >
-              <h3 className="text-lg font-bold">{opponent.username}</h3>
-              <p>
-                {`${opponent.games} parties: `}
-                <span className="text-green-600">{opponent.defeats} victoires</span>
-                {opponent.victories > 0 ? ` / ` : ''}
-                {opponent.victories > 0 ? <span className="text-red-600">{opponent.victories} défaites</span> : ''}
-              </p>
-              <p className="text-xs">{opponent.rounds} manches jouées</p>
-            </div>
-          ))}
-      </div>
+                  onClick={() => {
+                    if (opponentFilter === opponent.id) {
+                      setOpponentFilter(null);
+                      return;
+                    }
+                    setOpponentFilter(opponent.id);
+                  }}
+                >
+                  <h3 className="text-lg font-bold">{opponent.username}</h3>
+                  <p>
+                    {`${opponent.games} parties: `}
+                    <span className="text-green-600">{opponent.defeats} victoires</span>
+                    {opponent.victories > 0 ? ` / ` : ''}
+                    {opponent.victories > 0 ? <span className="text-red-600">{opponent.victories} défaites</span> : ''}
+                  </p>
+                  <p className="text-xs">{opponent.rounds} manches jouées</p>
+                </div>
+              ))}
+          </div>
 
-      <h2 className="text-2xl font-bold mt-4">
-        Tes parties
-        {opponentFilter && " contre " + opponents[opponentFilter].username}
-      </h2>
-      {games.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 my-4">
-          {games
-            .filter(game => !opponentFilter || game.players?.find(player => player.id === opponentFilter))
-            .map((game) => (
-              <div key={game.id} className={
-                `${game.winner === userId ? "bg-green-600" : game.winner ? "bg-red-600" : "bg-blue-500"}
+          <h2 className="text-2xl font-bold mt-4">
+            Tes parties
+            {opponentFilter && " contre " + opponents[opponentFilter].username}
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 my-4">
+            {games
+              .filter(game => !opponentFilter || game.players?.find(player => player.id === opponentFilter))
+              .map((game) => (
+                <div key={game.id} className={
+                  `${game.winner === userId ? "bg-green-600" : game.winner ? "bg-red-600" : "bg-blue-500"}
               shadow-md rounded-lg p-4 glass w-full text-black
               flex justify-between
               `
-              }>
-                <div className="flex flex-col justify-between">
-                  <div>
-                    <h2 className="text-lg font-bold">
-                      {game.winner === userId
-                        ? "🥳 Victoire !"
-                        : game.winner
-                          ? "😭 Défaite"
-                          : "🔄 Partie en cours."}
-                    </h2>
-                    <p>
-                      {`${game.players?.length} joueurs: `}
-                      {
-                        game.players?.map((player, index) => (
-                          <span key={player.id}>
-                            {player.username}{index < game.players.length - 2 ? ', ' : index === game.players.length - 2 ? ' et ' : ''}
-                          </span>
-                        ))
-                      }
+                }>
+                  <div className="flex flex-col justify-between">
+                    <div>
+                      <h2 className="text-lg font-bold">
+                        {game.winner === userId
+                          ? "🥳 Victoire !"
+                          : game.winner
+                            ? "😭 Défaite"
+                            : "🔄 Partie en cours."}
+                      </h2>
+                      <p>
+                        {`${game.players?.length} joueurs: `}
+                        {
+                          game.players?.map((player, index) => (
+                            <span key={player.id}>
+                              {player.username}{index < game.players.length - 2 ? ', ' : index === game.players.length - 2 ? ' et ' : ''}
+                            </span>
+                          ))
+                        }
+                      </p>
+                    </div>
+                    <p className="text-xs">{new Date(game.createdAt).toLocaleDateString(
+                      'fr-FR'
+                    )}
                     </p>
                   </div>
-                  <p className="text-xs">{new Date(game.createdAt).toLocaleDateString(
-                    'fr-FR'
-                  )}
-                  </p>
+                  <div className="flex flex-col justify-between">
+                    <p className="text-center">
+                      <span className="text-4xl"><strong>{game.roundNumber}</strong></span><br /> manches
+                    </p>
+                    <button
+                      onClick={() => navigate(`/game/${game.id}`)}
+                      className="btn btn-xs btn-neutral"
+                    >
+                      Consulter
+                    </button>
+                  </div>
                 </div>
-                <div className="flex flex-col justify-between">
-                  <p className="text-center">
-                    <span className="text-4xl"><strong>{game.roundNumber}</strong></span><br /> manches
-                  </p>
-                  <button
-                    onClick={() => navigate(`/game/${game.id}`)}
-                    className="btn btn-xs btn-neutral"
-                  >
-                    Consulter
-                  </button>
-                </div>
-              </div>
-            ))}
-        </div>
-      ) : (
-        <div className="flex-1 flex items-center justify-center">
-          <p>Vous n'avez pas encore créé de jeu.</p>
-        </div>
+              ))}
+          </div>
+        </>
       )}
+
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import ReconnectMessage from "@/components/game/messages/ReconnectMessage";
 import { useUser } from "@/hooks/User";
 import { useWebSocket } from "@/hooks/WebSocket";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Create = () => {
@@ -10,7 +10,7 @@ const Create = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  const handleCreateGame = async (privateRoom: boolean) => {
+  const handleCreateGame = useCallback(async (privateRoom: boolean) => {
     setLoading(true);
     if (socket && isConnected) {
       try {
@@ -38,7 +38,17 @@ const Create = () => {
       }
     }
     setLoading(false);
-  }
+  }, [socket, isConnected, token, userId, logout, navigate]);
+
+  // Créer une partie dès que le composant est monté
+  useEffect(() => {
+    const createGame = async () => {
+      await handleCreateGame(true);
+    };
+    if (socket && isConnected) {
+      createGame();
+    }
+  }, [handleCreateGame, isConnected, socket]);
 
   if (userLoading || wbLoading) {
     // Optionnel : Afficher un loader pendant la vérification de l'authentification

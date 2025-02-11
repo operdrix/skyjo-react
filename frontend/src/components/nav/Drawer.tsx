@@ -1,6 +1,6 @@
 import { useUser } from "@/hooks/User";
 import { Link, useNavigate } from "react-router-dom";
-import ToggleTheme from "./nav/ToggleTheme";
+import ToggleTheme from "../nav/ToggleTheme";
 
 const Drawer = ({ children }: {
   children: React.ReactNode
@@ -41,6 +41,7 @@ const Drawer = ({ children }: {
             <ul className="p-2">
               <li><Link to={'/create'}>Créer partie</Link></li>
               <li><Link to={'/public-rooms'}>Rejoindre partie</Link></li>
+              <li><Link to={'/rules'}>Règles du Skyjo</Link></li>
             </ul>
           </li>
           {isAuthentified ? (

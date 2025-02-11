@@ -81,6 +81,7 @@ const Header = () => {
                 <ul className="p-2 w-52">
                   <li><Link to={'/create'}>Créer une partie</Link></li>
                   <li><Link to={'/public-rooms'}>Rejoindre une partie</Link></li>
+                  <li><Link to={'/rules'}>Règles du Skyjo</Link></li>
                 </ul>
               </details>
             </li>

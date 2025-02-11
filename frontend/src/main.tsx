@@ -16,6 +16,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import RequestResetPassword from './pages/auth/RequestResetPassword'
 import ResetPassword from './pages/auth/ResetPassword'
 import Dashboard from './pages/dashboard/Dashboard'
+import RulesPage from './pages/game/Rules'
 import PrivacyPage from './pages/privacy/PrivacyPage'
 
 const router = createBrowserRouter([
@@ -30,6 +31,10 @@ const router = createBrowserRouter([
       {
         path: '/privacy',
         element: <PrivacyPage />
+      },
+      {
+        path: '/rules',
+        element: <RulesPage />
       }
     ]
   },

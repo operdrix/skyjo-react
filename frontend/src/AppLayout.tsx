@@ -1,7 +1,7 @@
 import Footer from "@/components/nav/Footer";
 import Header from "@/components/nav/Header";
 import { Outlet } from "react-router-dom";
-import Drawer from "./components/Drawer";
+import Drawer from "./components/nav/Drawer";
 
 const AppLayout = () => {
 

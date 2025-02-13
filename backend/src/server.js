@@ -106,7 +106,7 @@ await app
  **********/
 
 app.get("/api", (request, reply) => {
-	reply.send({ documentationURL: "https://labodolivier.fr/api/documentation" });
+	reply.send({ documentationURL: "https://labodolivier.com/api/documentation" });
 });
 // Fonction pour décoder et vérifier le token
 app.decorate("authenticate", async (request, reply) => {
@@ -157,7 +157,7 @@ const start = async () => {
 		);
 		console.log(
 			chalk.bgYellow(
-				"Accéder à la documentation sur https://labodolivier.fr/api/documentation"
+				"Accéder à la documentation sur https://labodolivier.com/api/documentation"
 			)
 		);
 	} catch (err) {

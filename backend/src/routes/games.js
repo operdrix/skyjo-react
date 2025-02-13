@@ -1,4 +1,4 @@
-import { createGame, getGame, getGames, updateGame, updateGameSettings } from "../controllers/games.js";
+import { createGame, deleteGame, getGame, getGames, updateGame, updateGameSettings } from "../controllers/games.js";
 
 export function gamesRoutes(app) {
 
@@ -45,6 +45,16 @@ export function gamesRoutes(app) {
 	// Changer les paramètres d'une partie
 	app.patch("/api/game/:gameId", { preHandler: [app.authenticate] }, async (request, reply) => {
 		const response = await updateGameSettings(request.params.gameId, request.body);
+		if (response.error) {
+			reply.status(response.code).send(response);
+		} else {
+			reply.send(response);
+		}
+	});
+
+	// Supprimer une partie
+	app.delete("/api/game/:gameId", { preHandler: [app.authenticate] }, async (request, reply) => {
+		const response = await deleteGame(request.params.gameId, request.user.id);
 		if (response.error) {
 			reply.status(response.code).send(response);
 		} else {

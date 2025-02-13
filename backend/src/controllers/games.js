@@ -84,6 +84,22 @@ export async function getUserGames(userId) {
   }
 }
 
+// Supprimer une partie
+export async function deleteGame(gameId, userId) {
+  const game = await Game.findByPk(gameId);
+
+  if (!game) {
+    return { error: "La partie n'existe pas.", code: 404 };
+  }
+
+  if (game.creator !== userId) {
+    return { error: "Seul le créateur de la partie peut la supprimer.", code: 403 };
+  }
+
+  await game.destroy();
+  return { gameDestroyed: true };
+}
+
 // Consulter une partie
 export async function getGame(gameId) {
   const game = await Game.findByPk(gameId, {

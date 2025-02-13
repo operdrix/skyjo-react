@@ -4,6 +4,7 @@ import React from 'react';
 interface CustomFieldProps extends FieldProps {
     type?: string;
     label?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 }
 

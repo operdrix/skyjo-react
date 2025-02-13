@@ -75,9 +75,9 @@ await app
 		},
 	})
 	.register(fastifySwaggerUi, {
-		routePrefix: "/documentation",
+		routePrefix: "/api/documentation",
 		theme: {
-			title: "Docs - JDR LOTR API",
+			title: "Documentation API Skyjo d'Olivier",
 		},
 		uiConfig: {
 			docExpansion: "list",
@@ -106,7 +106,7 @@ await app
  **********/
 
 app.get("/api", (request, reply) => {
-	reply.send({ documentationURL: "http://localhost:3000/api/documentation" });
+	reply.send({ documentationURL: "https://labodolivier.fr/api/documentation" });
 });
 // Fonction pour décoder et vérifier le token
 app.decorate("authenticate", async (request, reply) => {
@@ -157,7 +157,7 @@ const start = async () => {
 		);
 		console.log(
 			chalk.bgYellow(
-				"Accéder à la documentation sur http://localhost:3000/documentation"
+				"Accéder à la documentation sur https://labodolivier.fr/api/documentation"
 			)
 		);
 	} catch (err) {

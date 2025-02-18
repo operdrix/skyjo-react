@@ -238,7 +238,7 @@ const WaitingRoom = () => {
   return (
     <div className="flex-1 flex items-center container mx-auto">
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 p-5 min-h-[50vh]">
-        <div className="bg-base-300 lg:col-span-2 flex flex-col space-y-4 rounded-box p-5">
+        <div className="bg-base-300 col-span-3 lg:col-span-2 flex flex-col space-y-4 rounded-box p-5">
           <div className="flex justify-between items-start">
             <h1 className="text-2xl text-title">Salle d'attente</h1>
             {game.private ?
@@ -340,7 +340,7 @@ const WaitingRoom = () => {
             </>
           }
         </div>
-        <div className="bg-base-300 flex flex-col space-y-4 rounded-box p-5">
+        <div className="bg-base-300 col-span-3 lg:col-span-1 flex flex-col space-y-4 rounded-box p-5">
           <div className="flex justify-between items-start">
             <h2 className="text-2xl">Joueurs {game?.players.length}/{game?.maxPlayers}</h2>
             <OnlineStatus isConnected={isConnected} />

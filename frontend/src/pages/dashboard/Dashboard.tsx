@@ -220,7 +220,7 @@ const Dashboard = () => {
           <div className="stat-title">de victoires</div>
         </div>
       </div>
-      {finishedGames === 0 && (
+      {games.length === 0 && (
         <div className="flex-1 flex items-center justify-center flex-col space-y-3">
           <p>Vous n'avez pas encore terminé de partie.</p>
           <p>
@@ -228,7 +228,7 @@ const Dashboard = () => {
           </p>
         </div>
       )}
-      {finishedGames > 0 && (
+      {games.length > 0 && (
         <>
           <h2 className="text-2xl font-bold mt-4">Tes adversaires <span className="text-xs">(Parties terminées)</span></h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 my-4">

@@ -1,0 +1,174 @@
+name: Deploy to Production
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set env variables
+        run: |
+          echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          echo "BACKEND_IMAGE=${{ github.repository_owner }}/skyjo-backend:${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          echo "FRONTEND_IMAGE=${{ github.repository_owner }}/skyjo-frontend:${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      # Création du fichier docker-compose de production avec les bonnes variables
+      - name: Create deployment files
+        run: |
+          mkdir -p deploy
+          
+          # Création du fichier docker-compose.yml
+          cat > deploy/docker-compose.yml << 'EOL'
+          version: '3.8'
+          services:
+            frontend:
+              image: ${FRONTEND_IMAGE}
+              restart: always
+              ports:
+                - "${FRONTEND_PORT:-80}:80"
+              container_name: skyjo-frontend-prod
+              depends_on:
+                - backend
+              networks:
+                - skyjo-network
+          
+            backend:
+              image: ${BACKEND_IMAGE}
+              restart: always
+              ports:
+                - "${BACKEND_PORT:-3000}:3000"
+              container_name: skyjo-backend-prod
+              environment:
+                - DB_HOST=${DB_HOST:-mysql}
+                - DB_USER=${DB_USER}
+                - DB_PASSWORD=${DB_PASSWORD}
+                - DB_NAME=${DB_NAME:-skyjo}
+                - DB_PORT=${DB_PORT:-3306}
+                - JWT_SECRET=${JWT_SECRET}
+                - APP_URL=${APP_URL}
+                - EMAIL_HOST=${EMAIL_HOST}
+                - EMAIL_PORT=${EMAIL_PORT}
+                - EMAIL_USER=${EMAIL_USER}
+                - EMAIL_PASS=${EMAIL_PASS}
+                - EMAIL_FROM=${EMAIL_FROM}
+              depends_on:
+                - mysql
+              networks:
+                - skyjo-network
+                - skyjo-db_network
+          
+            mysql:
+              image: mysql:latest
+              container_name: skyjo-mysql-prod
+              restart: always
+              environment:
+                MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+                MYSQL_DATABASE: ${DB_NAME:-skyjo}
+                MYSQL_USER: ${DB_USER}
+                MYSQL_PASSWORD: ${DB_PASSWORD}
+              ports:
+                - "${MYSQL_PORT:-3307}:3306"
+              volumes:
+                - mysql_data:/var/lib/mysql
+              networks:
+                - skyjo-db_network
+          
+          volumes:
+            mysql_data:
+          
+          networks:
+            skyjo-network:
+            skyjo-db_network:
+          EOL
+          
+          # Création du script de déploiement
+          cat > deploy/deploy.sh << 'EOL'
+          #!/bin/bash
+          
+          cd /opt/skyjo
+          
+          # Pull des nouvelles images
+          docker-compose pull
+          
+          # Arrêt des conteneurs existants
+          docker-compose down
+          
+          # Démarrage des nouveaux conteneurs
+          docker-compose up -d
+          
+          # Vérification du statut
+          docker-compose ps
+          EOL
+          
+          # Création du fichier .env
+          cat > deploy/.env << EOL
+          FRONTEND_IMAGE=${{ github.repository_owner }}/skyjo-frontend:${GITHUB_REF#refs/tags/}
+          BACKEND_IMAGE=${{ github.repository_owner }}/skyjo-backend:${GITHUB_REF#refs/tags/}
+          DB_HOST=mysql
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_NAME=skyjo
+          DB_PORT=3306
+          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          APP_URL=${{ secrets.APP_URL }}
+          EMAIL_HOST=${{ secrets.EMAIL_HOST }}
+          EMAIL_PORT=${{ secrets.EMAIL_PORT }}
+          EMAIL_USER=${{ secrets.EMAIL_USER }}
+          EMAIL_PASS=${{ secrets.EMAIL_PASS }}
+          EMAIL_FROM=${{ secrets.EMAIL_FROM }}
+          EOL
+          
+          chmod +x deploy/deploy.sh
+
+      # Téléchargement des images sur Docker Hub
+      - name: Tag Docker images for release
+        run: |
+          echo "Tagging images with version tag: ${{ env.TAG }}"
+          docker pull ${{ github.repository_owner }}/skyjo-backend:latest
+          docker pull ${{ github.repository_owner }}/skyjo-frontend:latest
+          docker tag ${{ github.repository_owner }}/skyjo-backend:latest ${{ github.repository_owner }}/skyjo-backend:${{ env.TAG }}
+          docker tag ${{ github.repository_owner }}/skyjo-frontend:latest ${{ github.repository_owner }}/skyjo-frontend:${{ env.TAG }}
+          
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          
+      - name: Push tagged images
+        run: |
+          docker push ${{ github.repository_owner }}/skyjo-backend:${{ env.TAG }}
+          docker push ${{ github.repository_owner }}/skyjo-frontend:${{ env.TAG }}
+
+      # Déploiement sur le serveur via SSH
+      - name: Deploy to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: "deploy/*"
+          target: "/tmp"
+          rm: true
+
+      - name: Execute deploy script
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            mkdir -p /opt/skyjo
+            cp /tmp/deploy/* /opt/skyjo/
+            cd /opt/skyjo
+            chmod +x deploy.sh
+            ./deploy.sh 

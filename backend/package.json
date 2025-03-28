@@ -26,9 +26,14 @@
   },
   "scripts": {
     "dev": "node --watch src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "lint": "eslint . --ext .js",
+    "lint:fix": "eslint . --ext .js --fix"
   },
   "devDependencies": {
-    "cross-env": "^7.0.3"
+    "@eslint/js": "^9.23.0",
+    "cross-env": "^7.0.3",
+    "eslint": "^9.23.0",
+    "globals": "^16.0.0"
   }
 }

@@ -96,16 +96,16 @@ jobs:
           cd /opt/skyjo
           
           # Pull des nouvelles images
-          docker-compose pull
+          docker compose pull
           
           # Arrêt des conteneurs existants
-          docker-compose down
+          docker compose down
           
           # Démarrage des nouveaux conteneurs
-          docker-compose up -d
+          docker compose up -d
           
           # Vérification du statut
-          docker-compose ps
+          docker compose ps
           EOL
           
           # Création du fichier .env
@@ -125,6 +125,8 @@ jobs:
           EMAIL_USER=${{ secrets.EMAIL_USER }}
           EMAIL_PASS=${{ secrets.EMAIL_PASS }}
           EMAIL_FROM=${{ secrets.EMAIL_FROM }}
+          GMAIL_APP_EMAIL=${{ secrets.GMAIL_APP_EMAIL }}
+          GMAIL_APP_PASSWORD=${{ secrets.GMAIL_APP_PASSWORD }}
           EOL
           
           chmod +x deploy/deploy.sh
@@ -149,19 +151,26 @@ jobs:
           docker push ${{ github.repository_owner }}/skyjo-backend:${{ env.TAG }}
           docker push ${{ github.repository_owner }}/skyjo-frontend:${{ env.TAG }}
 
-      # Déploiement sur le serveur via SSH
-      - name: Deploy to server
-        uses: appleboy/scp-action@master
+      # Vérification de la clé SSH 
+      - name: Debug SSH key
+        run: |
+          echo "SSH key length: $(echo "${{ secrets.SSH_PRIVATE_KEY }}" | wc -c) characters"
+          echo "SSH key starts with: $(echo "${{ secrets.SSH_PRIVATE_KEY }}" | head -1)"
+        
+      # Test de connexion SSH
+      - name: Test SSH connection
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          source: "deploy/*"
-          target: "/tmp"
-          rm: true
-
-      - name: Execute deploy script
+          script: |
+            echo "SSH connection successful"
+            mkdir -p /tmp/test-deploy
+            
+      # Déploiement sur le serveur via SSH - Étape simplifiée
+      - name: Prepare server directory
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -170,7 +179,52 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             mkdir -p /opt/skyjo
-            cp /tmp/deploy/* /opt/skyjo/
+            
+      # Déploiement des fichiers individuels 
+      - name: Deploy docker-compose.yml
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: "deploy/docker-compose.yml"
+          target: "/tmp"
+          strip_components: 1
+          
+      - name: Deploy .env file
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: "deploy/.env"
+          target: "/tmp"
+          strip_components: 1
+          
+      - name: Deploy deployment script
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: "deploy/deploy.sh"
+          target: "/tmp"
+          strip_components: 1
+          
+      - name: Execute deploy script
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cp /tmp/docker-compose.yml /opt/skyjo/
+            cp /tmp/.env /opt/skyjo/
+            cp /tmp/deploy.sh /opt/skyjo/
+            chmod +x /opt/skyjo/deploy.sh
             cd /opt/skyjo
-            chmod +x deploy.sh
             ./deploy.sh 

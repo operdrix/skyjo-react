@@ -1,0 +1,52 @@
+name: Validate Code
+
+on:
+  push:
+    branches-ignore:
+      - main
+    paths-ignore:
+      - '**.md'
+      - '.github/**'
+      - '!.github/workflows/validate.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # Validation du backend
+      - name: Install backend dependencies
+        run: cd backend && npm ci
+        
+      - name: Lint backend
+        run: cd backend && npm run lint
+        continue-on-error: true  # Optionnel: ne pas faire échouer le workflow pour des erreurs de lint
+        
+      - name: Build backend check
+        run: cd backend && npm run build --if-present
+
+      # Validation du frontend
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci
+        
+      - name: Lint frontend
+        run: cd frontend && npm run lint
+        continue-on-error: true  # Optionnel: ne pas faire échouer le workflow pour des erreurs de lint
+        
+      - name: Build frontend check
+        run: cd frontend && npm run build --if-present
+
+      # Si vous avez des tests
+      # - name: Run backend tests
+      #   run: cd backend && npm test
+      #   
+      # - name: Run frontend tests
+      #   run: cd frontend && npm test 

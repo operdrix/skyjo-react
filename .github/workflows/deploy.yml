@@ -57,6 +57,8 @@ jobs:
                 - EMAIL_USER=${EMAIL_USER}
                 - EMAIL_PASS=${EMAIL_PASS}
                 - EMAIL_FROM=${EMAIL_FROM}
+                - GMAIL_APP_EMAIL=${GMAIL_APP_EMAIL}
+                - GMAIL_APP_PASSWORD=${GMAIL_APP_PASSWORD}
               depends_on:
                 - mysql
               networks:

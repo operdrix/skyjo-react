@@ -13,6 +13,7 @@ import { useGame } from "@/hooks/Game";
 import { useUser } from "@/hooks/User";
 import { useWebSocket } from "@/hooks/WebSocket";
 import type { GameType } from "@/types/types";
+import { buildApiUrl } from "@/utils/apiUtils";
 import notify from "@/utils/notify";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -42,7 +43,7 @@ const Game = () => {
     const getGame = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`${process.env.VITE_BACKEND_HOST}/game/${gameId}`, {
+        const response = await fetch(buildApiUrl(`game/${gameId}`), {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,

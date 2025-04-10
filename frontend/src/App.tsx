@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useUser } from "./hooks/User";
+import { buildApiUrl } from "./utils/apiUtils";
 
 function App() {
 
@@ -25,7 +26,7 @@ function App() {
 
     setLoading(true);
     try {
-      const response = await fetch(`${process.env.VITE_BACKEND_HOST}/game`, {
+      const response = await fetch(buildApiUrl('game'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

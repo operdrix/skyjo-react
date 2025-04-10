@@ -1,6 +1,7 @@
 import ErrorMessage from "@/components/game/messages/ErrorMessage";
 import { useUser } from "@/hooks/User";
 import { GameType } from "@/types/types";
+import { buildApiUrl } from "@/utils/apiUtils";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -17,7 +18,7 @@ const JoinPublic = () => {
     setLoading(true);
     setError(null); // Reset error state before fetching
     try {
-      const response = await fetch(`${process.env.VITE_BACKEND_HOST}/games?state=pending&privateRoom=false`, {
+      const response = await fetch(buildApiUrl('games?state=pending&privateRoom=false'), {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,

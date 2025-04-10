@@ -51,6 +51,21 @@ services:
     networks:
       - skyjo-db_network
 
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: skyjo-phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "${PHPMYADMIN_PORT:-8080}:80"
+    depends_on:
+      - mysql
+    networks:
+      - skyjo-db_network
+
 volumes:
   mysql_data:
 

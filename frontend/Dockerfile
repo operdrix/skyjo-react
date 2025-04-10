@@ -3,7 +3,11 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
+
+# S'assurer que la variable est définie au moment du build
+ARG VITE_BACKEND_HOST
 ENV VITE_BACKEND_HOST=${VITE_BACKEND_HOST}
+
 RUN npm run build
 
 FROM nginx:alpine

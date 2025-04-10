@@ -3,7 +3,6 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
-ARG VITE_BACKEND_HOST=http://localhost:3000
 ENV VITE_BACKEND_HOST=${VITE_BACKEND_HOST}
 RUN npm run build
 

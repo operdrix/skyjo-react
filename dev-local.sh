@@ -3,10 +3,16 @@
 # Définir la variable d'environnement pour le build (sans le /api)
 export VITE_BACKEND_HOST=http://localhost:3000
 
-# Construire les images locales
-docker build -t skyjo-frontend:local --build-arg VITE_BACKEND_HOST=$VITE_BACKEND_HOST ./frontend
-docker build -t skyjo-backend:local ./backend
-
-# Lancer les conteneurs avec docker-compose
+# Lancer MySQL via Docker Compose
 cd deploy
-docker-compose up 
+docker compose up -d mysql
+
+# Lancer le backend en mode dev
+cd ../backend
+npm install
+npm run dev &
+
+# Lancer le frontend en mode dev
+cd ../frontend
+npm install
+npm run dev 

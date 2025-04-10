@@ -1,6 +1,7 @@
 import ErrorMessage from "@/components/game/messages/ErrorMessage"
 import { useUser } from "@/hooks/User"
 import { GameType } from "@/types/types"
+import { buildApiUrl } from "@/utils/apiUtils"
 import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 
@@ -36,7 +37,7 @@ const Dashboard = () => {
     const getGames = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`${process.env.VITE_BACKEND_HOST}/users/${userId}/games`, {
+        const response = await fetch(buildApiUrl(`users/${userId}/games`), {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -69,7 +70,7 @@ const Dashboard = () => {
     // Demande de confirmation
     if (!window.confirm('Voulez-vous vraiment supprimer cette partie ?')) return;
     try {
-      const response = await fetch(`${process.env.VITE_BACKEND_HOST}/game/${gameId}`, {
+      const response = await fetch(buildApiUrl(`game/${gameId}`), {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,

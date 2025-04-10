@@ -1,4 +1,5 @@
 const Footer = () => {
+  const appVersion = import.meta.env.VITE_APP_VERSION;
   return (
     <footer className="footer bg-neutral text-neutral-content p-10">
       <aside>
@@ -56,6 +57,7 @@ const Footer = () => {
           Légal
         </h6>
         <a href="/privacy" className="link link-hover">Politique de confidentialité</a>
+        <p>{appVersion}</p>
       </nav>
     </footer>
   )

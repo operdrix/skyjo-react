@@ -1,6 +1,7 @@
 import ReconnectMessage from "@/components/game/messages/ReconnectMessage";
 import { useUser } from "@/hooks/User";
 import { useWebSocket } from "@/hooks/WebSocket";
+import { buildApiUrl } from "@/utils/apiUtils";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -14,7 +15,7 @@ const Create = () => {
     setLoading(true);
     if (socket && isConnected) {
       try {
-        const response = await fetch(`${process.env.VITE_BACKEND_HOST}/game`, {
+        const response = await fetch(buildApiUrl('game'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

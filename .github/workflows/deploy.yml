@@ -32,12 +32,18 @@ jobs:
           EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
         run: |
+          # Définir le tag avant de l'utiliser
+          DEPLOYMENT_TAG=${GITHUB_REF#refs/tags/}
+          
+          # Créer le fichier .env à partir du template
           envsubst < deploy/.env.template > deploy/.env
+          
+          # Ajouter les variables spécifiques
           cat << EOL >> deploy/.env
           
           # Variables spécifiques générées pour ce déploiement
           DEPLOYMENT_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
-          DEPLOYMENT_TAG=${GITHUB_REF#refs/tags/}
+          DEPLOYMENT_TAG=${DEPLOYMENT_TAG}
           EOL
           
           # Remplacement des variables avec les secrets
@@ -51,6 +57,7 @@ jobs:
           sed -i "s|\${EMAIL_USER}|$EMAIL_USER|g" deploy/.env
           sed -i "s|\${EMAIL_PASS}|$EMAIL_PASS|g" deploy/.env
           sed -i "s|\${EMAIL_FROM}|$EMAIL_FROM|g" deploy/.env
+          sed -i "s|\${DEPLOYMENT_TAG}|${DEPLOYMENT_TAG}|g" deploy/.env
           
           # Injection des images Docker
           sed -i "s|\${FRONTEND_IMAGE}|${{ github.repository_owner }}/skyjo-frontend:${GITHUB_REF#refs/tags/}|g" deploy/.env

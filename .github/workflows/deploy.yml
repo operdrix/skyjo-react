@@ -20,41 +20,52 @@ jobs:
 
       # Création du fichier .env à partir du template
       - name: Generate .env file
+        env:
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          APP_URL: ${{ secrets.APP_URL }}
+          EMAIL_HOST: ${{ secrets.EMAIL_HOST }}
+          EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
         run: |
           envsubst < deploy/.env.template > deploy/.env
           cat << EOL >> deploy/.env
           
           # Variables spécifiques générées pour ce déploiement
           DEPLOYMENT_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
-          DEPLOYMENT_TAG=${{ env.TAG }}
+          DEPLOYMENT_TAG=${GITHUB_REF#refs/tags/}
           EOL
           
           # Remplacement des variables avec les secrets
-          sed -i "s|\${DB_USER}|${{ secrets.DB_USER }}|g" deploy/.env
-          sed -i "s|\${DB_PASSWORD}|${{ secrets.DB_PASSWORD }}|g" deploy/.env
-          sed -i "s|\${MYSQL_ROOT_PASSWORD}|${{ secrets.MYSQL_ROOT_PASSWORD }}|g" deploy/.env
-          sed -i "s|\${JWT_SECRET}|${{ secrets.JWT_SECRET }}|g" deploy/.env
-          sed -i "s|\${APP_URL}|${{ secrets.APP_URL }}|g" deploy/.env
-          sed -i "s|\${EMAIL_HOST}|${{ secrets.EMAIL_HOST }}|g" deploy/.env
-          sed -i "s|\${EMAIL_PORT}|${{ secrets.EMAIL_PORT }}|g" deploy/.env
-          sed -i "s|\${EMAIL_USER}|${{ secrets.EMAIL_USER }}|g" deploy/.env
-          sed -i "s|\${EMAIL_PASS}|${{ secrets.EMAIL_PASS }}|g" deploy/.env
-          sed -i "s|\${EMAIL_FROM}|${{ secrets.EMAIL_FROM }}|g" deploy/.env
+          sed -i "s|\${DB_USER}|$DB_USER|g" deploy/.env
+          sed -i "s|\${DB_PASSWORD}|$DB_PASSWORD|g" deploy/.env
+          sed -i "s|\${MYSQL_ROOT_PASSWORD}|$MYSQL_ROOT_PASSWORD|g" deploy/.env
+          sed -i "s|\${JWT_SECRET}|$JWT_SECRET|g" deploy/.env
+          sed -i "s|\${APP_URL}|$APP_URL|g" deploy/.env
+          sed -i "s|\${EMAIL_HOST}|$EMAIL_HOST|g" deploy/.env
+          sed -i "s|\${EMAIL_PORT}|$EMAIL_PORT|g" deploy/.env
+          sed -i "s|\${EMAIL_USER}|$EMAIL_USER|g" deploy/.env
+          sed -i "s|\${EMAIL_PASS}|$EMAIL_PASS|g" deploy/.env
+          sed -i "s|\${EMAIL_FROM}|$EMAIL_FROM|g" deploy/.env
           
           # Injection des images Docker
-          sed -i "s|\${FRONTEND_IMAGE}|${{ env.FRONTEND_IMAGE }}|g" deploy/.env
-          sed -i "s|\${BACKEND_IMAGE}|${{ env.BACKEND_IMAGE }}|g" deploy/.env
+          sed -i "s|\${FRONTEND_IMAGE}|${{ github.repository_owner }}/skyjo-frontend:${GITHUB_REF#refs/tags/}|g" deploy/.env
+          sed -i "s|\${BACKEND_IMAGE}|${{ github.repository_owner }}/skyjo-backend:${GITHUB_REF#refs/tags/}|g" deploy/.env
           
           chmod +x deploy/deploy.sh
 
       # Téléchargement des images sur Docker Hub
       - name: Tag Docker images for release
         run: |
-          echo "Tagging images with version tag: ${{ env.TAG }}"
+          echo "Tagging images with version tag: ${GITHUB_REF#refs/tags/}"
           docker pull ${{ github.repository_owner }}/skyjo-backend:latest
           docker pull ${{ github.repository_owner }}/skyjo-frontend:latest
-          docker tag ${{ github.repository_owner }}/skyjo-backend:latest ${{ github.repository_owner }}/skyjo-backend:${{ env.TAG }}
-          docker tag ${{ github.repository_owner }}/skyjo-frontend:latest ${{ github.repository_owner }}/skyjo-frontend:${{ env.TAG }}
+          docker tag ${{ github.repository_owner }}/skyjo-backend:latest ${{ github.repository_owner }}/skyjo-backend:${GITHUB_REF#refs/tags/}
+          docker tag ${{ github.repository_owner }}/skyjo-frontend:latest ${{ github.repository_owner }}/skyjo-frontend:${GITHUB_REF#refs/tags/}
           
       - name: Login to DockerHub
         uses: docker/login-action@v3
@@ -64,8 +75,8 @@ jobs:
           
       - name: Push tagged images
         run: |
-          docker push ${{ github.repository_owner }}/skyjo-backend:${{ env.TAG }}
-          docker push ${{ github.repository_owner }}/skyjo-frontend:${{ env.TAG }}
+          docker push ${{ github.repository_owner }}/skyjo-backend:${GITHUB_REF#refs/tags/}
+          docker push ${{ github.repository_owner }}/skyjo-frontend:${GITHUB_REF#refs/tags/}
 
       # Vérification de la clé SSH 
       - name: Debug SSH key

@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { verifyJwt } from "@/services/authService";
+import { buildApiUrl } from '@/utils/apiUtils';
 import getUserIdFromToken from "@/utils/getUserIdFromToken";
 import { createContext, useCallback, useEffect, useState } from "react";
 
@@ -95,7 +96,7 @@ export const UserProvider = ({ children }: {
   const logout = useCallback(() => {
     // appel de l'api pour détruire le token
     try {
-      fetch(`${process.env.VITE_BACKEND_HOST}/logout`, {
+      fetch(buildApiUrl('logout'), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

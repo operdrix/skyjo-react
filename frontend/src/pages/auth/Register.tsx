@@ -1,6 +1,7 @@
 import CustomField from '@/components/forms/CustomField';
 import Modal from '@/components/Modal';
 import PrivacyPolicy from '@/components/nav/PrivacyPolicy';
+import { buildApiUrl } from '@/utils/apiUtils';
 import { Field, Form, Formik } from 'formik';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -46,7 +47,7 @@ function Register() {
     setLoading(true);
     try {
       console.log("Form values", values);
-      const response = await fetch(`${process.env.VITE_BACKEND_HOST}/register`, {
+      const response = await fetch(buildApiUrl('register'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

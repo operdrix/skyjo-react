@@ -1,39 +1,40 @@
-import { useEffect, useState } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import { buildApiUrl } from '@/utils/apiUtils';
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 const VerifyEmail = () => {
-    const { token } = useParams()
-    const [error, setError] = useState('')
+    const { token } = useParams<string>()
+    const [isLoading, setIsLoading] = useState<boolean>(true)
+    const [errorMessage, setErrorMessage] = useState<string>('')
     const navigate = useNavigate()
 
     useEffect(() => {
-        verifyEmail()
-    }, [])
-
-    const verifyEmail = async () => {
-        try {
-            const response = await fetch(`${process.env.VITE_BACKEND_HOST}/verify/${token}`)
-            const data = await response.json()
-            if (response.ok) {
-                console.log('Success:', data)
-                navigate('/auth/login', {
-                    state: {
-                        message: {
-                            title: 'Email vérifié',
-                            message: 'Votre email a bien été vérifié, vous pouvez maintenant vous connecter',
-                            type: 'success'
+        const verifyToken = async () => {
+            try {
+                const response = await fetch(buildApiUrl(`verify/${token}`))
+                const data = await response.json()
+                if (response.ok) {
+                    navigate('/auth/login', {
+                        state: {
+                            message: {
+                                title: 'Email vérifié',
+                                message: 'Votre email a bien été vérifié, vous pouvez maintenant vous connecter',
+                                type: 'success'
+                            }
                         }
-                    }
-                })
-            } else {
-                console.error('Error:', data)
-                setError(data.error)
+                    })
+                } else {
+                    setErrorMessage(data.error || 'La vérification a échoué')
+                }
+            } catch {
+                setErrorMessage('Erreur serveur, veuillez réessayer plus tard')
+            } finally {
+                setIsLoading(false)
             }
-        } catch (error) {
-            console.error(error)
-            setError('An error occurred. Please try again later.')
         }
-    }
+
+        verifyToken()
+    }, [token, navigate])
 
     if (!token) {
         return (
@@ -45,8 +46,9 @@ const VerifyEmail = () => {
             </div>
         )
     }
+
     return (
-        error ? (
+        errorMessage ? (
             <div className="toast toast-center toast-middle">
                 <div className=" alert alert-error">
                     <svg
@@ -60,12 +62,12 @@ const VerifyEmail = () => {
                             strokeWidth="2"
                             d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span>{error}</span>
+                    <span>{errorMessage}</span>
                 </div>
             </div>
-        ) : (
+        ) : isLoading ? (
             <span className="loading loading-ring loading-lg"></span>
-        )
+        ) : null
     )
 }
 

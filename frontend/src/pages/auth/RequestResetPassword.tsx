@@ -1,5 +1,6 @@
 import CustomField from '@/components/forms/CustomField';
 import { MessageType } from '@/components/Modal';
+import { buildApiUrl } from '@/utils/apiUtils';
 import { Field, Form, Formik } from 'formik';
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -20,7 +21,7 @@ function RequestResetPassword() {
   const handleSubmit = async (values: typeof initialValues) => {
     setLoading(true);
     try {
-      const response = await fetch(`${process.env.VITE_BACKEND_HOST}/password-reset-request`, {
+      const response = await fetch(buildApiUrl('password-reset-request'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

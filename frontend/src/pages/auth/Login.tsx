@@ -1,6 +1,7 @@
 import CustomField from '@/components/forms/CustomField';
 import Modal, { MessageType } from '@/components/Modal';
 import { useUser } from '@/hooks/User';
+import { buildApiUrl } from '@/utils/apiUtils';
 import { Field, Form, Formik } from 'formik';
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -50,7 +51,7 @@ function Login() {
   const handleSubmit = async (values: typeof initialValues) => {
     console.log("Login: Form values", values);
     try {
-      const response = await fetch(`${process.env.VITE_BACKEND_HOST}/login`, {
+      const response = await fetch(buildApiUrl('login'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

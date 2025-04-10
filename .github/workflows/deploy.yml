@@ -57,7 +57,7 @@ jobs:
           sed -i "s|\${EMAIL_USER}|$EMAIL_USER|g" deploy/.env
           sed -i "s|\${EMAIL_PASS}|$EMAIL_PASS|g" deploy/.env
           sed -i "s|\${EMAIL_FROM}|$EMAIL_FROM|g" deploy/.env
-          sed -i "s|\${DEPLOYMENT_TAG}|${DEPLOYMENT_TAG}|g" deploy/.env
+          sed -i "s|APP_VERSION_PLACEHOLDER|${DEPLOYMENT_TAG}|g" deploy/.env
           
           # Injection des images Docker
           sed -i "s|\${FRONTEND_IMAGE}|${{ github.repository_owner }}/skyjo-frontend:${GITHUB_REF#refs/tags/}|g" deploy/.env

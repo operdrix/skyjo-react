@@ -3,6 +3,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
+RUN npm run build
 # Les variables d'environnement seront fournies via docker-compose
 EXPOSE 3000
-CMD ["node", "src/server.js"]
+CMD ["node", "dist/server.js"]

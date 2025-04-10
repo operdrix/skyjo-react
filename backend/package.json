@@ -1,8 +1,8 @@
 {
   "name": "skyjo-api",
-  "version": "2.0.0",
+  "version": "2.0.15",
   "description": "API pour le jeu Skyjo",
-  "main": "index.js",
+  "main": "dist/server.js",
   "author": "Olivier Perdrix",
   "type": "module",
   "dependencies": {
@@ -25,15 +25,27 @@
     "socket.io": "^4.8.0"
   },
   "scripts": {
-    "dev": "node --watch src/server.js",
-    "start": "node src/server.js",
-    "lint": "eslint . --ext .js",
-    "lint:fix": "eslint . --ext .js --fix"
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix"
   },
   "devDependencies": {
-    "@eslint/js": "^9.23.0",
+    "@eslint/js": "^8.56.0",
+    "@types/dotenv": "^8.2.3",
+    "@types/fastify-jwt": "^0.8.1",
+    "@types/node": "^20.11.19",
+    "@types/nodemailer": "^6.4.17",
+    "@types/sequelize": "^4.28.20",
+    "@types/socket.io": "^3.0.2",
+    "@types/socket.io-client": "^1.4.36",
+    "@typescript-eslint/eslint-plugin": "^7.0.1",
+    "@typescript-eslint/parser": "^7.0.1",
     "cross-env": "^7.0.3",
-    "eslint": "^9.23.0",
-    "globals": "^16.0.0"
+    "eslint": "^8.56.0",
+    "globals": "^16.0.0",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3"
   }
 }

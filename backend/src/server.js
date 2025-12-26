@@ -176,10 +176,13 @@ app.decorate("authenticate", async (request, reply) => {
 				.send({ error: "Token invalide ou expiré" });
 		}
 
-		// Vérifier le token JWT
-		await request.jwtVerify({ onlyCookie: false });
+		// Vérifier et décoder le token JWT
+		const decoded = app.jwt.verify(token);
 
-		// Si le token vient du cookie, on le met aussi dans l'objet request pour cohérence
+		// Ajouter les infos utilisateur décodées à la requête
+		request.user = decoded;
+
+		// Si le token vient du cookie, on le met aussi dans l'header pour cohérence
 		if (!request.headers["authorization"]) {
 			request.headers["authorization"] = `Bearer ${token}`;
 		}

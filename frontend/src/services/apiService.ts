@@ -59,7 +59,10 @@ export const apiCall = async <T = any>(
 
     return { data, code: response.status };
   } catch (error) {
-    console.error('Erreur API:', error);
+    // Ne pas logger les erreurs attendues de auth/verify (utilisateur non connecté)
+    if (!endpoint.includes('auth/verify')) {
+      console.error('Erreur API:', error);
+    }
     return {
       error: 'Erreur de connexion au serveur',
       code: 500,

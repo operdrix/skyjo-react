@@ -223,7 +223,7 @@ export function usersRoutes(app, blacklistedTokens) {
 		},
 	}, async (request, reply) => {
 		// Si on arrive ici, c'est que le middleware authenticate a validé le token
-		reply.send({ 
+		reply.send({
 			valid: true,
 			user: {
 				id: request.user.id,

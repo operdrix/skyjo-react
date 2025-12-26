@@ -65,10 +65,16 @@ export const UserProvider = ({ children }: {
 
     const checkAuth = async () => {
       setLoading(true);
-      const isAuth = await verifyAuth();
+      const { isAuth, user } = await verifyAuth();
 
       if (isMounted) {
         setIsAuthentified(isAuth);
+        if (isAuth && user) {
+          // Récupérer seulement id et username du token
+          // Les autres infos seront chargées si nécessaire
+          setUserId(user.id);
+          setUserName(user.username);
+        }
         setLoading(false);
       }
     };
@@ -82,7 +88,7 @@ export const UserProvider = ({ children }: {
 
   const logout = useCallback(async () => {
     try {
-      await api.post('logout');
+      await api.post('logout', {});
     } catch {
       // Même si l'appel échoue, on déconnecte localement
     } finally {

@@ -61,12 +61,10 @@ export function usersRoutes(app, blacklistedTokens) {
 	}).post(
 		"/api/logout",
 		{
-			preHandler: [app.authenticate],
 			schema: {
 				tags: ["Authentification"],
 				summary: "Déconnexion utilisateur",
-				description: "Déconnecte l'utilisateur en ajoutant son token à la liste noire",
-				security: [{ bearerAuth: [] }],
+				description: "Déconnecte l'utilisateur en ajoutant son token à la liste noire et en supprimant le cookie",
 				response: {
 					200: {
 						type: "object",
@@ -84,12 +82,12 @@ export function usersRoutes(app, blacklistedTokens) {
 				token = request.headers["authorization"].split(" ")[1];
 			}
 
-			// Ajouter le token à la liste noire
+			// Ajouter le token à la liste noire (si présent)
 			if (token) {
 				blacklistedTokens.push(token);
 			}
 
-			// Supprimer le cookie
+			// Supprimer le cookie (toujours, même s'il n'y a pas de token)
 			reply.clearCookie("authToken", { path: "/" });
 			reply.send({ logout: true });
 		}
@@ -199,32 +197,39 @@ export function usersRoutes(app, blacklistedTokens) {
 		}
 	});
 
-	// Vérification du token jwt
+	// Vérification du token jwt (depuis cookie ou header)
 	app.get("/api/auth/verify", {
+		preHandler: [app.authenticate],
 		schema: {
 			tags: ["Authentification"],
 			summary: "Vérification du token JWT",
-			description: "Vérifie la validité d'un token JWT",
+			description: "Vérifie la validité d'un token JWT depuis un cookie httpOnly ou header Authorization",
 			security: [{ bearerAuth: [] }],
+			response: {
+				200: {
+					type: "object",
+					properties: {
+						valid: { type: "boolean" },
+						user: {
+							type: "object",
+							properties: {
+								id: { type: "string" },
+								username: { type: "string" },
+							}
+						}
+					}
+				}
+			}
 		},
 	}, async (request, reply) => {
-		const bearer = request.headers["authorization"];
-		if (!bearer) {
-			reply.status(401).send({ error: "Token manquant" });
-			return;
-		}
-		const token = bearer.split(" ")[1];
-		// Vérifier si le token est dans la liste noire
-		if (blacklistedTokens.includes(token)) {
-			reply.status(401).send({ error: "Token invalide ou expiré" });
-			return;
-		}
-		try {
-			const decoded = app.jwt.verify(token);
-			reply.send(decoded);
-		} catch (error) {
-			reply.status(401).send({ error: "Token invalide", errDetails: error });
-		}
+		// Si on arrive ici, c'est que le middleware authenticate a validé le token
+		reply.send({ 
+			valid: true,
+			user: {
+				id: request.user.id,
+				username: request.user.username
+			}
+		});
 	});
 
 	app.post("/api/password-reset-request", {

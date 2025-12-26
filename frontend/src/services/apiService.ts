@@ -37,7 +37,8 @@ export const apiCall = async <T = any>(
     const response = await fetch(url, defaultOptions);
 
     // Si erreur 401 (non autorisé), on déconnecte automatiquement l'utilisateur
-    if (response.status === 401) {
+    // SAUF si c'est la route de vérification elle-même (pour éviter une boucle)
+    if (response.status === 401 && !endpoint.includes('auth/verify')) {
       if (logoutCallback) {
         logoutCallback();
       }

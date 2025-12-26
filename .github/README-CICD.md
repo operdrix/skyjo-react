@@ -1,49 +1,41 @@
 # Configuration CI/CD pour Skyjo
 
-Ce document explique comment fonctionne la CI/CD mise en place pour le projet Skyjo.
+Ce document explique comment fonctionne la CI/CD mise en place pour le projet Skyjo avec Dokploy.
 
-## Workflows GitHub Actions
+## Architecture
 
-Deux workflows ont été configurés :
+Le projet utilise une architecture CI/CD simple avec GitHub Actions pour le build et Dokploy pour le déploiement.
 
-1. **Docker Publish** (`docker-publish.yml`) : Construit et publie les images Docker sur DockerHub à chaque push sur la branche main
-2. **Deploy to Production** (`deploy.yml`) : Déploie l'application sur le serveur de production lors de la création d'un tag
+## Workflow GitHub Actions
+
+**Docker Publish** (`docker-publish.yml`) : 
+- Construit et publie les images Docker sur DockerHub à chaque push sur la branche `main`
+- Tag les images avec la version lors de la création d'un tag (format `v*`)
+- Tags générés automatiquement :
+  - `latest` : dernière version sur main
+  - `sha-<commit>` : identifiant de commit
+  - `v1.0.0` : version sémantique (lors de création de tag)
+  - `1.0` : version majeure.mineure (lors de création de tag)
 
 ## Secrets GitHub Actions nécessaires
 
-Les workflows nécessitent que vous configuriez les secrets suivants dans votre dépôt GitHub :
+Les workflows nécessitent que vous configuriez les secrets suivants dans votre dépôt GitHub (Settings → Secrets and variables → Actions) :
 
 ### Pour la publication Docker
 - `DOCKERHUB_USERNAME` : Votre nom d'utilisateur Docker Hub
-- `DOCKERHUB_TOKEN` : Un token d'accès Docker Hub (pas votre mot de passe)
-
-### Pour le déploiement SSH
-- `SSH_HOST` : L'adresse IP ou le nom d'hôte de votre serveur
-- `SSH_PORT` : Le port SSH (généralement 22)
-- `SSH_USERNAME` : Le nom d'utilisateur pour la connexion SSH
-- `SSH_PRIVATE_KEY` : La clé privée SSH pour l'authentification
-
-### Pour la configuration de l'application
-- `DB_USER` : Nom d'utilisateur de la base de données
-- `DB_PASSWORD` : Mot de passe de la base de données
-- `MYSQL_ROOT_PASSWORD` : Mot de passe root MySQL
-- `JWT_SECRET` : Clé secrète pour la génération des tokens JWT
-- `APP_URL` : URL de l'application
-- `EMAIL_HOST` : Serveur SMTP pour l'envoi d'emails
-- `EMAIL_PORT` : Port du serveur SMTP
-- `EMAIL_USER` : Nom d'utilisateur SMTP
-- `EMAIL_PASS` : Mot de passe SMTP
-- `EMAIL_FROM` : Adresse d'expédition des emails
+- `DOCKERHUB_TOKEN` : Un token d'accès Docker Hub (créez-le dans Account Settings → Security → New Access Token)
 
 ## Comment utiliser cette CI/CD
 
 ### Publication d'images Docker
 
-Chaque push sur la branche main déclenchera automatiquement la construction et la publication des images Docker sur Docker Hub avec le tag `latest`.
+Chaque push sur la branche main déclenchera automatiquement :
+1. La construction des images Docker pour backend et frontend
+2. La publication sur Docker Hub avec le tag `latest` et `sha-<commit>`
 
-### Déploiement en production
+### Déploiement d'une nouvelle version
 
-Pour déployer en production :
+Pour déployer une nouvelle version :
 
 1. Créez un tag sur la branche main :
    ```bash
@@ -52,26 +44,32 @@ Pour déployer en production :
    ```
 
 2. GitHub Actions va automatiquement :
-   - Tagger les images Docker avec le numéro de version
-   - Publier ces images sur Docker Hub
-   - Déployer l'application sur votre serveur
+   - Construire les images Docker
+   - Les publier sur Docker Hub avec les tags `v1.0.0` et `1.0`
+   - Les images seront disponibles pour Dokploy
 
-## Gestion des environnements
+3. Dans Dokploy :
+   - Le service détectera automatiquement la nouvelle image
+   - Ou déployez manuellement via l'interface Dokploy
 
-Les variables d'environnement sont gérées différemment selon le contexte :
+## Déploiement avec Dokploy
 
-1. **Variables de build** : Définies lors de la construction des images Docker
-2. **Variables d'exécution** : Définies dans le fichier `.env` déployé sur le serveur
+Le déploiement est géré par Dokploy. Consultez le fichier [README-DOKPLOY.md](../README-DOKPLOY.md) à la racine du projet pour :
+- La configuration des services dans Dokploy
+- Les variables d'environnement à définir
+- La structure de déploiement
 
-## Structure sur le serveur
+## Structure du projet
 
-L'application est déployée dans le répertoire `/opt/skyjo` sur le serveur avec les fichiers suivants :
-- `docker-compose.yml` : Configuration des services
-- `.env` : Variables d'environnement
-- `deploy.sh` : Script de déploiement
+- **backend/** : API Node.js
+- **frontend/** : Application React avec Vite
+- **deploy/** : Fichiers de référence pour Dokploy (docker-compose.yml)
+- **.github/workflows/** : Workflows GitHub Actions
 
-## Sauvegarde de la base de données
+## Images Docker
 
-Les données MySQL sont persistées dans un volume Docker nommé `mysql_data`.
+Les images sont publiées sur Docker Hub :
+- `<username>/skyjo-backend:latest` : Backend
+- `<username>/skyjo-frontend:latest` : Frontend
 
-Il est recommandé de configurer des sauvegardes régulières de ce volume sur le serveur de production. 
+Remplacez `<username>` par votre nom d'utilisateur Docker Hub.

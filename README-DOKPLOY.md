@@ -61,11 +61,12 @@ DB_PASSWORD=votre_mot_de_passe_mysql
 DB_NAME=skyjo
 DB_PORT=3306
 
-# JWT
+# JWT - IMPORTANT: Générez une clé aléatoire de 32+ caractères
 JWT_SECRET=votre_secret_jwt_tres_secure_minimum_32_caracteres
 
-# Application
-APP_URL=https://votre-domaine.com
+# Application - URL publique de votre API backend
+# Exemples: https://api.labodolivier.com ou https://labodolivier.com/api
+APP_URL=https://api.labodolivier.com
 PORT=3000
 NODE_ENV=production
 
@@ -76,14 +77,21 @@ EMAIL_USER=votre@email.com
 EMAIL_PASS=votre_mot_de_passe_smtp
 EMAIL_FROM=noreply@votre-domaine.com
 
-# Frontend (pour CORS)
-FRONTEND_HOST=https://votre-domaine.com
+# Frontend - URL publique de votre frontend (pour CORS)
+# Exemples: https://labodolivier.com
+FRONTEND_HOST=https://skyjo.labodolivier.com
 ```
 
 **⚠️ Notes importantes** :
 - `DB_HOST` doit correspondre au nom du service MySQL dans Dokploy
-- `JWT_SECRET` minimum 32 caractères aléatoires
-- `APP_URL` et `FRONTEND_HOST` doivent pointer vers votre domaine frontend
+- `JWT_SECRET` minimum 32 caractères aléatoires (voir section Sécurité)
+- `APP_URL` est l'URL publique de votre **API backend** (utilisée pour les logs et la documentation)
+  - Local : `http://localhost:3000`
+  - Prod : `https://api.labodolivier.com` ou `https://labodolivier.com/api`
+- `FRONTEND_HOST` est l'URL publique de votre **frontend** (utilisée pour CORS)
+  - Local : `http://localhost:5173`
+  - Prod : `https://labodolivier.com`
+- Ces URLs peuvent être identiques si le backend est accessible via un sous-chemin (`/api`)
 
 #### Dépendances
 - Ajouter une dépendance vers le service `skyjo-db`
@@ -177,7 +185,7 @@ Pour déployer manuellement après un push :
 | `DB_NAME` | Nom de la BDD | `skyjo` |
 | `DB_PORT` | Port MySQL | `3306` |
 | `JWT_SECRET` | Clé JWT (32+ chars) | `xxx` |
-| `APP_URL` | URL publique app | `https://skyjo.com` |
+| `APP_URL` | **URL publique de l'API backend** | `https://api.labodolivier.com` |
 | `PORT` | Port backend | `3000` |
 | `NODE_ENV` | Environnement | `production` |
 | `EMAIL_HOST` | Serveur SMTP | `smtp.gmail.com` |
@@ -185,7 +193,13 @@ Pour déployer manuellement après un push :
 | `EMAIL_USER` | User SMTP | `user@gmail.com` |
 | `EMAIL_PASS` | Pass SMTP | `xxx` |
 | `EMAIL_FROM` | Email expéditeur | `noreply@skyjo.com` |
-| `FRONTEND_HOST` | URL frontend (CORS) | `https://skyjo.com` |
+| `FRONTEND_HOST` | **URL publique du frontend (CORS)** | `https://labodolivier.com` |
+
+**💡 Différence entre APP_URL et FRONTEND_HOST :**
+- `APP_URL` : URL de votre **API backend** (ex: `https://api.labodolivier.com`)
+  - Utilisée pour afficher l'URL de la doc dans les logs
+- `FRONTEND_HOST` : URL de votre **frontend** (ex: `https://labodolivier.com`)
+  - Utilisée pour la configuration CORS (autoriser les requêtes du frontend)
 
 ### Frontend - Build Arguments (Build Args)
 

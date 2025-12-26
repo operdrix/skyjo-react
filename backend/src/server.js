@@ -56,11 +56,13 @@ await app
 		saltWorkFactor: 12,
 	})
 	.register(cors, {
-		origin: "*",
+		origin: process.env.FRONTEND_HOST || "http://localhost:5173",
+		credentials: true,
 	})
 	.register(socketioServer, {
 		cors: {
-			origin: "*",
+			origin: process.env.FRONTEND_HOST || "http://localhost:5173",
+			credentials: true,
 		},
 	})
 	.register(fastifySwagger, {
@@ -93,20 +95,21 @@ await app
 		},
 		staticCSP: true,
 		transformStaticCSP: (header) => header,
-		transformSpecification: (swaggerObject, request, reply) => {
+		transformSpecification: (swaggerObject, _request, _reply) => {
 			return swaggerObject;
 		},
 		transformSpecificationClone: true,
 	})
 	.register(fastifyJWT, {
-		secret: "unanneaupourlesgouvernertous",
+		secret: process.env.JWT_SECRET || "unanneaupourlesgouvernertous",
 	});
 /**********
  * Routes
  **********/
 
-app.get("/api", (request, reply) => {
-	reply.send({ documentationURL: "https://labodolivier.com/api/documentation" });
+app.get("/api", (_request, reply) => {
+	const apiUrl = process.env.APP_URL || "http://localhost:3000";
+	reply.send({ documentationURL: `${apiUrl}/api/documentation` });
 });
 // Fonction pour décoder et vérifier le token
 app.decorate("authenticate", async (request, reply) => {
@@ -151,13 +154,15 @@ const start = async () => {
 					error
 				);
 			});
-		await app.listen({ port: 3000, host: '0.0.0.0' });
+		const port = process.env.PORT || 3000;
+		const apiUrl = process.env.APP_URL || `http://localhost:${port}`;
+		await app.listen({ port: parseInt(port), host: "0.0.0.0" });
 		console.log(
-			"Serveur Fastify lancé sur " + chalk.blue("http://localhost:3000")
+			"Serveur Fastify lancé sur " + chalk.blue(`${apiUrl}`)
 		);
 		console.log(
 			chalk.bgYellow(
-				"Accéder à la documentation sur https://labodolivier.com/api/documentation"
+				`Accéder à la documentation sur ${apiUrl}/api/documentation`
 			)
 		);
 	} catch (err) {

@@ -47,24 +47,116 @@ export function usersRoutes(app, blacklistedTokens) {
 		if (response.error) {
 			reply.status(response.code).send(response);
 		} else {
-			// Définir le cookie httpOnly avec le token
-			reply.setCookie("authToken", response.token, {
+			// Créer un access token de courte durée
+			const accessToken = app.jwt.sign(
+				{
+					id: response.user.id,
+					username: response.user.username,
+					email: response.user.email,
+				},
+				{ expiresIn: "15m" } // Access token valide 15 minutes
+			);
+
+			// Créer un refresh token de longue durée
+			const refreshToken = app.jwt.sign(
+				{
+					id: response.user.id,
+					username: response.user.username,
+					email: response.user.email,
+				},
+				{ expiresIn: "14d" } // Refresh token valide 14 jours
+			);
+
+			// Définir les deux cookies httpOnly
+			reply.setCookie("accessToken", accessToken, {
+				httpOnly: true,
+				secure: process.env.NODE_ENV === "production",
+				sameSite: "strict",
+				path: "/",
+				maxAge: 15 * 60, // 15 minutes en secondes
+			});
+
+			reply.setCookie("refreshToken", refreshToken, {
 				httpOnly: true,
 				secure: process.env.NODE_ENV === "production",
 				sameSite: "strict",
 				path: "/",
 				maxAge: 14 * 24 * 60 * 60, // 14 jours en secondes
 			});
-			// Renvoyer uniquement les infos utilisateur (pas le token)
+
+			// Renvoyer uniquement les infos utilisateur (pas les tokens)
 			reply.send({ user: response.user });
 		}
 	}).post(
+		"/api/auth/refresh",
+		{
+			schema: {
+				tags: ["Authentification"],
+				summary: "Renouvellement du token d'accès",
+				description: "Utilise le refresh token pour obtenir un nouvel access token",
+				response: {
+					200: {
+						type: "object",
+						properties: {
+							success: { type: "boolean" },
+						},
+					},
+					401: {
+						type: "object",
+						properties: {
+							error: { type: "string" },
+						},
+					},
+				},
+			},
+		},
+		async (request, reply) => {
+			try {
+				const refreshToken = request.cookies.refreshToken;
+
+				if (!refreshToken) {
+					return reply.status(401).send({ error: "Refresh token manquant" });
+				}
+
+				// Vérifier si le refresh token est dans la liste noire
+				if (blacklistedTokens.includes(refreshToken)) {
+					return reply.status(401).send({ error: "Refresh token invalide" });
+				}
+
+				// Vérifier et décoder le refresh token
+				const decoded = app.jwt.verify(refreshToken);
+
+				// Créer un nouvel access token
+				const newAccessToken = app.jwt.sign(
+					{
+						id: decoded.id,
+						username: decoded.username,
+						email: decoded.email,
+					},
+					{ expiresIn: "15m" } // Access token valide 15 minutes
+				);
+
+				// Définir le nouveau cookie access token
+				reply.setCookie("accessToken", newAccessToken, {
+					httpOnly: true,
+					secure: process.env.NODE_ENV === "production",
+					sameSite: "strict",
+					path: "/",
+					maxAge: 15 * 60, // 15 minutes en secondes
+				});
+
+				reply.send({ success: true });
+			} catch {
+				reply.status(401).send({ error: "Refresh token invalide ou expiré" });
+			}
+		}
+	).post(
 		"/api/logout",
 		{
 			schema: {
 				tags: ["Authentification"],
 				summary: "Déconnexion utilisateur",
-				description: "Déconnecte l'utilisateur en ajoutant son token à la liste noire et en supprimant le cookie",
+				description: "Déconnecte l'utilisateur en ajoutant ses tokens à la liste noire et en supprimant les cookies",
 				response: {
 					200: {
 						type: "object",
@@ -76,19 +168,21 @@ export function usersRoutes(app, blacklistedTokens) {
 			},
 		},
 		async (request, reply) => {
-			// Récupérer le token depuis le cookie ou l'header
-			let token = request.cookies.authToken;
-			if (!token && request.headers["authorization"]) {
-				token = request.headers["authorization"].split(" ")[1];
+			// Récupérer les tokens depuis les cookies
+			const accessToken = request.cookies.accessToken;
+			const refreshToken = request.cookies.refreshToken;
+
+			// Ajouter les tokens à la liste noire (si présents)
+			if (accessToken) {
+				blacklistedTokens.push(accessToken);
+			}
+			if (refreshToken) {
+				blacklistedTokens.push(refreshToken);
 			}
 
-			// Ajouter le token à la liste noire (si présent)
-			if (token) {
-				blacklistedTokens.push(token);
-			}
-
-			// Supprimer le cookie (toujours, même s'il n'y a pas de token)
-			reply.clearCookie("authToken", { path: "/" });
+			// Supprimer les deux cookies
+			reply.clearCookie("accessToken", { path: "/" });
+			reply.clearCookie("refreshToken", { path: "/" });
 			reply.send({ logout: true });
 		}
 	);

@@ -155,25 +155,25 @@ app.get("/api", {
 	const apiUrl = process.env.APP_URL || "http://localhost:3000";
 	reply.send({ documentationURL: `${apiUrl}/api/documentation` });
 });
-// Fonction pour décoder et vérifier le token
+// Fonction pour décoder et vérifier le token (access token)
 app.decorate("authenticate", async (request, reply) => {
 	try {
-		// Essayer de récupérer le token depuis le cookie d'abord, sinon depuis l'header Authorization
-		let token = request.cookies.authToken;
+		// Essayer de récupérer l'access token depuis le cookie d'abord, sinon depuis l'header Authorization
+		let token = request.cookies.accessToken;
 
 		if (!token && request.headers["authorization"]) {
 			token = request.headers["authorization"].split(" ")[1];
 		}
 
 		if (!token) {
-			return reply.status(401).send({ error: "Token manquant" });
+			return reply.status(401).send({ error: "Access token manquant" });
 		}
 
 		// Vérifier si le token est dans la liste noire
 		if (blacklistedTokens.includes(token)) {
 			return reply
 				.status(401)
-				.send({ error: "Token invalide ou expiré" });
+				.send({ error: "Access token invalide ou expiré" });
 		}
 
 		// Vérifier et décoder le token JWT
@@ -187,7 +187,7 @@ app.decorate("authenticate", async (request, reply) => {
 			request.headers["authorization"] = `Bearer ${token}`;
 		}
 	} catch (err) {
-		reply.status(401).send({ error: "Token invalide ou expiré", errorDetails: err });
+		reply.status(401).send({ error: "Access token invalide ou expiré", errorDetails: err });
 	}
 });
 //gestion utilisateur

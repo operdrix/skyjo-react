@@ -11,7 +11,7 @@ dotenv.config();
 
 function createTransporter() {
 	return nodemailer.createTransport({
-		service: 'gmail',
+		service: "gmail",
 		auth: {
 			user: process.env.GMAIL_APP_EMAIL,
 			pass: process.env.GMAIL_APP_PASSWORD,
@@ -61,12 +61,12 @@ async function generateID(id) {
 
 export async function getUsers() {
 	return await User.findAll({
-		attributes: ['id', 'username', 'firstname', 'lastname', 'email', 'bestScrore', 'avatar']
+		attributes: ["id", "username", "firstname", "lastname", "email", "bestScrore", "avatar"]
 	});
 }
 export async function getUserById(id) {
 	return await User.findByPk(id, {
-		attributes: ['id', 'username', 'firstname', 'lastname', 'email', 'bestScrore', 'avatar']
+		attributes: ["id", "username", "firstname", "lastname", "email", "bestScrore", "avatar"]
 	});
 }
 export async function findAndCountAllUsersById(id) {
@@ -124,7 +124,7 @@ export async function registerUser(userDatas, bcrypt) {
 	//hashage du mot de passe
 	const hashedPassword = await bcrypt.hash(password);
 	//génération du token de vérification
-	const generateToken = crypto.randomBytes(32).toString('hex');
+	const generateToken = crypto.randomBytes(32).toString("hex");
 
 	//création de l'utilisateur dans la base de données
 	const user = {
@@ -145,9 +145,9 @@ export async function registerUser(userDatas, bcrypt) {
 		const transporter = createTransporter();
 
 		const mailOptions = {
-			from: 'olivperdrix@gmail.com',
+			from: "olivperdrix@gmail.com",
 			to: newUser.email,
-			subject: 'Confirmation d\'inscription',
+			subject: "Confirmation d'inscription",
 			html: getMJMLTemplate(newUser.firstname, `${process.env.FRONTEND_HOST}/auth/verify/${newUser.verifiedtoken}`),
 		};
 
@@ -238,7 +238,7 @@ export async function requestPasswordReset(email) {
 	const transporter = createTransporter();
 	const resetLink = `${process.env.FRONTEND_HOST}/auth/password-reset/${resetToken}`;
 	const mailOptions = {
-		from: 'olivperdrix@gmail.com',
+		from: "olivperdrix@gmail.com",
 		to: user.email,
 		subject: "Réinitialisation de mot de passe",
 		html: getMJMLTemplateResetPassword(user.username, resetLink),
@@ -278,7 +278,7 @@ export async function resetPassword(token, newPassword, bcrypt) {
 	const transporter = createTransporter();
 	const resetLink = `${process.env.FRONTEND_HOST}/auth/login`;
 	const mailOptions = {
-		from: 'olivperdrix@gmail.com',
+		from: "olivperdrix@gmail.com",
 		to: user.email,
 		subject: "Mot de passe réinitialisé",
 		html: getMJMLTemplateResetPasswordConfirm(user.firstname, resetLink),

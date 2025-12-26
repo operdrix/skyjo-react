@@ -69,10 +69,34 @@ await app
 		openapi: {
 			openapi: "3.0.0",
 			info: {
-				title: "Documentation de l'API SkyJo",
+				title: "API SkyJo d'Olivier",
 				description:
-					"API développée pour un exercice avec React avec Fastify et Sequelize",
-				version: "0.1.0",
+					"API du jeu Skyjo développée avec Fastify, Sequelize et Socket.io",
+				version: "1.0.0",
+				contact: {
+					name: "Olivier Perdrix",
+					url: "https://labodolivier.com",
+				},
+			},
+			servers: [
+				{
+					url: process.env.APP_URL || "http://localhost:3000",
+					description: process.env.NODE_ENV === "production" ? "Serveur de production" : "Serveur de développement",
+				},
+			],
+			tags: [
+				{ name: "Authentification", description: "Gestion de l'authentification et des utilisateurs" },
+				{ name: "Parties", description: "Gestion des parties de jeu" },
+				{ name: "Système", description: "Routes système et informations" },
+			],
+			components: {
+				securitySchemes: {
+					bearerAuth: {
+						type: "http",
+						scheme: "bearer",
+						bearerFormat: "JWT",
+					},
+				},
 			},
 		},
 	})
@@ -107,7 +131,21 @@ await app
  * Routes
  **********/
 
-app.get("/api", (_request, reply) => {
+app.get("/api", {
+	schema: {
+		tags: ["Système"],
+		summary: "Informations sur l'API",
+		description: "Retourne l'URL de la documentation Swagger",
+		response: {
+			200: {
+				type: "object",
+				properties: {
+					documentationURL: { type: "string" },
+				},
+			},
+		},
+	},
+}, (_request, reply) => {
 	const apiUrl = process.env.APP_URL || "http://localhost:3000";
 	reply.send({ documentationURL: `${apiUrl}/api/documentation` });
 });

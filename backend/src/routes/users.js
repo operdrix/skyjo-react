@@ -10,7 +10,36 @@ import {
 } from "../controllers/users.js";
 
 export function usersRoutes(app, blacklistedTokens) {
-	app.post("/api/login", async (request, reply) => {
+	app.post("/api/login", {
+		schema: {
+			tags: ["Authentification"],
+			summary: "Connexion utilisateur",
+			description: "Authentifie un utilisateur et retourne un token JWT",
+			body: {
+				type: "object",
+				required: ["email", "password"],
+				properties: {
+					email: { type: "string", format: "email" },
+					password: { type: "string", minLength: 6 },
+				},
+			},
+			response: {
+				200: {
+					type: "object",
+					properties: {
+						token: { type: "string", description: "Token JWT" },
+						user: {
+							type: "object",
+							properties: {
+								id: { type: "string", description: "ID de l'utilisateur" },
+								username: { type: "string", description: "Nom d'utilisateur" },
+							},
+						},
+					},
+				},
+			},
+		},
+	}, async (request, reply) => {
 		const response = await loginUser(request.body, app);
 		if (response.error) {
 			reply.status(response.code).send(response);
@@ -19,7 +48,23 @@ export function usersRoutes(app, blacklistedTokens) {
 		}
 	}).post(
 		"/api/logout",
-		{ preHandler: [app.authenticate] },
+		{
+			preHandler: [app.authenticate],
+			schema: {
+				tags: ["Authentification"],
+				summary: "Déconnexion utilisateur",
+				description: "Déconnecte l'utilisateur en ajoutant son token à la liste noire",
+				security: [{ bearerAuth: [] }],
+				response: {
+					200: {
+						type: "object",
+						properties: {
+							logout: { type: "boolean" },
+						},
+					},
+				},
+			},
+		},
 		async (request, reply) => {
 			const token = request.headers["authorization"].split(" ")[1]; // Récupérer le token depuis l'en-tête Authorization
 
@@ -30,7 +75,35 @@ export function usersRoutes(app, blacklistedTokens) {
 		}
 	);
 	//inscription
-	app.post("/api/register", async (request, reply) => {
+	app.post("/api/register", {
+		schema: {
+			tags: ["Authentification"],
+			summary: "Inscription utilisateur",
+			description: "Crée un nouveau compte utilisateur",
+			body: {
+				type: "object",
+				required: ["firstname", "lastname", "username", "email", "password"],
+				properties: {
+					firstname: { type: "string", minLength: 1, description: "Prénom" },
+					lastname: { type: "string", minLength: 1, description: "Nom" },
+					username: { type: "string", minLength: 3, description: "Nom d'utilisateur" },
+					email: { type: "string", format: "email", description: "Adresse email" },
+					password: { type: "string", minLength: 6, description: "Mot de passe" },
+					avatar: { type: "string", description: "URL de l'avatar (optionnel)" },
+				},
+			},
+			response: {
+				200: {
+					type: "object",
+					properties: {
+						id: { type: "string" },
+						username: { type: "string" },
+						email: { type: "string" },
+					},
+				},
+			},
+		},
+	}, async (request, reply) => {
 		const response = await registerUser(request.body, app.bcrypt);
 		if (response.error) {
 			reply.status(response.code).send(response);
@@ -39,19 +112,65 @@ export function usersRoutes(app, blacklistedTokens) {
 		}
 	});
 	//récupération de la liste des utilisateurs
-	app.get("/api/users", { preHandler: [app.authenticate] }, async (request, reply) => {
+	app.get("/api/users", {
+		preHandler: [app.authenticate],
+		schema: {
+			tags: ["Authentification"],
+			summary: "Liste des utilisateurs",
+			description: "Récupère la liste de tous les utilisateurs (authentification requise)",
+			security: [{ bearerAuth: [] }],
+		},
+	}, async (request, reply) => {
 		reply.send(await getUsers());
 	});
 	//récupération d'un utilisateur par son id
-	app.get("/api/users/:id", { preHandler: [app.authenticate] }, async (request, reply) => {
+	app.get("/api/users/:id", {
+		preHandler: [app.authenticate],
+		schema: {
+			tags: ["Authentification"],
+			summary: "Détails d'un utilisateur",
+			description: "Récupère les informations d'un utilisateur par son ID",
+			security: [{ bearerAuth: [] }],
+			params: {
+				type: "object",
+				properties: {
+					id: { type: "number", description: "ID de l'utilisateur" },
+				},
+			},
+		},
+	}, async (request, reply) => {
 		reply.send(await getUserById(request.params.id));
 	});
 	//Récupération des parties d'un utilisateur
-	app.get("/api/users/:id/games", async (request, reply) => {
+	app.get("/api/users/:id/games", {
+		schema: {
+			tags: ["Parties"],
+			summary: "Parties d'un utilisateur",
+			description: "Récupère toutes les parties d'un utilisateur",
+			params: {
+				type: "object",
+				properties: {
+					id: { type: "string", description: "ID de l'utilisateur" },
+				},
+			},
+		},
+	}, async (request, reply) => {
 		reply.send(await getUserGames(request.params.id));
 	});
 	// Vérification de l'email de l'utilisateur via le token
-	app.get("/api/verify/:token", async (request, reply) => {
+	app.get("/api/verify/:token", {
+		schema: {
+			tags: ["Authentification"],
+			summary: "Vérification d'email",
+			description: "Vérifie l'email d'un utilisateur via le token reçu par email",
+			params: {
+				type: "object",
+				properties: {
+					token: { type: "string", description: "Token de vérification" },
+				},
+			},
+		},
+	}, async (request, reply) => {
 		const response = await verifyUser(request.params.token);
 		if (response.error) {
 			reply.status(response.code).send(response);
@@ -61,27 +180,47 @@ export function usersRoutes(app, blacklistedTokens) {
 	});
 
 	// Vérification du token jwt
-	app.get("/api/auth/verify", async (request, reply) => {
+	app.get("/api/auth/verify", {
+		schema: {
+			tags: ["Authentification"],
+			summary: "Vérification du token JWT",
+			description: "Vérifie la validité d'un token JWT",
+			security: [{ bearerAuth: [] }],
+		},
+	}, async (request, reply) => {
 		const bearer = request.headers["authorization"];
 		if (!bearer) {
 			reply.status(401).send({ error: "Token manquant" });
-			return
+			return;
 		}
 		const token = bearer.split(" ")[1];
 		// Vérifier si le token est dans la liste noire
 		if (blacklistedTokens.includes(token)) {
 			reply.status(401).send({ error: "Token invalide ou expiré" });
-			return
+			return;
 		}
 		try {
 			const decoded = app.jwt.verify(token);
 			reply.send(decoded);
-		} catch (error) {
+		} catch (_error) {
 			reply.status(401).send({ error: "Token invalide" });
 		}
 	});
 
-	app.post("/api/password-reset-request", async (request, reply) => {
+	app.post("/api/password-reset-request", {
+		schema: {
+			tags: ["Authentification"],
+			summary: "Demande de réinitialisation de mot de passe",
+			description: "Envoie un email avec un lien pour réinitialiser le mot de passe",
+			body: {
+				type: "object",
+				required: ["email"],
+				properties: {
+					email: { type: "string", format: "email" },
+				},
+			},
+		},
+	}, async (request, reply) => {
 		const { email } = request.body;
 		const response = await requestPasswordReset(email);
 		if (response.error) {
@@ -91,7 +230,26 @@ export function usersRoutes(app, blacklistedTokens) {
 		}
 	});
 
-	app.post("/api/password-reset/:token", async (request, reply) => {
+	app.post("/api/password-reset/:token", {
+		schema: {
+			tags: ["Authentification"],
+			summary: "Réinitialisation de mot de passe",
+			description: "Réinitialise le mot de passe avec le token reçu par email",
+			params: {
+				type: "object",
+				properties: {
+					token: { type: "string", description: "Token de réinitialisation" },
+				},
+			},
+			body: {
+				type: "object",
+				required: ["newPassword"],
+				properties: {
+					newPassword: { type: "string", minLength: 6 },
+				},
+			},
+		},
+	}, async (request, reply) => {
 		const { token } = request.params;
 		const { newPassword } = request.body;
 		const response = await resetPassword(token, newPassword, app.bcrypt);

@@ -1,4 +1,4 @@
-FROM node:20 as builder
+FROM node:20 AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
@@ -7,6 +7,9 @@ COPY . .
 # S'assurer que la variable est définie au moment du build
 ARG VITE_BACKEND_HOST
 ENV VITE_BACKEND_HOST=${VITE_BACKEND_HOST}
+
+ARG VITE_BACKEND_WS
+ENV VITE_BACKEND_WS=${VITE_BACKEND_WS}
 
 RUN npm run build
 

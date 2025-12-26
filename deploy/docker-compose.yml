@@ -1,27 +1,32 @@
+# docker-compose.yml de référence pour Dokploy
+# Ce fichier montre la configuration des services pour Dokploy
+# Dans Dokploy, vous créerez 3 services séparés : frontend, backend, et db (géré par Dokploy)
+
 services:
+  # Service Frontend
   frontend:
-    image: ${FRONTEND_IMAGE}
+    image: ${DOCKER_USERNAME}/skyjo-frontend:latest
     restart: always
-    container_name: skyjo-frontend-prod
     ports:
-      - "127.0.0.1:${FRONTEND_PORT:-3001}:80"
+      - "80:80"
     depends_on:
       - backend
-    networks:
-      - skyjo-network
+    # Pas de variables d'environnement nécessaires pour le frontend
+    # Les variables VITE_* sont injectées au build time
 
+  # Service Backend
   backend:
-    image: ${BACKEND_IMAGE}
+    image: ${DOCKER_USERNAME}/skyjo-backend:latest
     restart: always
     ports:
-      - "${BACKEND_PORT:-3000}:3000"
-    container_name: skyjo-backend-prod
+      - "3000:3000"
     environment:
-      - DB_HOST=${DB_HOST:-mysql}
+      # Variables à configurer dans Dokploy (Environment)
+      - DB_HOST=${DB_HOST}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME:-skyjo}
-      - DB_PORT=${DB_PORT:-3306}
+      - DB_NAME=${DB_NAME}
+      - DB_PORT=${DB_PORT}
       - JWT_SECRET=${JWT_SECRET}
       - APP_URL=${APP_URL}
       - EMAIL_HOST=${EMAIL_HOST}
@@ -29,46 +34,26 @@ services:
       - EMAIL_USER=${EMAIL_USER}
       - EMAIL_PASS=${EMAIL_PASS}
       - EMAIL_FROM=${EMAIL_FROM}
+      - PORT=3000
+      - NODE_ENV=production
     depends_on:
-      - mysql
-    networks:
-      - skyjo-network
-      - skyjo-db_network
+      - db
 
-  mysql:
+  # Service Database (géré directement dans Dokploy)
+  # Cette section est pour référence seulement
+  # Créez un service MySQL dans Dokploy avec les mêmes paramètres
+  db:
     image: mysql:latest
-    container_name: skyjo-mysql-prod
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME:-skyjo}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
     ports:
-      - "${MYSQL_PORT:-3307}:3306"
+      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-    networks:
-      - skyjo-db_network
-
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: skyjo-phpmyadmin
-    restart: always
-    environment:
-      PMA_HOST: mysql
-      PMA_PORT: 3306
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-    ports:
-      - "${PHPMYADMIN_PORT:-8080}:80"
-    depends_on:
-      - mysql
-    networks:
-      - skyjo-db_network
 
 volumes:
-  mysql_data:
-
-networks:
-  skyjo-network:
-  skyjo-db_network: 
+  mysql_data: 

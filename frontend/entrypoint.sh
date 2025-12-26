@@ -9,7 +9,7 @@
 set -e
 
 REGEX='__([A-Z0-9_]+)__'
-VARS_TO_REPLACE='VITE_BACKEND_HOST'
+VARS_TO_REPLACE='VITE_BACKEND_HOST VITE_BACKEND_WS'
 
 echo "Checking for environment variables in the static files"
 

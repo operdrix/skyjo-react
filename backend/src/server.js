@@ -56,12 +56,13 @@ await app
 		saltWorkFactor: 12,
 	})
 	.register(cors, {
-		origin: process.env.FRONTEND_HOST || "http://localhost:5173",
+		// Autoriser la valeur définie via FRONTEND_HOST ET localhost:4173 pour le dev (Vite)
+		origin: [process.env.FRONTEND_HOST || "http://localhost:5173", "http://localhost:4173"],
 		credentials: true,
 	})
 	.register(socketioServer, {
 		cors: {
-			origin: process.env.FRONTEND_HOST || "http://localhost:5173",
+			origin: [process.env.FRONTEND_HOST || "http://localhost:5173", "http://localhost:4173"],
 			credentials: true,
 		},
 	})

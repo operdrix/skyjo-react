@@ -1,20 +1,20 @@
 # 🚀 Déploiement Skyjo avec Dokploy
 
-Ce document explique comment déployer l'application Skyjo sur Dokploy.
+Ce document explique comment déployer l'application Skyjo sur Dokploy avec build automatique depuis GitHub.
 
 ## 📋 Prérequis
 
-- Un compte Dokploy configuré
-- Images Docker publiées sur Docker Hub via GitHub Actions
-- Accès à la console Dokploy
+- Un compte Dokploy configuré avec accès à votre serveur
+- Un repository GitHub avec l'application Skyjo
+- Dokploy configuré pour accéder à votre repository GitHub
 
 ## 🏗️ Architecture
 
-L'application est composée de 3 services :
+L'application est composée de 3 services qui seront buildés directement par Dokploy :
 
-1. **Database (MySQL)** : Géré directement par Dokploy
-2. **Backend (API Node.js)** : Conteneur Docker
-3. **Frontend (React + Nginx)** : Conteneur Docker
+1. **Database (MySQL)** : Service MySQL géré par Dokploy
+2. **Backend (API Node.js)** : Build depuis GitHub (branche `main`, context `./backend`)
+3. **Frontend (React + Nginx)** : Build depuis GitHub (branche `main`, context `./frontend`)
 
 ## 📦 Configuration des services dans Dokploy
 
@@ -25,214 +25,288 @@ Dans Dokploy, créez un service MySQL :
 **Type de service** : Database → MySQL
 
 **Configuration** :
-- **Nom** : `skyjo-db` (ou votre choix)
-- **Version** : `latest` ou version stable (8.0, 8.4, etc.)
+- **Nom** : `skyjo-db` (gardez bien ce nom pour la connexion)
+- **Version** : `8.4` ou version stable
 - **Database Name** : `skyjo`
 - **Username** : `skyjo_user`
 - **Password** : Générer un mot de passe sécurisé
 - **Root Password** : Générer un mot de passe sécurisé
 
-**Important** : Notez le nom interne du service (ex: `skyjo-db`), vous en aurez besoin pour la configuration du backend.
+**✅ Important** : Notez le nom du service (`skyjo-db`), vous en aurez besoin pour le backend.
 
 ---
 
 ### 2️⃣ Service Backend
 
-**Type de service** : Application → Docker Image
+**Type de service** : Application → GitHub
 
-**Configuration générale** :
-- **Nom** : `skyjo-backend`
-- **Image** : `<votre-username>/skyjo-backend:latest`
+**Configuration Git** :
+- **Repository** : Votre repository GitHub (ex: `olivierperdrix/skyjo-react`)
+- **Branch** : `main`
+- **Build Path** : `./backend`
+
+**Configuration Docker** :
+- **Dockerfile Path** : `./backend/Dockerfile`
 - **Port** : `3000`
 
 #### Variables d'environnement (Environment)
 
-Ajoutez ces variables dans l'onglet **Environment** du service backend :
+Dans l'onglet **Environment** du service backend, ajoutez :
 
 ```bash
 # Database
-DB_HOST=skyjo-db                    # Nom du service MySQL dans Dokploy
-DB_USER=skyjo_user                  # Utilisateur créé dans le service MySQL
-DB_PASSWORD=votre_mot_de_passe      # Mot de passe du service MySQL
-DB_NAME=skyjo                       # Nom de la base de données
-DB_PORT=3306                        # Port MySQL standard
+DB_HOST=skyjo-db
+DB_USER=skyjo_user
+DB_PASSWORD=votre_mot_de_passe_mysql
+DB_NAME=skyjo
+DB_PORT=3306
 
 # JWT
-JWT_SECRET=votre_secret_jwt_tres_secure_min_32_chars
+JWT_SECRET=votre_secret_jwt_tres_secure_minimum_32_caracteres
 
 # Application
-APP_URL=https://votre-domaine.com   # URL publique de votre application
-PORT=3000                           # Port du backend
-NODE_ENV=production                 # Environnement de production
+APP_URL=https://votre-domaine.com
+PORT=3000
+NODE_ENV=production
 
 # Email (SMTP)
-EMAIL_HOST=smtp.example.com         # Serveur SMTP
-EMAIL_PORT=587                      # Port SMTP (587 ou 465)
-EMAIL_USER=votre@email.com          # Utilisateur SMTP
-EMAIL_PASS=votre_mot_de_passe_smtp  # Mot de passe SMTP
-EMAIL_FROM=noreply@votre-domaine.com # Adresse d'expédition
+EMAIL_HOST=smtp.example.com
+EMAIL_PORT=587
+EMAIL_USER=votre@email.com
+EMAIL_PASS=votre_mot_de_passe_smtp
+EMAIL_FROM=noreply@votre-domaine.com
 
 # Frontend (pour CORS)
 FRONTEND_HOST=https://votre-domaine.com
 ```
 
-**⚠️ Important** :
+**⚠️ Notes importantes** :
 - `DB_HOST` doit correspondre au nom du service MySQL dans Dokploy
-- `JWT_SECRET` doit être une chaîne sécurisée d'au moins 32 caractères
-- `APP_URL` doit être l'URL publique de votre frontend
+- `JWT_SECRET` minimum 32 caractères aléatoires
+- `APP_URL` et `FRONTEND_HOST` doivent pointer vers votre domaine frontend
 
 #### Dépendances
-- Ajoutez une dépendance vers le service `skyjo-db`
+- Ajouter une dépendance vers le service `skyjo-db`
+
+#### Domaine (optionnel)
+- Si vous voulez un domaine pour l'API : `api.votre-domaine.com`
 
 ---
 
 ### 3️⃣ Service Frontend
 
-**Type de service** : Application → Docker Image
+**Type de service** : Application → GitHub
 
-**Configuration générale** :
-- **Nom** : `skyjo-frontend`
-- **Image** : `<votre-username>/skyjo-frontend:latest`
+**Configuration Git** :
+- **Repository** : Votre repository GitHub (ex: `olivierperdrix/skyjo-react`)
+- **Branch** : `main`
+- **Build Path** : `./frontend`
+
+**Configuration Docker** :
+- **Dockerfile Path** : `./frontend/Dockerfile`
 - **Port** : `80`
 
 #### Variables de build (Build Args)
 
-**⚠️ ATTENTION** : Les variables pour le frontend doivent être configurées **au moment du build dans GitHub Actions**, pas dans Dokploy.
+**⚠️ CRITIQUE** : Les variables `VITE_*` doivent être définies comme **Build Arguments** (pas Environment Variables).
 
-Dans votre workflow GitHub Actions, ajoutez ces arguments de build :
+Dans l'onglet **Build Args** du service frontend, ajoutez :
 
-```yaml
-- name: Build and push Frontend image
-  uses: docker/build-push-action@v5
-  with:
-    context: ./frontend
-    push: true
-    build-args: |
-      VITE_BACKEND_HOST=https://api.votre-domaine.com
-      VITE_BACKEND_WS=wss://api.votre-domaine.com
-    tags: ${{ steps.meta-frontend.outputs.tags }}
+```bash
+VITE_BACKEND_HOST=https://api.votre-domaine.com
+VITE_BACKEND_WS=wss://api.votre-domaine.com
 ```
 
-**Variables nécessaires** :
-- `VITE_BACKEND_HOST` : URL de l'API backend (https://api.votre-domaine.com)
-- `VITE_BACKEND_WS` : URL WebSocket (wss://api.votre-domaine.com)
+**Explications** :
+- `VITE_BACKEND_HOST` : URL publique de votre API backend
+- `VITE_BACKEND_WS` : URL WebSocket (même URL avec `wss://`)
+- Ces variables sont compilées dans le JavaScript au moment du build
+- Si vous les changez, vous devez rebuild le frontend
 
-**Note** : Ces variables sont "cuites" dans le build frontend et ne peuvent pas être changées après coup sans rebuild.
-
-#### Domaine et SSL
-- Configurez votre domaine dans l'onglet **Domains**
+#### Domaine
+- Configurez votre domaine principal : `votre-domaine.com`
 - Activez SSL automatique via Let's Encrypt
 
 #### Dépendances
-- Ajoutez une dépendance vers le service `skyjo-backend`
+- Ajouter une dépendance vers le service `skyjo-backend`
 
 ---
 
-## 🔄 Processus de déploiement
+## 🔄 Workflow de déploiement
 
-### Déploiement initial
+### 1. Déploiement initial
 
-1. **Créez le service Database** dans Dokploy
-2. **Créez le service Backend** avec toutes les variables d'environnement
-3. **Créez le service Frontend** et configurez le domaine
-4. **Déployez** chaque service dans l'ordre : DB → Backend → Frontend
+1. **Créez le service Database** dans Dokploy et démarrez-le
+2. **Créez le service Backend** :
+   - Configurez le repository GitHub
+   - Ajoutez toutes les variables d'environnement
+   - Lancez le build (Dokploy clone le repo et build via Dockerfile)
+3. **Créez le service Frontend** :
+   - Configurez le repository GitHub
+   - Ajoutez les Build Args `VITE_*`
+   - Configurez le domaine
+   - Lancez le build
 
-### Mises à jour
+### 2. Déploiements automatiques
 
-Pour déployer une nouvelle version :
+**Dokploy peut surveiller votre branche `main` et redéployer automatiquement** :
 
-1. **Poussez votre code** sur la branche `main` de GitHub
-2. **GitHub Actions** construit et publie automatiquement les nouvelles images sur Docker Hub
-3. Dans **Dokploy**, pour chaque service (backend/frontend) :
-   - Allez dans l'onglet **Deployments**
-   - Cliquez sur **Redeploy** pour tirer la dernière image
+1. Dans chaque service (backend/frontend), activez **Auto Deploy**
+2. Configurez le **webhook GitHub** si nécessaire
+3. À chaque push sur `main`, Dokploy rebuildera automatiquement
 
-Ou, si vous voulez déployer une version spécifique :
+### 3. Déploiements manuels
 
-1. Créez un tag git : `git tag v1.0.0 && git push origin v1.0.0`
-2. GitHub Actions publie l'image avec le tag `v1.0.0`
-3. Dans Dokploy, modifiez l'image du service : `<username>/skyjo-backend:v1.0.0`
-4. Redéployez le service
+Pour déployer manuellement après un push :
+
+1. Allez dans le service (backend ou frontend)
+2. Cliquez sur **Redeploy**
+3. Dokploy pull le dernier code et rebuild
 
 ---
 
 ## 📝 Résumé des variables
 
-### Variables BACKEND (Environment dans Dokploy)
-Toutes les variables listées dans la section Backend ci-dessus doivent être configurées dans Dokploy.
+### Backend - Variables d'environnement (Environment)
 
-### Variables FRONTEND (Build Args dans GitHub Actions)
-- `VITE_BACKEND_HOST` : URL de l'API
-- `VITE_BACKEND_WS` : URL WebSocket
+| Variable | Description | Exemple |
+|----------|-------------|---------|
+| `DB_HOST` | Nom du service MySQL | `skyjo-db` |
+| `DB_USER` | Utilisateur MySQL | `skyjo_user` |
+| `DB_PASSWORD` | Mot de passe MySQL | `xxx` |
+| `DB_NAME` | Nom de la BDD | `skyjo` |
+| `DB_PORT` | Port MySQL | `3306` |
+| `JWT_SECRET` | Clé JWT (32+ chars) | `xxx` |
+| `APP_URL` | URL publique app | `https://skyjo.com` |
+| `PORT` | Port backend | `3000` |
+| `NODE_ENV` | Environnement | `production` |
+| `EMAIL_HOST` | Serveur SMTP | `smtp.gmail.com` |
+| `EMAIL_PORT` | Port SMTP | `587` |
+| `EMAIL_USER` | User SMTP | `user@gmail.com` |
+| `EMAIL_PASS` | Pass SMTP | `xxx` |
+| `EMAIL_FROM` | Email expéditeur | `noreply@skyjo.com` |
+| `FRONTEND_HOST` | URL frontend (CORS) | `https://skyjo.com` |
 
-**⚠️ Ces variables doivent être configurées dans le workflow GitHub Actions, pas dans Dokploy.**
+### Frontend - Build Arguments (Build Args)
+
+| Variable | Description | Exemple |
+|----------|-------------|---------|
+| `VITE_BACKEND_HOST` | URL API backend | `https://api.skyjo.com` |
+| `VITE_BACKEND_WS` | URL WebSocket | `wss://api.skyjo.com` |
+
+**⚠️ Important** : Les variables `VITE_*` sont compilées au build. Si vous les changez, vous devez rebuild le frontend.
 
 ---
 
 ## 🔐 Sécurité
 
-### Bonnes pratiques
-
-1. **Mots de passe** : Utilisez des mots de passe forts et uniques
-2. **JWT_SECRET** : Générez une clé de 32+ caractères aléatoires
-3. **SSL** : Activez toujours HTTPS pour la production
-4. **Environnement** : Ne committez JAMAIS les variables sensibles dans Git
-5. **Backup** : Configurez des sauvegardes automatiques de la base de données dans Dokploy
-
 ### Génération de secrets sécurisés
 
 ```bash
-# Générer un JWT_SECRET
+# Générer un JWT_SECRET (32+ caractères)
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 # Ou avec OpenSSL
 openssl rand -hex 32
 ```
 
+### Bonnes pratiques
+
+1. **Mots de passe** : Utilisez des mots de passe forts et uniques
+2. **JWT_SECRET** : Minimum 32 caractères aléatoires
+3. **SSL** : Toujours activer HTTPS en production
+4. **Variables sensibles** : Ne jamais les committer dans Git
+5. **Backup** : Configurer des sauvegardes automatiques de MySQL dans Dokploy
+6. **Logs** : Surveiller les logs des services régulièrement
+
 ---
 
 ## 🐛 Dépannage
 
-### Le backend ne se connecte pas à la base de données
+### Le backend ne démarre pas
 
-- Vérifiez que `DB_HOST` correspond au nom du service MySQL dans Dokploy
-- Vérifiez les credentials (DB_USER, DB_PASSWORD)
-- Consultez les logs du service backend dans Dokploy
+**Symptômes** : Service en erreur, logs montrent "Cannot connect to database"
+
+**Solutions** :
+1. Vérifiez que le service MySQL est bien démarré
+2. Vérifiez `DB_HOST` = nom exact du service MySQL dans Dokploy
+3. Vérifiez les credentials (DB_USER, DB_PASSWORD)
+4. Consultez les logs du backend dans Dokploy
 
 ### Le frontend ne communique pas avec le backend
 
-- Vérifiez que `VITE_BACKEND_HOST` pointe vers l'URL publique du backend
-- Vérifiez la configuration CORS dans le backend (variable `FRONTEND_HOST`)
-- Vérifiez que les services sont bien déployés et en cours d'exécution
+**Symptômes** : Erreurs réseau dans la console du navigateur, CORS errors
 
-### Problèmes d'email
+**Solutions** :
+1. Vérifiez que `VITE_BACKEND_HOST` pointe vers l'URL publique du backend
+2. Vérifiez que `FRONTEND_HOST` dans le backend correspond à l'URL du frontend
+3. Vérifiez que les services sont déployés et running
+4. Testez l'API directement : `curl https://api.votre-domaine.com`
 
-- Vérifiez les credentials SMTP (EMAIL_USER, EMAIL_PASS)
-- Testez la connexion SMTP depuis le container backend
-- Consultez les logs du backend
+### Le build frontend échoue
+
+**Symptômes** : Build failed dans Dokploy
+
+**Solutions** :
+1. Vérifiez que les Build Args `VITE_*` sont bien définis
+2. Consultez les logs de build dans Dokploy
+3. Vérifiez que le Dockerfile est correct
+4. Testez le build localement : `docker build --build-arg VITE_BACKEND_HOST=xxx ./frontend`
+
+### Les emails ne fonctionnent pas
+
+**Symptômes** : Pas d'emails reçus (confirmation, reset password)
+
+**Solutions** :
+1. Vérifiez les credentials SMTP (EMAIL_USER, EMAIL_PASS)
+2. Vérifiez le port SMTP (587 pour TLS, 465 pour SSL)
+3. Vérifiez que votre provider SMTP autorise les connexions
+4. Consultez les logs du backend pour les erreurs SMTP
+
+### Changement de variables VITE_*
+
+**Symptômes** : Vous avez changé l'URL du backend mais le frontend utilise toujours l'ancienne
+
+**Solution** :
+1. Les variables `VITE_*` sont compilées au build
+2. Modifiez les Build Args dans Dokploy
+3. **Rebuild** le service frontend (pas juste redéployer)
 
 ---
 
 ## 📚 Ressources
 
 - [Documentation Dokploy](https://docs.dokploy.com)
-- [Docker Hub](https://hub.docker.com)
-- [GitHub Actions](https://docs.github.com/actions)
-- [README CI/CD](.github/README-CICD.md)
+- [Documentation Docker](https://docs.docker.com)
+- [Documentation Vite](https://vitejs.dev/guide/env-and-mode.html)
+- [Fichier docker-compose.yml de référence](deploy/docker-compose.yml)
 
 ---
 
-## 🔗 Liens utiles
+## 🎯 Checklist de déploiement
 
-- **Images Docker** : https://hub.docker.com/u/`<votre-username>`
-- **Dokploy Console** : https://`<votre-dokploy>`
-- **Repository GitHub** : https://github.com/`<votre-username>`/skyjo-react
+Avant de déployer en production, vérifiez :
+
+- [ ] Service MySQL créé et démarré
+- [ ] Credentials MySQL notés et sécurisés
+- [ ] JWT_SECRET généré (32+ caractères)
+- [ ] Credentials SMTP configurés et testés
+- [ ] Domaine(s) configuré(s) et DNS pointant vers le serveur
+- [ ] SSL activé sur les domaines
+- [ ] Variables d'environnement backend toutes définies
+- [ ] Build Args frontend (`VITE_*`) définis
+- [ ] Auto Deploy activé (optionnel)
+- [ ] Sauvegarde MySQL configurée
+- [ ] Tests de l'application effectués
 
 ---
 
 ## 📞 Support
 
-Pour toute question ou problème :
-1. Consultez les logs dans Dokploy
-2. Vérifiez la configuration des variables d'environnement
-3. Consultez la documentation CI/CD dans [.github/README-CICD.md](.github/README-CICD.md)
+Pour toute question :
+1. Consultez les logs dans Dokploy (onglet Logs de chaque service)
+2. Vérifiez la configuration des variables
+3. Testez les connexions (DB, SMTP, API)
+4. Consultez la documentation Dokploy
+
+Bon déploiement ! 🚀

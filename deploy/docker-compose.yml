@@ -1,55 +1,60 @@
 # docker-compose.yml de référence pour Dokploy
-# Ce fichier montre la configuration des services pour Dokploy
-# Dans Dokploy, vous créerez 3 services séparés : frontend, backend, et db (géré par Dokploy)
+# Ce fichier montre la structure des services pour référence
+# Dans Dokploy, vous créerez 3 services séparés avec build depuis GitHub
 
 services:
   # Service Frontend
+  # Build depuis GitHub : branche main, context ./frontend
   frontend:
-    image: ${DOCKER_USERNAME}/skyjo-frontend:latest
+    build:
+      context: ./frontend
+      args:
+        - VITE_BACKEND_HOST=https://api.votre-domaine.com
+        - VITE_BACKEND_WS=wss://api.votre-domaine.com
     restart: always
     ports:
       - "80:80"
     depends_on:
       - backend
-    # Pas de variables d'environnement nécessaires pour le frontend
-    # Les variables VITE_* sont injectées au build time
 
   # Service Backend
+  # Build depuis GitHub : branche main, context ./backend
   backend:
-    image: ${DOCKER_USERNAME}/skyjo-backend:latest
+    build:
+      context: ./backend
     restart: always
     ports:
       - "3000:3000"
     environment:
       # Variables à configurer dans Dokploy (Environment)
-      - DB_HOST=${DB_HOST}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME}
-      - DB_PORT=${DB_PORT}
-      - JWT_SECRET=${JWT_SECRET}
-      - APP_URL=${APP_URL}
-      - EMAIL_HOST=${EMAIL_HOST}
-      - EMAIL_PORT=${EMAIL_PORT}
-      - EMAIL_USER=${EMAIL_USER}
-      - EMAIL_PASS=${EMAIL_PASS}
-      - EMAIL_FROM=${EMAIL_FROM}
+      - DB_HOST=skyjo-db
+      - DB_USER=skyjo_user
+      - DB_PASSWORD=votre_mot_de_passe
+      - DB_NAME=skyjo
+      - DB_PORT=3306
+      - JWT_SECRET=votre_secret_jwt
+      - APP_URL=https://votre-domaine.com
+      - EMAIL_HOST=smtp.example.com
+      - EMAIL_PORT=587
+      - EMAIL_USER=votre@email.com
+      - EMAIL_PASS=votre_mot_de_passe_smtp
+      - EMAIL_FROM=noreply@votre-domaine.com
       - PORT=3000
       - NODE_ENV=production
+      - FRONTEND_HOST=https://votre-domaine.com
     depends_on:
       - db
 
-  # Service Database (géré directement dans Dokploy)
-  # Cette section est pour référence seulement
-  # Créez un service MySQL dans Dokploy avec les mêmes paramètres
+  # Service Database
+  # Créer un service MySQL directement dans Dokploy
   db:
-    image: mysql:latest
+    image: mysql:8.4
     restart: always
     environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_DATABASE=${DB_NAME}
-      - MYSQL_USER=${DB_USER}
-      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=votre_root_password
+      - MYSQL_DATABASE=skyjo
+      - MYSQL_USER=skyjo_user
+      - MYSQL_PASSWORD=votre_mot_de_passe
     ports:
       - "3306:3306"
     volumes:

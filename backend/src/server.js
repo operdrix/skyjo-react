@@ -1,5 +1,6 @@
 import chalk from "chalk";
 //pour fastify
+import cookie from "@fastify/cookie";
 import cors from "@fastify/cors";
 import fastifyJWT from "@fastify/jwt";
 import fastifySwagger from "@fastify/swagger";
@@ -52,6 +53,10 @@ let blacklistedTokens = [];
 const app = fastify();
 //Ajout du plugin fastify-bcrypt pour le hash du mdp
 await app
+	.register(cookie, {
+		secret: process.env.COOKIE_SECRET || "mon-secret-de-cookie-super-secret",
+		parseOptions: {},
+	})
 	.register(fastifyBcrypt, {
 		saltWorkFactor: 12,
 	})
@@ -153,7 +158,16 @@ app.get("/api", {
 // Fonction pour décoder et vérifier le token
 app.decorate("authenticate", async (request, reply) => {
 	try {
-		const token = request.headers["authorization"].split(" ")[1];
+		// Essayer de récupérer le token depuis le cookie d'abord, sinon depuis l'header Authorization
+		let token = request.cookies.authToken;
+
+		if (!token && request.headers["authorization"]) {
+			token = request.headers["authorization"].split(" ")[1];
+		}
+
+		if (!token) {
+			return reply.status(401).send({ error: "Token manquant" });
+		}
 
 		// Vérifier si le token est dans la liste noire
 		if (blacklistedTokens.includes(token)) {
@@ -161,9 +175,16 @@ app.decorate("authenticate", async (request, reply) => {
 				.status(401)
 				.send({ error: "Token invalide ou expiré" });
 		}
-		await request.jwtVerify();
+
+		// Vérifier le token JWT
+		await request.jwtVerify({ onlyCookie: false });
+
+		// Si le token vient du cookie, on le met aussi dans l'objet request pour cohérence
+		if (!request.headers["authorization"]) {
+			request.headers["authorization"] = `Bearer ${token}`;
+		}
 	} catch (err) {
-		reply.send(err);
+		reply.status(401).send({ error: "Token invalide ou expiré", errorDetails: err });
 	}
 });
 //gestion utilisateur

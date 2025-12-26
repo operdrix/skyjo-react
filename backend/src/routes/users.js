@@ -27,12 +27,15 @@ export function usersRoutes(app, blacklistedTokens) {
 				200: {
 					type: "object",
 					properties: {
-						token: { type: "string", description: "Token JWT" },
 						user: {
 							type: "object",
 							properties: {
 								id: { type: "string", description: "ID de l'utilisateur" },
 								username: { type: "string", description: "Nom d'utilisateur" },
+								firstname: { type: "string", description: "Prénom" },
+								lastname: { type: "string", description: "Nom" },
+								email: { type: "string", description: "Email" },
+								avatar: { type: "string", description: "Avatar" },
 							},
 						},
 					},
@@ -44,7 +47,16 @@ export function usersRoutes(app, blacklistedTokens) {
 		if (response.error) {
 			reply.status(response.code).send(response);
 		} else {
-			reply.send(response);
+			// Définir le cookie httpOnly avec le token
+			reply.setCookie("authToken", response.token, {
+				httpOnly: true,
+				secure: process.env.NODE_ENV === "production",
+				sameSite: "strict",
+				path: "/",
+				maxAge: 14 * 24 * 60 * 60, // 14 jours en secondes
+			});
+			// Renvoyer uniquement les infos utilisateur (pas le token)
+			reply.send({ user: response.user });
 		}
 	}).post(
 		"/api/logout",
@@ -66,11 +78,19 @@ export function usersRoutes(app, blacklistedTokens) {
 			},
 		},
 		async (request, reply) => {
-			const token = request.headers["authorization"].split(" ")[1]; // Récupérer le token depuis l'en-tête Authorization
+			// Récupérer le token depuis le cookie ou l'header
+			let token = request.cookies.authToken;
+			if (!token && request.headers["authorization"]) {
+				token = request.headers["authorization"].split(" ")[1];
+			}
 
 			// Ajouter le token à la liste noire
-			blacklistedTokens.push(token);
+			if (token) {
+				blacklistedTokens.push(token);
+			}
 
+			// Supprimer le cookie
+			reply.clearCookie("authToken", { path: "/" });
 			reply.send({ logout: true });
 		}
 	);
@@ -202,8 +222,8 @@ export function usersRoutes(app, blacklistedTokens) {
 		try {
 			const decoded = app.jwt.verify(token);
 			reply.send(decoded);
-		} catch (_error) {
-			reply.status(401).send({ error: "Token invalide" });
+		} catch (error) {
+			reply.status(401).send({ error: "Token invalide", errDetails: error });
 		}
 	});
 

@@ -201,7 +201,19 @@ export async function loginUser(userDatas, app) {
 		{ id: user.id, username: user.username },
 		{ expiresIn: "14d" }
 	);
-	return { token, user: { id: user.id, username: user.username } };
+
+	// Renvoyer le token et les infos complètes de l'utilisateur
+	return {
+		token,
+		user: {
+			id: user.id,
+			username: user.username,
+			firstname: user.firstname,
+			lastname: user.lastname,
+			email: user.email,
+			avatar: user.avatar
+		}
+	};
 }
 
 export async function verifyUser(token) {

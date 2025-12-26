@@ -12,14 +12,14 @@ import ToggleTheme from "@/components/nav/ToggleTheme";
 import { useGame } from "@/hooks/Game";
 import { useUser } from "@/hooks/User";
 import { useWebSocket } from "@/hooks/WebSocket";
+import { api } from "@/services/apiService";
 import type { GameType } from "@/types/types";
-import { buildApiUrl } from "@/utils/apiUtils";
 import notify from "@/utils/notify";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 const Game = () => {
-  const { token, userId, loading: userLoading } = useUser();
+  const { userId, loading: userLoading } = useUser();
   const { socket, isConnected, sendMessage, subscribeToEvent, unsubscribeFromEvent, loading: wsLoading } = useWebSocket()
   const { game, setGame, sound, setSound } = useGame();
   const { gameId } = useParams<string>();
@@ -37,27 +37,21 @@ const Game = () => {
 
   //On récupère les informations de la partie
   useEffect(() => {
-    if (!gameId || !token || !userId) return;
+    if (!gameId || !userId) return;
     console.log('récupération de la partie', gameId);
 
     const getGame = async () => {
       setLoading(true);
       try {
-        const response = await fetch(buildApiUrl(`game/${gameId}`), {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const data = await response.json();
-        if (response.ok) {
-          setGame(data);
-          if (data.state === 'pending') {
+        const response = await api.get(`game/${gameId}`);
+        if (response.data) {
+          setGame(response.data);
+          if (response.data.state === 'pending') {
             navigate(`/join/${gameId}`);
           }
-        } else {
+        } else if (response.error) {
           // la partie n'existe pas
-          console.error('Error fetching game:', data);
+          console.error('Error fetching game:', response.error);
           setError("La partie n'existe pas.");
         }
       } catch (error) {
@@ -69,7 +63,7 @@ const Game = () => {
       }
     };
     if (!error) getGame();
-  }, [gameId, token, userId, error, setGame, navigate]);
+  }, [gameId, userId, error, setGame, navigate]);
 
   // Rediriger vers la salle d'attente si la partie est en attente de joueurs
   useEffect(() => {

@@ -1,17 +1,26 @@
 // authService.ts
-import { buildApiUrl } from "../utils/apiUtils";
+import { api } from './apiService';
 
-export const verifyJwt = async (token: string | null): Promise<boolean> => {
-    try {
-        const response = await fetch(buildApiUrl('auth/verify'), {
-            method: "GET",
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-        return response.ok;
-    } catch (error) {
-        console.error(error);
-        return false;
-    }
+export const verifyAuth = async (): Promise<boolean> => {
+    const response = await api.get('auth/verify');
+    return response.code === 200;
+};
+
+export const login = async (email: string, password: string) => {
+    return await api.post('login', { email, password });
+};
+
+export const logout = async () => {
+    return await api.post('logout');
+};
+
+export const register = async (userData: {
+    firstname: string;
+    lastname: string;
+    username: string;
+    email: string;
+    password: string;
+    avatar?: string;
+}) => {
+    return await api.post('register', userData);
 };

@@ -1,6 +1,6 @@
 import CustomField from '@/components/forms/CustomField';
 import { MessageType } from '@/components/Modal';
-import { buildApiUrl } from '@/utils/apiUtils';
+import { api } from '@/services/apiService';
 import { Field, Form, Formik } from 'formik';
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -20,24 +20,20 @@ function RequestResetPassword() {
 
   const handleSubmit = async (values: typeof initialValues) => {
     setLoading(true);
-    try {
-      const response = await fetch(buildApiUrl('password-reset-request'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(values),
+
+    const response = await api.post('password-reset-request', values);
+
+    if (response.error) {
+      setErrorMessage(response.error);
+    } else {
+      setMessage({
+        title: 'Mail envoyé',
+        message: 'Un mail de réinitialisation de mot de passe vous a été envoyé',
+        type: 'success'
       });
-      await response.json();
-
-      setMessage({ title: 'Mail envoyé', message: 'Un mail de réinitialisation de mot de passe vous a été envoyé', type: 'success' });
-
-    } catch (error) {
-      console.error('Error serveur:', error);
-      setErrorMessage('Erreur serveur, veuillez réessayer plus tard');
-    } finally {
-      setLoading(false);
     }
+
+    setLoading(false);
   };
 
   if (message) {

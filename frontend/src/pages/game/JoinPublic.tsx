@@ -1,12 +1,12 @@
 import ErrorMessage from "@/components/game/messages/ErrorMessage";
 import { useUser } from "@/hooks/User";
+import { api } from "@/services/apiService";
 import { GameType } from "@/types/types";
-import { buildApiUrl } from "@/utils/apiUtils";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const JoinPublic = () => {
-  const { token, userId, loading: userLoading } = useUser();
+  const { userId, loading: userLoading } = useUser();
   const [games, setGames] = useState<GameType[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -18,17 +18,11 @@ const JoinPublic = () => {
     setLoading(true);
     setError(null); // Reset error state before fetching
     try {
-      const response = await fetch(buildApiUrl('games?state=pending&privateRoom=false'), {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await response.json();
-      if (response.ok) {
-        setGames(data);
-      } else {
-        console.error("Error fetching game:", data);
+      const response = await api.get('games?state=pending&privateRoom=false');
+      if (response.data) {
+        setGames(response.data);
+      } else if (response.error) {
+        console.error("Error fetching game:", response.error);
         setError("La partie n'existe pas.");
       }
     } catch (error) {
@@ -37,7 +31,7 @@ const JoinPublic = () => {
     } finally {
       setLoading(false);
     }
-  }, [token, userId]);
+  }, [userId]);
 
   useEffect(() => {
     fetchGames();

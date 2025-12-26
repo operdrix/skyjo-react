@@ -1,7 +1,7 @@
 import CustomField from '@/components/forms/CustomField';
 import Modal, { MessageType } from '@/components/Modal';
 import { useUser } from '@/hooks/User';
-import { buildApiUrl } from '@/utils/apiUtils';
+import { login } from '@/services/authService';
 import { Field, Form, Formik } from 'formik';
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -17,7 +17,7 @@ function Login() {
   const [error, setError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
 
-  const { setToken, isAuthentified, setIsAuthentified } = useUser();
+  const { setUserData } = useUser();
 
   const navigate = useNavigate()
 
@@ -49,33 +49,14 @@ function Login() {
   });
 
   const handleSubmit = async (values: typeof initialValues) => {
-    console.log("Login: Form values", values);
-    try {
-      const response = await fetch(buildApiUrl('login'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(values),
-      });
-      const data = await response.json();
+    const response = await login(values.email, values.password);
 
-      if (response.ok) {
-        console.log('Login Success, token:', data);
-        setToken(data.token);
-        setIsAuthentified(true);
-        console.log('login: isauthentified:', isAuthentified);
-        console.log('login: Redirect:', redirect);
-        navigate(redirect, { state: { message: 'Vous êtes connecté' } });
-      } else {
-        console.error('Error bdd:', data);
-        setError(true);
-        setErrorMessage(data.error);
-      }
-    } catch (error) {
-      console.error('Error serveur:', error);
+    if (response.error) {
       setError(true);
-      setErrorMessage('Erreur serveur');
+      setErrorMessage(response.error);
+    } else if (response.data) {
+      setUserData(response.data.user);
+      navigate(redirect, { state: { message: 'Vous êtes connecté' } });
     }
   };
 

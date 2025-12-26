@@ -1,18 +1,27 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import { verifyJwt } from "@/services/authService";
-import { buildApiUrl } from '@/utils/apiUtils';
-import getUserIdFromToken from "@/utils/getUserIdFromToken";
+import { api, setLogoutCallback } from "@/services/apiService";
+import { verifyAuth } from "@/services/authService";
 import { createContext, useCallback, useEffect, useState } from "react";
 
+type UserData = {
+  id: string;
+  username: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+  avatar: string;
+} | null;
+
 type UserContextType = {
-  token: string | null;
   userId: string | null;
   userName: string | null;
+  userFirstName: string | null;
+  userLastName: string | null;
+  userEmail: string | null;
+  userAvatar: string | null;
   isAuthentified: boolean;
-  setIsAuthentified: (isAuthentified: boolean) => void;
   loading: boolean;
-  setToken: (token: string | null) => void;
   logout: () => void;
+  setUserData: (userData: UserData) => void;
 };
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -20,97 +29,85 @@ export const UserContext = createContext<UserContextType | undefined>(undefined)
 export const UserProvider = ({ children }: {
   children: React.ReactNode;
 }) => {
-  const [token, setToken] = useState<string | null>(() => {
-    if (typeof window !== "undefined") {
-      return window.localStorage.getItem("authToken") || null;
-    }
-    return null;
-  });
-
   const [userId, setUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
-
+  const [userFirstName, setUserFirstName] = useState<string | null>(null);
+  const [userLastName, setUserLastName] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [isAuthentified, setIsAuthentified] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Sauvegarde du token dans le localStorage ou suppression
-  useEffect(() => {
-    setTokenInLocalStorage(token);
-  }, [token]);
+  // Fonction pour mettre à jour les données utilisateur
+  const setUserData = useCallback((userData: UserData) => {
+    if (userData) {
+      setUserId(userData.id);
+      setUserName(userData.username);
+      setUserFirstName(userData.firstname);
+      setUserLastName(userData.lastname);
+      setUserEmail(userData.email);
+      setUserAvatar(userData.avatar);
+      setIsAuthentified(true);
+    } else {
+      setUserId(null);
+      setUserName(null);
+      setUserFirstName(null);
+      setUserLastName(null);
+      setUserEmail(null);
+      setUserAvatar(null);
+      setIsAuthentified(false);
+    }
+  }, []);
 
+  // Vérifier l'authentification au chargement
   useEffect(() => {
-    setLoading(true);
-    console.log("usercontext: Token", loading);
-
     let isMounted = true;
 
-    if (token) {
-      verifyJwt(token).then((auth) => {
-        if (isMounted) {
-          const decode = getUserIdFromToken(token);
-          if (decode) {
-            setUserId(decode.id);
-            setUserName(decode.username);
-          }
-          console.log("usercontext: isAuthentified", auth);
+    const checkAuth = async () => {
+      setLoading(true);
+      const isAuth = await verifyAuth();
 
-          setIsAuthentified(auth);
-          setLoading(false);  // Fin de la vérification
-        }
-      });
-    } else {
-      setIsAuthentified(false);
-      setLoading(false);  // Fin de la vérification
-    }
+      if (isMounted) {
+        setIsAuthentified(isAuth);
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
 
     return () => {
       isMounted = false;
     };
+  }, []);
 
-  }, [token]);
-
-  useEffect(() => {
-    if (userId) {
-      window.localStorage.setItem("userId", userId);
-    } else {
-      window.localStorage.removeItem("userId");
-    }
-  }, [userId]);
-
-  useEffect(() => {
-    if (userName) {
-      window.localStorage.setItem("userName", userName);
-    } else {
-      window.localStorage.removeItem("userName");
-    }
-  }, [userName]);
-
-  const setTokenInLocalStorage = (token: string | null) => {
-    if (token) {
-      window.localStorage.setItem("authToken", token);
-    } else {
-      window.localStorage.removeItem("authToken");
-    }
-  };
-
-  const logout = useCallback(() => {
-    // appel de l'api pour détruire le token
+  const logout = useCallback(async () => {
     try {
-      fetch(buildApiUrl('logout'), {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-    } catch (error) {
-      console.log(error);
+      await api.post('logout');
+    } catch {
+      // Même si l'appel échoue, on déconnecte localement
+    } finally {
+      setUserData(null);
     }
-    setToken(null);
-    window.localStorage.removeItem('authToken');
-  }, [token]);
+  }, [setUserData]);
+
+  // Enregistrer le callback de logout pour l'intercepteur 401
+  useEffect(() => {
+    setLogoutCallback(logout);
+  }, [logout]);
 
   return (
-    <UserContext.Provider value={{ token, setToken, userId, userName, isAuthentified, setIsAuthentified, loading, logout }}>
+    <UserContext.Provider value={{
+      userId,
+      userName,
+      userFirstName,
+      userLastName,
+      userEmail,
+      userAvatar,
+      isAuthentified,
+      loading,
+      logout,
+      setUserData
+    }}>
       {children}
     </UserContext.Provider>
   );

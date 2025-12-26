@@ -17,12 +17,11 @@ const GameLayout = () => {
   // Vérifier si l'utilisateur est connecté au site
   useEffect(() => {
     if (!userLoading && !isAuthentified) {
-      console.log('Game Layout: User not authentified');
       navigate('/auth/login', {
         state: {
           message: {
             type: 'info',
-            message: 'Vous devez être connecté pour accéder à cette page', // + window.location.pathname,
+            message: 'Vous devez être connecté pour accéder à cette page',
             title: 'Connexion requise'
           },
           from: window.location.pathname

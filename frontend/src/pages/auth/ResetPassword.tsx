@@ -1,6 +1,6 @@
 import CustomField from '@/components/forms/CustomField';
 import { MessageType } from '@/components/Modal';
-import { buildApiUrl } from '@/utils/apiUtils';
+import { api } from '@/services/apiService';
 import { Field, Form, Formik } from 'formik';
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -23,32 +23,19 @@ function ResetPassword() {
 
   const handleSubmit = async (values: typeof initialValues) => {
     setLoading(true);
-    try {
-      const response = await fetch(buildApiUrl(`password-reset/${token}`), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(values),
-      });
-      const data = await response.json();
 
-      if (response.ok) {
-        console.log('Success:', data);
-        setMessage({
-          title: 'Mot de passe réinitialisé',
-          message: 'Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.'
-        });
-      } else {
-        console.error('Error bdd:', data);
-        setErrorMessage(data.error);
-      }
-    } catch (error) {
-      console.error('Error serveur:', error);
-      setErrorMessage('Une erreur est survenue');
-    } finally {
-      setLoading(false);
+    const response = await api.post(`password-reset/${token}`, values);
+
+    if (response.error) {
+      setErrorMessage(response.error);
+    } else {
+      setMessage({
+        title: 'Mot de passe réinitialisé',
+        message: 'Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.'
+      });
     }
+
+    setLoading(false);
   };
 
   if (message) {

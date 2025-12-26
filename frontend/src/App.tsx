@@ -1,53 +1,40 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useUser } from "./hooks/User";
-import { buildApiUrl } from "./utils/apiUtils";
+import { api } from "./services/apiService";
 
 function App() {
 
-  const { token, userId, logout, loading: userLoading, isAuthentified } = useUser();
+  const { userId, loading: userLoading, isAuthentified } = useUser();
   const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
 
   const handleCreateGame = async () => {
     if (!userLoading && !isAuthentified) {
-      console.log('Game Layout: User not authentified');
       navigate('/auth/login', {
         state: {
           message: {
             type: 'info',
-            message: 'Vous devez être connecté pour créer une partie !', // + window.location.pathname,
+            message: 'Vous devez être connecté pour créer une partie !',
             title: 'Connexion requise'
           },
           from: window.location.pathname
         }
       });
+      return;
     }
 
     setLoading(true);
-    try {
-      const response = await fetch(buildApiUrl('game'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ userId: userId, privateRoom: true }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        navigate(`/join/${data.gameId}`)
-      } else {
-        console.error('Error:', data);
-        if (response.status === 401) {
-          logout();
-        }
-        setLoading(false);
-      }
-    } catch (error) {
-      console.error('Error:', error);
+
+    const response = await api.post('game', { userId, privateRoom: true });
+
+    if (response.error) {
+      // L'erreur 401 est gérée automatiquement par l'intercepteur
       setLoading(false);
+    } else if (response.data) {
+      navigate(`/join/${response.data.gameId}`);
     }
+
     setLoading(false);
   }
 

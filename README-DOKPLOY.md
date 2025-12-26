@@ -70,13 +70,6 @@ APP_URL=https://api.labodolivier.com
 PORT=3000
 NODE_ENV=production
 
-# Email (SMTP)
-EMAIL_HOST=smtp.example.com
-EMAIL_PORT=587
-EMAIL_USER=votre@email.com
-EMAIL_PASS=votre_mot_de_passe_smtp
-EMAIL_FROM=noreply@votre-domaine.com
-
 # Frontend - URL publique de votre frontend (pour CORS)
 # Exemples: https://labodolivier.com
 FRONTEND_HOST=https://skyjo.labodolivier.com
@@ -188,11 +181,6 @@ Pour déployer manuellement après un push :
 | `APP_URL` | **URL publique de l'API backend** | `https://api.labodolivier.com` |
 | `PORT` | Port backend | `3000` |
 | `NODE_ENV` | Environnement | `production` |
-| `EMAIL_HOST` | Serveur SMTP | `smtp.gmail.com` |
-| `EMAIL_PORT` | Port SMTP | `587` |
-| `EMAIL_USER` | User SMTP | `user@gmail.com` |
-| `EMAIL_PASS` | Pass SMTP | `xxx` |
-| `EMAIL_FROM` | Email expéditeur | `noreply@skyjo.com` |
 | `FRONTEND_HOST` | **URL publique du frontend (CORS)** | `https://labodolivier.com` |
 
 **💡 Différence entre APP_URL et FRONTEND_HOST :**

@@ -1,12 +1,12 @@
 import ReconnectMessage from "@/components/game/messages/ReconnectMessage";
 import { useUser } from "@/hooks/User";
 import { useWebSocket } from "@/hooks/WebSocket";
-import { buildApiUrl } from "@/utils/apiUtils";
+import { api } from "@/services/apiService";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Create = () => {
-  const { token, userId, logout, loading: userLoading } = useUser();
+  const { userId, loading: userLoading } = useUser();
   const { socket, isConnected, loading: wbLoading } = useWebSocket()
   const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
@@ -14,32 +14,16 @@ const Create = () => {
   const handleCreateGame = useCallback(async (privateRoom: boolean) => {
     setLoading(true);
     if (socket && isConnected) {
-      try {
-        const response = await fetch(buildApiUrl('game'), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ userId: userId, privateRoom: privateRoom }),
-        });
-        const data = await response.json();
-        if (response.ok) {
-          navigate(`/join/${data.gameId}`)
-        } else {
-          console.error('Error:', data);
-          if (response.status === 401) {
-            logout();
-          }
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('Error:', error);
+      const response = await api.post('game', { userId, privateRoom });
+
+      if (response.error) {
         setLoading(false);
+      } else if (response.data) {
+        navigate(`/join/${response.data.gameId}`);
       }
     }
     setLoading(false);
-  }, [socket, isConnected, token, userId, logout, navigate]);
+  }, [socket, isConnected, userId, navigate]);
 
   // Créer une partie dès que le composant est monté
   useEffect(() => {

@@ -174,7 +174,7 @@ export async function loginUser(userDatas, app) {
 	const { count, rows } = await findAndCountAllUsersByEmail(email);
 	if (count === 0) {
 		return {
-			error: "Il n'y a pas d'utilisateur associé à cette adresse email.",
+			error: "Login ou mot de passe incorrect",
 			code: 400
 		};
 	} else if (rows[0].verified === false) {
@@ -194,14 +194,26 @@ export async function loginUser(userDatas, app) {
 	//comparaison des mots de passe
 	const match = await app.bcrypt.compare(password, user.password);
 	if (!match) {
-		return { error: "Mot de passe incorrect", code: 400 };
+		return { error: "Login ou mot de passe incorrect", code: 400 };
 	}
 	// Générer le JWT après une authentification réussie
 	const token = app.jwt.sign(
 		{ id: user.id, username: user.username },
 		{ expiresIn: "14d" }
 	);
-	return { token, user: { id: user.id, username: user.username } };
+
+	// Renvoyer le token et les infos complètes de l'utilisateur
+	return {
+		token,
+		user: {
+			id: user.id,
+			username: user.username,
+			firstname: user.firstname,
+			lastname: user.lastname,
+			email: user.email,
+			avatar: user.avatar
+		}
+	};
 }
 
 export async function verifyUser(token) {

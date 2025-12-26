@@ -10,10 +10,10 @@ export async function getGames(query) {
     where.state = state;
   }
   if (privateRoom) {
-    where.private = privateRoom === 'true' ? true : false;
+    where.private = privateRoom === "true" ? true : false;
   }
   if (creatorId) {
-    where['$players.id$'] = creatorId;
+    where["$players.id$"] = creatorId;
   }
   const games = await Game.findAll({
     where,
@@ -279,35 +279,35 @@ export async function dealCards(gameId) {
   }
 
   // Set de cartes du skyjo (5 cartes -2, 10 cartes -1, 15 cartes 0 et 10 cartes de chaque de 1 à 12)
-  const cards = []
+  const cards = [];
   // ajout des cartes -2
   for (let i = 0; i < 5; i++) {
-    cards.push({ id: 'card_' + cards.length, value: -2, color: 'negative', revealed: false, onHand: false });
+    cards.push({ id: "card_" + cards.length, value: -2, color: "negative", revealed: false, onHand: false });
   }
   // ajout des cartes -1
   for (let i = 0; i < 10; i++) {
-    cards.push({ id: 'card_' + cards.length, value: -1, color: 'negative', revealed: false, onHand: false });
+    cards.push({ id: "card_" + cards.length, value: -1, color: "negative", revealed: false, onHand: false });
   }
   // ajout des cartes 0
   for (let i = 0; i < 15; i++) {
-    cards.push({ id: 'card_' + cards.length, value: 0, color: 'zero', revealed: false, onHand: false });
+    cards.push({ id: "card_" + cards.length, value: 0, color: "zero", revealed: false, onHand: false });
   }
   // ajout des cartes de 1 à 4
   for (let i = 1; i <= 4; i++) {
     for (let j = 0; j < 10; j++) {
-      cards.push({ id: 'card_' + cards.length, value: i, color: 'green', revealed: false, onHand: false });
+      cards.push({ id: "card_" + cards.length, value: i, color: "green", revealed: false, onHand: false });
     }
   }
   // ajout des cartes de 5 à 8
   for (let i = 5; i <= 8; i++) {
     for (let j = 0; j < 10; j++) {
-      cards.push({ id: 'card_' + cards.length, value: i, color: 'yellow', revealed: false, onHand: false });
+      cards.push({ id: "card_" + cards.length, value: i, color: "yellow", revealed: false, onHand: false });
     }
   }
   // ajout des cartes de 9 à 12
   for (let i = 9; i <= 12; i++) {
     for (let j = 0; j < 10; j++) {
-      cards.push({ id: 'card_' + cards.length, value: i, color: 'red', revealed: false, onHand: false });
+      cards.push({ id: "card_" + cards.length, value: i, color: "red", revealed: false, onHand: false });
     }
   }
 
@@ -411,7 +411,7 @@ async function saveScore(game) {
 
   const countPoints = (cards) => {
     return cards.reduce((total, card) => total + card.value, 0);
-  }
+  };
 
   // on parcours les joueurs pour enregistrer leur score
   for (const player of game.players) {

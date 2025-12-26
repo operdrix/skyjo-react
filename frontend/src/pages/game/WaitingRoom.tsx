@@ -4,14 +4,14 @@ import OnlineStatus from "@/components/game/OnlineStatus";
 import Rules from "@/components/game/Rules";
 import { useUser } from "@/hooks/User";
 import { useWebSocket } from "@/hooks/WebSocket";
+import { api } from "@/services/apiService";
 import type { ErrorType, GameType } from "@/types/types";
-import { buildApiUrl } from "@/utils/apiUtils";
 import notify from "@/utils/notify";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 const WaitingRoom = () => {
-  const { token, userId, loading: userLoading } = useUser();
+  const { userId, loading: userLoading } = useUser();
   const { socket, isConnected, sendMessage, subscribeToEvent, unsubscribeFromEvent, loading: wsLoading } = useWebSocket()
   const { gameId } = useParams<string>();
   const [game, setGame] = useState<GameType | null>(null);
@@ -31,31 +31,25 @@ const WaitingRoom = () => {
 
   //On récupère les informations de la partie
   useEffect(() => {
-    if (!gameId || !token || !userId) return;
+    if (!gameId || !userId) return;
     console.log('récupération de la partie', gameId);
 
     const getGame = async () => {
       setLoading(true);
       try {
-        const response = await fetch(buildApiUrl(`game/${gameId}`), {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const data = await response.json();
-        if (response.ok) {
-          setGame(data);
-          if (data.creator === userId) {
+        const response = await api.get(`game/${gameId}`);
+        if (response.data) {
+          setGame(response.data);
+          if (response.data.creator === userId) {
             setIsCreator(true);
           }
           if (game?.state === 'playing' || game?.state === 'finished') {
             // Rediriger vers la page de jeu si la partie a déjà commencé
             navigate(`/game/${gameId}`);
           }
-        } else {
+        } else if (response.error) {
           // la partie n'existe pas
-          console.error('Error fetching game:', data);
+          console.error('Error fetching game:', response.error);
           setError("La partie n'existe pas.");
         }
       } catch (error) {
@@ -66,11 +60,11 @@ const WaitingRoom = () => {
       }
     };
     if (!error) getGame();
-  }, [gameId, token, userId, error, setGame, game?.state, navigate]);
+  }, [gameId, userId, error, setGame, game?.state, navigate]);
 
   // Cas de l'utilisateur qui rejoint la partie
   useEffect(() => {
-    if (loading || userLoading || wsLoading || !gameId || !game || !token || error) return;
+    if (loading || userLoading || wsLoading || !gameId || !game || error) return;
 
     console.log('rejoindre partie', userId);
 
@@ -85,19 +79,12 @@ const WaitingRoom = () => {
       console.log('ajout nouveau du joueur à la partie');
 
       const addPlayer = async () => {
-        await fetch(buildApiUrl(`game/join/${gameId}`), {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ userId }),
-        });
+        await api.patch(`game/join/${gameId}`, { userId });
       }
       addPlayer();
       sendMessage("player-joined-game", { room: gameId, userId });
     }
-  }, [game, gameId, userId, sendMessage, userLoading, wsLoading, loading, navigate, token, error]);
+  }, [game, gameId, userId, sendMessage, userLoading, wsLoading, loading, navigate, error]);
 
   // Avertir les autres joueurs de la connexion du joueur
   useEffect(() => {
@@ -150,14 +137,7 @@ const WaitingRoom = () => {
     if (!isCreator || !game) return;
     const updatedGame = { ...game, private: !game.private };
     setGame(updatedGame);
-    await fetch(buildApiUrl(`game/${gameId}`), {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ private: !game.private }),
-    });
+    await api.patch(`game/${gameId}`, { private: !game.private });
 
     // avertir les autres joueurs du changement
     sendMessage("update-game-params", { room: gameId });
@@ -178,14 +158,7 @@ const WaitingRoom = () => {
     if (!isCreator || !game) return;
     const value = parseInt(e.target.value);
     // Mettre à jour le nombre de joueurs max dans la base de données
-    await fetch(buildApiUrl(`game/${gameId}`), {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ maxPlayers: value }),
-    });
+    await api.patch(`game/${gameId}`, { maxPlayers: value });
     // avertir les autres joueurs du changement
     sendMessage("update-game-params", { room: gameId });
   }

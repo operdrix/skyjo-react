@@ -1,5 +1,6 @@
 import chalk from "chalk";
 //pour fastify
+import cookie from "@fastify/cookie";
 import cors from "@fastify/cors";
 import fastifyJWT from "@fastify/jwt";
 import fastifySwagger from "@fastify/swagger";
@@ -52,6 +53,10 @@ let blacklistedTokens = [];
 const app = fastify();
 //Ajout du plugin fastify-bcrypt pour le hash du mdp
 await app
+	.register(cookie, {
+		secret: process.env.COOKIE_SECRET || "mon-secret-de-cookie-super-secret",
+		parseOptions: {},
+	})
 	.register(fastifyBcrypt, {
 		saltWorkFactor: 12,
 	})
@@ -150,20 +155,39 @@ app.get("/api", {
 	const apiUrl = process.env.APP_URL || "http://localhost:3000";
 	reply.send({ documentationURL: `${apiUrl}/api/documentation` });
 });
-// Fonction pour décoder et vérifier le token
+// Fonction pour décoder et vérifier le token (access token)
 app.decorate("authenticate", async (request, reply) => {
 	try {
-		const token = request.headers["authorization"].split(" ")[1];
+		// Essayer de récupérer l'access token depuis le cookie d'abord, sinon depuis l'header Authorization
+		let token = request.cookies.accessToken;
+
+		if (!token && request.headers["authorization"]) {
+			token = request.headers["authorization"].split(" ")[1];
+		}
+
+		if (!token) {
+			return reply.status(401).send({ error: "Access token manquant" });
+		}
 
 		// Vérifier si le token est dans la liste noire
 		if (blacklistedTokens.includes(token)) {
 			return reply
 				.status(401)
-				.send({ error: "Token invalide ou expiré" });
+				.send({ error: "Access token invalide ou expiré" });
 		}
-		await request.jwtVerify();
+
+		// Vérifier et décoder le token JWT
+		const decoded = app.jwt.verify(token);
+
+		// Ajouter les infos utilisateur décodées à la requête
+		request.user = decoded;
+
+		// Si le token vient du cookie, on le met aussi dans l'header pour cohérence
+		if (!request.headers["authorization"]) {
+			request.headers["authorization"] = `Bearer ${token}`;
+		}
 	} catch (err) {
-		reply.send(err);
+		reply.status(401).send({ error: "Access token invalide ou expiré", errorDetails: err });
 	}
 });
 //gestion utilisateur

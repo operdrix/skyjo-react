@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 interface ModalProps {
   id: string
@@ -87,21 +87,21 @@ const SvgWarning = () => (
 export default function Modal({ id, title, message, type = "alert", open = false }: ModalProps) {
   const [isOpen, setIsOpen] = useState(open)
 
-  const openModal = () => {
+  const openModal = useCallback(() => {
     const modal = document.getElementById(id)
     if (modal) {
       (modal as HTMLDialogElement).showModal()
       setIsOpen(true)
     }
-  }
+  }, [id])
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     const modal = document.getElementById(id)
     if (modal) {
       (modal as HTMLDialogElement).close()
       setIsOpen(false)
     }
-  }
+  }, [id])
 
   useEffect(() => {
     const modal = document.getElementById(id)
@@ -118,7 +118,7 @@ export default function Modal({ id, title, message, type = "alert", open = false
     } else {
       closeModal()
     }
-  }, [isOpen])
+  }, [isOpen, openModal, closeModal])
 
   const classVariant = {
     alert: '',

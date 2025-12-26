@@ -1,7 +1,7 @@
 import CustomField from '@/components/forms/CustomField';
 import Modal, { MessageType } from '@/components/Modal';
 import { useUser } from '@/hooks/User';
-import { buildApiUrl } from '@/utils/apiUtils';
+import { login } from '@/services/authService';
 import { Field, Form, Formik } from 'formik';
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -14,19 +14,11 @@ function Login() {
   const [redirect, setRedirect] = useState<string>('/');
   const [message, setMessage] = useState<MessageType | null>(null);
 
-  const [error, setError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
 
-  const { setToken, isAuthentified, setIsAuthentified } = useUser();
+  const { setUserData } = useUser();
 
   const navigate = useNavigate()
-
-  useEffect(() => {
-    if (error) {
-      const modal = document.getElementById('error_modal');
-      (modal as HTMLDialogElement)?.showModal();
-    }
-  }, [error]);
 
   useEffect(() => {
     if (location.state?.message) {
@@ -49,33 +41,16 @@ function Login() {
   });
 
   const handleSubmit = async (values: typeof initialValues) => {
-    console.log("Login: Form values", values);
-    try {
-      const response = await fetch(buildApiUrl('login'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(values),
-      });
-      const data = await response.json();
+    // Réinitialiser le message d'erreur avant chaque tentative
+    setErrorMessage('');
 
-      if (response.ok) {
-        console.log('Login Success, token:', data);
-        setToken(data.token);
-        setIsAuthentified(true);
-        console.log('login: isauthentified:', isAuthentified);
-        console.log('login: Redirect:', redirect);
-        navigate(redirect, { state: { message: 'Vous êtes connecté' } });
-      } else {
-        console.error('Error bdd:', data);
-        setError(true);
-        setErrorMessage(data.error);
-      }
-    } catch (error) {
-      console.error('Error serveur:', error);
-      setError(true);
-      setErrorMessage('Erreur serveur');
+    const response = await login(values.email, values.password);
+
+    if (response.error) {
+      setErrorMessage(response.error);
+    } else if (response.data) {
+      setUserData(response.data.user);
+      navigate(redirect, { state: { message: 'Vous êtes connecté' } });
     }
   };
 
@@ -83,7 +58,6 @@ function Login() {
     <>
       <div className="flex-1 flex flex-col items-center justify-center">
         <Modal id="message_modal" title={message?.title || "Succès"} message={message?.message || ''} type={message?.type || 'success'} />
-        <Modal id="error_modal" title="Oups ! Il semblerait qu'il y ait un problème" message={errorMessage} type="error" />
 
         <Formik
           initialValues={initialValues}
@@ -92,6 +66,16 @@ function Login() {
         >
           <Form>
             <h1 className="font-bold text-center text-2xl mb-5">Connexion au jeu</h1>
+
+            {errorMessage && (
+              <div className="alert alert-error mb-4 shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span dangerouslySetInnerHTML={{ __html: errorMessage }} />
+              </div>
+            )}
+
             <div className="bg-base-200 shadow w-full rounded-lg divide-y divide-base-100">
               <div className="px-5 py-7">
                 <Field component={CustomField} name="email" label="E-mail" type='email' autoComplete="username" />

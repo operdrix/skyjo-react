@@ -1,4 +1,4 @@
-import { buildApiUrl } from '@/utils/apiUtils';
+import { api } from '@/services/apiService';
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -10,27 +10,23 @@ const VerifyEmail = () => {
 
     useEffect(() => {
         const verifyToken = async () => {
-            try {
-                const response = await fetch(buildApiUrl(`verify/${token}`))
-                const data = await response.json()
-                if (response.ok) {
-                    navigate('/auth/login', {
-                        state: {
-                            message: {
-                                title: 'Email vérifié',
-                                message: 'Votre email a bien été vérifié, vous pouvez maintenant vous connecter',
-                                type: 'success'
-                            }
+            const response = await api.get(`verify/${token}`);
+
+            if (response.error) {
+                setErrorMessage(response.error || 'La vérification a échoué');
+            } else {
+                navigate('/auth/login', {
+                    state: {
+                        message: {
+                            title: 'Email vérifié',
+                            message: 'Votre email a bien été vérifié, vous pouvez maintenant vous connecter',
+                            type: 'success'
                         }
-                    })
-                } else {
-                    setErrorMessage(data.error || 'La vérification a échoué')
-                }
-            } catch {
-                setErrorMessage('Erreur serveur, veuillez réessayer plus tard')
-            } finally {
-                setIsLoading(false)
+                    }
+                });
             }
+
+            setIsLoading(false);
         }
 
         verifyToken()

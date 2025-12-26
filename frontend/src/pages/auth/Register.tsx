@@ -1,7 +1,7 @@
 import CustomField from '@/components/forms/CustomField';
 import Modal from '@/components/Modal';
 import PrivacyPolicy from '@/components/nav/PrivacyPolicy';
-import { buildApiUrl } from '@/utils/apiUtils';
+import { register } from '@/services/authService';
 import { Field, Form, Formik } from 'formik';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -45,38 +45,29 @@ function Register() {
 
   const handleSubmit = async (values: typeof initialValues) => {
     setLoading(true);
-    try {
-      console.log("Form values", values);
-      const response = await fetch(buildApiUrl('register'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(values),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        console.log('Success:', data);
-        navigate('/auth/login', {
-          state: {
-            message: {
-              title: 'Compte créé',
-              message: 'Votre compte a bien été créé.<br><br>Veuillez consulter vos mails pour confirmer votre adresse email.<br><br>Une fois votre adresse email confirmée, vous pourrez vous connecter avec vos identifiants.',
-              type: 'success'
-            }
-          }
-        });
-      } else {
-        console.error('Error bdd:', data);
-        setError(true);
-        setErrorMessage(data.error);
-        setLoading(false);
-      }
-    } catch (error) {
-      console.error('Error serveur:', error);
+
+    const response = await register({
+      firstname: values.firstname,
+      lastname: values.lastname,
+      username: values.username,
+      email: values.email,
+      password: values.password,
+    });
+
+    if (response.error) {
       setError(true);
-      setErrorMessage('Une erreur est survenue');
+      setErrorMessage(response.error);
       setLoading(false);
+    } else {
+      navigate('/auth/login', {
+        state: {
+          message: {
+            title: 'Compte créé',
+            message: 'Votre compte a bien été créé.<br><br>Veuillez consulter vos mails pour confirmer votre adresse email.<br><br>Une fois votre adresse email confirmée, vous pourrez vous connecter avec vos identifiants.',
+            type: 'success'
+          }
+        }
+      });
     }
   };
   return (

@@ -1,13 +1,13 @@
 import ErrorMessage from "@/components/game/messages/ErrorMessage"
 import { useUser } from "@/hooks/User"
+import { api } from "@/services/apiService"
 import { GameType } from "@/types/types"
-import { buildApiUrl } from "@/utils/apiUtils"
 import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 
 const Dashboard = () => {
 
-  const { userId, userName, token, loading: userLoading, isAuthentified } = useUser()
+  const { userId, userName, loading: userLoading, isAuthentified } = useUser()
   const navigate = useNavigate();
   const [games, setGames] = useState<GameType[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -17,12 +17,11 @@ const Dashboard = () => {
   // Vérifier si l'utilisateur est connecté au site
   useEffect(() => {
     if (!userLoading && !isAuthentified) {
-      console.log('Game Layout: User not authentified');
       navigate('/auth/login', {
         state: {
           message: {
             type: 'info',
-            message: 'Vous devez être connecté pour accéder à cette page', // + window.location.pathname,
+            message: 'Vous devez être connecté pour accéder à cette page',
             title: 'Connexion requise'
           },
           from: window.location.pathname
@@ -32,60 +31,39 @@ const Dashboard = () => {
   }, [isAuthentified, navigate, userLoading]);
 
   useEffect(() => {
-    if (!userId || !token) return;
+    if (!userId) return;
 
     const getGames = async () => {
       setLoading(true);
-      try {
-        const response = await fetch(buildApiUrl(`users/${userId}/games`), {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const data = await response.json();
-        if (response.ok) {
-          // tri des parties par date de création descendante
-          data.sort((a: GameType, b: GameType) => {
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-          });
-          setGames(data);
-          console.log('Games fetched:', data);
 
-        } else {
-          console.error('Error fetching games:', data);
-        }
-      } catch (error) {
-        console.error('Network error:', error);
-        setError("Une erreur réseau s'est produite.");
-      } finally {
-        setLoading(false);
+      const response = await api.get(`users/${userId}/games`);
+
+      if (response.error) {
+        setError(response.error);
+      } else if (response.data) {
+        // tri des parties par date de création descendante
+        response.data.sort((a: GameType, b: GameType) => {
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
+        setGames(response.data);
       }
+
+      setLoading(false);
     };
+
     if (!error) getGames();
-  }, [token, userId, error]);
+  }, [userId, error]);
 
   const handleDeleteGame = async (gameId: string) => {
-    if (!token) return;
     // Demande de confirmation
     if (!window.confirm('Voulez-vous vraiment supprimer cette partie ?')) return;
-    try {
-      const response = await fetch(buildApiUrl(`game/${gameId}`), {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await response.json();
-      if (response.ok) {
-        console.log('Game deleted:', data);
-        setGames(games.filter(game => game.id !== gameId));
-      } else {
-        console.error('Error deleting game:', data);
-      }
-    } catch (error) {
-      console.error('Network error:', error);
-      setError("Une erreur réseau s'est produite.");
+
+    const response = await api.delete(`game/${gameId}`);
+
+    if (response.error) {
+      setError(response.error);
+    } else {
+      setGames(games.filter(game => game.id !== gameId));
     }
   };
 

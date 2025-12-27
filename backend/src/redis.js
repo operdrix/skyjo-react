@@ -8,14 +8,14 @@ let memoryBlacklist = new Map(); // Fallback en mémoire
 setInterval(() => {
   const now = Date.now();
   let cleaned = 0;
-  
+
   for (const [token, expiry] of memoryBlacklist.entries()) {
     if (now > expiry) {
       memoryBlacklist.delete(token);
       cleaned++;
     }
   }
-  
+
   if (cleaned > 0) {
     logger.debug(`Nettoyage blacklist mémoire: ${cleaned} tokens expirés supprimés`);
   }
@@ -81,13 +81,13 @@ export async function isBlacklisted(token) {
     // Fallback en mémoire si Redis n'est pas disponible
     const expiry = memoryBlacklist.get(token);
     if (!expiry) return false;
-    
+
     // Vérifier si le token a expiré
     if (Date.now() > expiry) {
       memoryBlacklist.delete(token);
       return false;
     }
-    
+
     return true;
   }
 

@@ -16,6 +16,8 @@ import { usersRoutes } from "./routes/users.js";
 import { websockets } from "./websockets/websockets.js";
 //bdd
 import { sequelize } from "./bdd.js";
+//redis
+import { initRedis, isBlacklisted } from "./redis.js";
 
 import dotenv from "dotenv";
 
@@ -76,6 +78,9 @@ try {
 	console.error(chalk.red("Erreur critique :"), error.message);
 	process.exit(1); // Arrêter le processus en cas d'échec total
 }
+
+// Initialiser Redis
+await initRedis();
 
 /**
  * API
@@ -209,8 +214,9 @@ app.decorate("authenticate", async (request, reply) => {
 			return reply.status(401).send({ error: "Access token manquant" });
 		}
 
-		// Vérifier si le token est dans la liste noire
-		if (blacklistedTokens.includes(token)) {
+		// Vérifier si le token est dans la liste noire (Redis ou mémoire)
+		const isTokenBlacklisted = await isBlacklisted(token);
+		if (isTokenBlacklisted || blacklistedTokens.includes(token)) {
 			return reply
 				.status(401)
 				.send({ error: "Access token invalide ou expiré" });

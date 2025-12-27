@@ -1,6 +1,39 @@
 import { checkGame, createGame, getGame, updateGame } from "../controllers/games.js";
 import { logger } from "../utils/logger.js";
 
+/**
+ * Valide les données d'entrée des événements WebSocket
+ */
+function validateEventData(socket, data, requiredFields) {
+  if (!data || typeof data !== 'object') {
+    socket.emit("error", { message: "Données invalides" });
+    return false;
+  }
+
+  for (const field of requiredFields) {
+    if (!data[field]) {
+      socket.emit("error", { message: `Le champ '${field}' est requis` });
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Vérifie que le token JWT est toujours valide
+ */
+async function verifySocketToken(socket, app) {
+  try {
+    app.jwt.verify(socket.handshake.auth.token);
+    return true;
+  } catch {
+    socket.emit("error", { message: "Session expirée, veuillez vous reconnecter" });
+    socket.disconnect();
+    return false;
+  }
+}
+
 export async function websockets(app) {
   await app.ready();
 
@@ -53,6 +86,12 @@ export async function websockets(app) {
 function playerJoinedGame(socket, io) {
 
   socket.on("player-joined-game", async ({ room }) => {
+    // Valider les données
+    if (!validateEventData(socket, { room }, ['room'])) return;
+
+    // Vérifier le token
+    if (!await verifySocketToken(socket, app)) return;
+
     // Utiliser l'userId du socket authentifié au lieu de celui envoyé par le client
     const userId = socket.userId;
 
@@ -102,11 +141,17 @@ export async function playerLeftGame(room, userId, io) {
 // on envoie à tous les joueurs de la partie les informations de la partie
 export async function gameSettingsChanged(socket, io) {
   socket.on("update-game-params", async ({ room }) => {
-    console.log("update-game-params", room);
+    // Valider les données
+    if (!validateEventData(socket, { room }, ['room'])) return;
+
+    // Vérifier le token
+    if (!await verifySocketToken(socket, app)) return;
+
+    logger.debug("update-game-params", room);
 
     const game = await getGame(room);
     if (!game) {
-      console.error("Game not found for room:", room);
+      logger.error("Game not found for room:", room);
       return;
     }
 
@@ -119,6 +164,12 @@ export async function gameSettingsChanged(socket, io) {
 // on envoie à tous les joueurs de la partie les informations de la partie
 export async function startGame(socket, io) {
   socket.on("start-game", async ({ room }) => {
+    // Valider les données
+    if (!validateEventData(socket, { room }, ['room'])) return;
+
+    // Vérifier le token
+    if (!await verifySocketToken(socket, app)) return;
+
     io.to(room).emit("waiting-deal");
 
     logger.debug("start-game", room);
@@ -139,11 +190,17 @@ export async function startGame(socket, io) {
 // Un coup est joué
 export async function playMove(socket, io) {
   socket.on("initial-turn-card", async ({ room, playerId, cardId }) => {
-    console.log("initial-turn-card", room, playerId, cardId);
+    // Valider les données
+    if (!validateEventData(socket, { room, playerId, cardId }, ['room', 'playerId', 'cardId'])) return;
+
+    // Vérifier le token
+    if (!await verifySocketToken(socket, app)) return;
+
+    logger.debug("initial-turn-card", room, playerId, cardId);
 
     const game = await getGame(room);
     if (!game) {
-      console.error("Game not found for room:", room);
+      logger.error("Game not found for room:", room);
       return;
     }
 
@@ -153,7 +210,7 @@ export async function playMove(socket, io) {
     // Trouver la carte et la modifier
     const cardIndex = gameData.playersCards[playerId].findIndex((c) => c.id === cardId);
     if (cardIndex === -1) {
-      console.error("Card not found for player:", playerId);
+      logger.error("Card not found for player:", playerId);
       return;
     }
 
@@ -167,11 +224,17 @@ export async function playMove(socket, io) {
   });
 
   socket.on("play-move", async ({ room, gameData }) => {
-    console.log("play-move", room, gameData.currentStep);
+    // Valider les données
+    if (!validateEventData(socket, { room, gameData }, ['room', 'gameData'])) return;
+
+    // Vérifier le token
+    if (!await verifySocketToken(socket, app)) return;
+
+    logger.debug("play-move", room, gameData.currentStep);
 
     const game = await getGame(room);
     if (!game) {
-      console.error("Game not found for room:", room);
+      logger.error("Game not found for room:", room);
       return;
     }
 
@@ -188,11 +251,17 @@ export async function playMove(socket, io) {
 // Joueurs prêts à rejouer
 export async function playerPlayAgain(socket, io) {
   socket.on("play-again", async ({ room, playersPlayAgain }) => {
-    console.log("play-again", room, playersPlayAgain);
+    // Valider les données
+    if (!validateEventData(socket, { room, playersPlayAgain }, ['room', 'playersPlayAgain'])) return;
+
+    // Vérifier le token
+    if (!await verifySocketToken(socket, app)) return;
+
+    logger.debug("play-again", room, playersPlayAgain);
 
     const game = await getGame(room);
     if (!game) {
-      console.error("Game not found for room:", room);
+      logger.error("Game not found for room:", room);
       return;
     }
     game.playersPlayAgain = playersPlayAgain;
@@ -207,12 +276,18 @@ export async function playerPlayAgain(socket, io) {
 // on créée une nouvelle partie avec les joueurs qui ont demandé à rejouer
 export async function restartGame(socket, io) {
   socket.on("restart-game", async ({ room }) => {
-    console.log("restart-game", room);
+    // Valider les données
+    if (!validateEventData(socket, { room }, ['room'])) return;
+
+    // Vérifier le token
+    if (!await verifySocketToken(socket, app)) return;
+
+    logger.debug("restart-game", room);
     io.to(room).emit("waiting-deal");
 
     const game = await getGame(room);
     if (!game) {
-      console.error("Game not found for room:", room);
+      logger.error("Game not found for room:", room);
       return;
     }
 
@@ -228,7 +303,7 @@ export async function restartGame(socket, io) {
 
     const gameReady = await getGame(gameId);
     if (!gameReady) {
-      console.error("Game not found for room:", gameId);
+      logger.error("Game not found for room:", gameId);
       return;
     }
     await new Promise((resolve) => setTimeout(resolve, 1000));

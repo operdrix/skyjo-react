@@ -3,6 +3,24 @@ import { createClient } from "redis";
 import { logger } from "./utils/logger.js";
 
 let redisClient = null;
+let memoryBlacklist = new Map(); // Fallback en mémoire
+
+// Nettoyer automatiquement la blacklist mémoire toutes les 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  let cleaned = 0;
+  
+  for (const [token, expiry] of memoryBlacklist.entries()) {
+    if (now > expiry) {
+      memoryBlacklist.delete(token);
+      cleaned++;
+    }
+  }
+  
+  if (cleaned > 0) {
+    logger.debug(`Nettoyage blacklist mémoire: ${cleaned} tokens expirés supprimés`);
+  }
+}, 5 * 60 * 1000); // 5 minutes
 
 // Initialiser le client Redis
 export async function initRedis() {
@@ -42,7 +60,10 @@ export async function initRedis() {
 export async function addToBlacklist(token, expiresIn) {
   if (!redisClient) {
     // Fallback en mémoire si Redis n'est pas disponible
-    return false;
+    const expiryTimestamp = Date.now() + expiresIn * 1000;
+    memoryBlacklist.set(token, expiryTimestamp);
+    logger.debug(`Token ajouté à la blacklist mémoire (expire dans ${expiresIn}s)`);
+    return true;
   }
 
   try {
@@ -59,7 +80,16 @@ export async function addToBlacklist(token, expiresIn) {
 export async function isBlacklisted(token) {
   if (!redisClient) {
     // Fallback en mémoire si Redis n'est pas disponible
-    return false;
+    const expiry = memoryBlacklist.get(token);
+    if (!expiry) return false;
+    
+    // Vérifier si le token a expiré
+    if (Date.now() > expiry) {
+      memoryBlacklist.delete(token);
+      return false;
+    }
+    
+    return true;
   }
 
   try {
@@ -80,6 +110,14 @@ export async function closeRedis() {
     await redisClient.quit();
     logger.success("✓ Déconnecté de Redis");
   }
+}
+
+// Obtenir les statistiques de la blacklist
+export function getBlacklistStats() {
+  return {
+    redisConnected: redisClient !== null,
+    memoryTokensCount: memoryBlacklist.size,
+  };
 }
 
 export { redisClient };

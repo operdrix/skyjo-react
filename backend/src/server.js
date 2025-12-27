@@ -20,6 +20,37 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+// Vérification des secrets obligatoires en production
+if (process.env.NODE_ENV === "production") {
+	const requiredSecrets = ["JWT_SECRET", "COOKIE_SECRET"];
+	const missingSecrets = requiredSecrets.filter(secret => !process.env[secret]);
+
+	if (missingSecrets.length > 0) {
+		console.error(
+			chalk.red("❌ ERREUR CRITIQUE : Les secrets suivants sont manquants en production :"),
+			missingSecrets.join(", ")
+		);
+		console.error(chalk.yellow("Définissez ces variables d'environnement avant de démarrer le serveur."));
+		process.exit(1);
+	}
+
+	// Vérifier que les secrets sont suffisamment forts (minimum 32 caractères)
+	const weakSecrets = requiredSecrets.filter(
+		secret => process.env[secret] && process.env[secret].length < 32
+	);
+
+	if (weakSecrets.length > 0) {
+		console.error(
+			chalk.red("❌ ERREUR CRITIQUE : Les secrets suivants sont trop faibles (< 32 caractères) :"),
+			weakSecrets.join(", ")
+		);
+		console.error(chalk.yellow("Utilisez des secrets d'au moins 32 caractères aléatoires."));
+		process.exit(1);
+	}
+
+	console.log(chalk.green("✓ Secrets de production validés"));
+}
+
 //Test de la connexion
 const retrySequelizeConnection = async (retries = 10, delay = 5000) => {
 	while (retries > 0) {

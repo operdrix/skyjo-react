@@ -42,6 +42,10 @@ const User = sequelize.define("user", {
 		type: DataTypes.STRING,
 		allowNull: true,
 	},
+	verifiedTokenExpires: {
+		type: DataTypes.DATE,
+		allowNull: true,
+	},
 	avatar: {
 		type: DataTypes.STRING,
 		allowNull: true,

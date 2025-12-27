@@ -137,6 +137,7 @@ export async function registerUser(userDatas, bcrypt) {
 		avatar,
 		password: hashedPassword,
 		verifiedtoken: generateToken,
+		verifiedTokenExpires: Date.now() + 24 * 3600000, // 24 heures
 	};
 
 	const newUser = await User.create(user);
@@ -223,13 +224,17 @@ export async function verifyUser(token) {
 			verifiedtoken: {
 				[Op.eq]: token,
 			},
+			verifiedTokenExpires: {
+				[Op.gt]: Date.now(),
+			},
 		},
 	});
 	if (!user) {
-		return { error: "Une erreur est survenue. Demander un nouvel email de confirmation.", code: 400 };
+		return { error: "Token invalide ou expiré. Demandez un nouvel email de confirmation.", code: 400 };
 	}
 	user.verified = true;
 	user.verifiedtoken = null;
+	user.verifiedTokenExpires = null;
 	await user.save();
 	return user;
 }

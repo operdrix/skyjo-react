@@ -2,6 +2,7 @@ import chalk from "chalk";
 //pour fastify
 import cookie from "@fastify/cookie";
 import cors from "@fastify/cors";
+import helmet from "@fastify/helmet";
 import fastifyJWT from "@fastify/jwt";
 import rateLimit from "@fastify/rate-limit";
 import fastifySwagger from "@fastify/swagger";
@@ -94,6 +95,26 @@ const app = fastify({
 });
 //Ajout du plugin fastify-bcrypt pour le hash du mdp
 await app
+	.register(helmet, {
+		// Configuration des headers de sécurité
+		contentSecurityPolicy: {
+			directives: {
+				defaultSrc: ["'self'"],
+				styleSrc: ["'self'", "'unsafe-inline'"], // Pour Swagger UI
+				scriptSrc: ["'self'", "'unsafe-inline'"], // Pour Swagger UI
+				imgSrc: ["'self'", "data:", "https:"],
+				connectSrc: ["'self'"],
+			},
+		},
+		// Désactiver X-Powered-By pour ne pas exposer Fastify
+		hidePoweredBy: true,
+		// Forcer HTTPS en production
+		hsts: process.env.NODE_ENV === "production" ? {
+			maxAge: 31536000, // 1 an
+			includeSubDomains: true,
+			preload: true,
+		} : false,
+	})
 	.register(rateLimit, {
 		global: false, // Pas de limite globale, on configure par route
 		max: 100,

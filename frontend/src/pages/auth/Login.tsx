@@ -2,11 +2,11 @@ import CustomField from '@/components/forms/CustomField';
 import Modal, { MessageType } from '@/components/Modal';
 import { useUser } from '@/hooks/User';
 import { login } from '@/services/authService';
+import DOMPurify from 'dompurify';
 import { Field, Form, Formik } from 'formik';
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import * as yup from 'yup';
-import DOMPurify from 'dompurify';
 
 
 function Login() {

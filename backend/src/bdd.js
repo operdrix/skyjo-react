@@ -7,7 +7,7 @@ dotenv.config();
 const { DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, DB_PORT } = process.env;
 if (!DB_HOST || !DB_NAME || !DB_USER || !DB_PASSWORD || !DB_PORT) {
 	console.error("Certaines variables d'environnement MySQL sont manquantes.");
-	console.log(DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, DB_PORT);
+	console.log(DB_HOST, DB_NAME, DB_USER, "***", DB_PORT);
 
 	process.exit(1);
 }

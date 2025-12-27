@@ -4,6 +4,7 @@ import mjml2html from "mjml";
 import nodemailer from "nodemailer";
 import { Op } from "sequelize";
 import User from "../models/users.js";
+import { logger } from "../utils/logger.js";
 
 import dotenv from "dotenv";
 
@@ -153,9 +154,9 @@ export async function registerUser(userDatas, bcrypt) {
 
 		try {
 			await transporter.sendMail(mailOptions);
-			console.log("Email de confirmation envoyé avec succès.");
+			logger.info("Email de confirmation envoyé avec succès.");
 		} catch (error) {
-			console.error("Erreur lors de l'envoi de l'email de confirmation:", error);
+			logger.error("Erreur lors de l'envoi de l'email de confirmation:", error);
 			// tu peux aussi logger cette erreur pour la gestion des erreurs
 		}
 	}
@@ -260,7 +261,7 @@ export async function requestPasswordReset(email) {
 		await transporter.sendMail(mailOptions);
 		return { message: "Email de réinitialisation envoyé avec succès.", code: 200 };
 	} catch (error) {
-		console.error("Erreur lors de l'envoi de l'email :", error);
+		logger.error("Erreur lors de l'envoi de l'email :", error);
 		return { error: "Impossible d'envoyer l'email.", code: 500 };
 	}
 }
@@ -300,7 +301,7 @@ export async function resetPassword(token, newPassword, bcrypt) {
 		await transporter.sendMail(mailOptions);
 		return { message: "Mot de passe réinitialisé avec succès.", code: 200 };
 	} catch (error) {
-		console.error("Erreur lors de l'envoi de l'email :", error);
+		logger.error("Erreur lors de l'envoi de l'email :", error);
 		return { error: "Impossible d'envoyer l'email.", code: 500 };
 	}
 

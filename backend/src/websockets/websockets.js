@@ -1,4 +1,5 @@
 import { checkGame, createGame, getGame, updateGame } from "../controllers/games.js";
+import { logger } from "../utils/logger.js";
 
 export async function websockets(app) {
   await app.ready();
@@ -21,14 +22,14 @@ export async function websockets(app) {
 
       next();
     } catch (err) {
-      console.error("WebSocket authentication error:", err.message);
+      logger.error("WebSocket authentication error:", err.message);
       next(new Error("Authentication failed"));
     }
   });
 
   // Lorsqu'un joueur se connecte
   app.io.on("connection", (socket) => {
-    console.log(`Joueur connecté : ${socket.username} (${socket.userId}) - socket: ${socket.id}`);
+    logger.info(`Joueur connecté : ${socket.username} (${socket.userId}) - socket: ${socket.id}`);
 
     // Ecoute des événements socket
     playerJoinedGame(socket, app.io);
@@ -40,7 +41,7 @@ export async function websockets(app) {
 
     // Lorsqu'un joueur se déconnecte
     socket.on("disconnect", async () => {
-      console.log(`Joueur déconnecté : ${socket.username} (${socket.userId}) - socket: ${socket.id}`);
+      logger.info(`Joueur déconnecté : ${socket.username} (${socket.userId}) - socket: ${socket.id}`);
       // Si le joueur est dans une partie, le retirer de la partie
       await playerLeftGame(socket.room, socket.userId, app.io);
     });
@@ -61,7 +62,7 @@ function playerJoinedGame(socket, io) {
     let game = null;
     game = await getGame(room);
     if (!game) {
-      console.error("Game not found for room:", room);
+      logger.error("Game not found for room:", room);
       return;
     }
 
@@ -74,7 +75,7 @@ function playerJoinedGame(socket, io) {
     socket.join(room);
     socket.room = room;
 
-    console.log("(player-joined-game) room:", room, "userId:", userId);
+    logger.debug("(player-joined-game) room:", room, "userId:", userId);
 
     // Émettre l'événement à tous les membres de la room
     io.to(room).emit("player-joined-game", game);
@@ -89,7 +90,7 @@ export async function playerLeftGame(room, userId, io) {
 
   const game = await getGame(room);
   if (!game) {
-    console.error("Game not found for room:", room);
+    logger.error("Game not found for room:", room);
     return;
   }
 
@@ -120,12 +121,12 @@ export async function startGame(socket, io) {
   socket.on("start-game", async ({ room }) => {
     io.to(room).emit("waiting-deal");
 
-    console.log("start-game", room);
+    logger.debug("start-game", room);
     await updateGame({ params: { action: "start", gameId: room } });
 
     const game = await getGame(room);
     if (!game) {
-      console.error("Game not found for room:", room);
+      logger.error("Game not found for room:", room);
       return;
     }
     await new Promise((resolve) => setTimeout(resolve, 3000));

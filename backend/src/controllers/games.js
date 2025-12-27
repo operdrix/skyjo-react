@@ -1,5 +1,6 @@
 import Game from "../models/games.js";
 import User from "../models/users.js";
+import { logger } from "../utils/logger.js";
 
 // Liste des parties avec filtres
 export async function getGames(query) {
@@ -179,25 +180,25 @@ export async function updateGame(request) {
         }
       } else {
         if (game.players.length >= game.maxPlayers) {
-          console.log("[game controller] Game is full");
+          logger.debug("[game controller] Game is full");
           return { error: `Cette partie est déjà complète avec ${game.maxPlayers} joueurs !` };
         }
         if (game.players.some(player => player.id === userId)) {
-          console.log("[game controller] Player already in game");
+          logger.debug("[game controller] Player already in game");
           return { error: "Vous êtes déjà dans cette partie.", code: 400 };
         }
-        console.log("[game controller] addPlayer ", userId);
+        logger.debug("[game controller] addPlayer ", userId);
         try {
           await game.addPlayer(userId);
         } catch (error) {
-          console.error("Error adding player to game:", error);
+          logger.error("Error adding player to game:", error);
           return { error: "Impossible de rejoindre la partie.", code: 500 };
         }
       }
       break;
 
     case "leave":
-      console.log("[game controller] player leaded ", userId);
+      logger.debug("[game controller] player leaded ", userId);
 
       if (game.state === "pending") {
         await game.removePlayer(userId);
@@ -228,7 +229,7 @@ export async function updateGame(request) {
       break;
 
     case "finish":
-      console.log("[game controller] finish game");
+      logger.debug("[game controller] finish game");
 
       if (!request.body.winnerScore || !request.body.winner) {
         return { error: "Le score et le gagnant doivent être fournis.", code: 400 };
@@ -240,7 +241,7 @@ export async function updateGame(request) {
       break;
 
     default:
-      console.log("Unknown action");
+      logger.warn("Unknown action");
       return { error: "Action inconnue", code: 400 };
   }
 

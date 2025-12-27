@@ -18,6 +18,8 @@ import { websockets } from "./websockets/websockets.js";
 import { sequelize } from "./bdd.js";
 //redis
 import { initRedis, isBlacklisted } from "./redis.js";
+//logger
+import { logger } from "./utils/logger.js";
 
 import dotenv from "dotenv";
 
@@ -29,11 +31,11 @@ if (process.env.NODE_ENV === "production") {
 	const missingSecrets = requiredSecrets.filter(secret => !process.env[secret]);
 
 	if (missingSecrets.length > 0) {
-		console.error(
-			chalk.red("❌ ERREUR CRITIQUE : Les secrets suivants sont manquants en production :"),
+		logger.error(
+			"❌ ERREUR CRITIQUE : Les secrets suivants sont manquants en production :",
 			missingSecrets.join(", ")
 		);
-		console.error(chalk.yellow("Définissez ces variables d'environnement avant de démarrer le serveur."));
+		logger.error("Définissez ces variables d'environnement avant de démarrer le serveur.");
 		process.exit(1);
 	}
 
@@ -43,15 +45,15 @@ if (process.env.NODE_ENV === "production") {
 	);
 
 	if (weakSecrets.length > 0) {
-		console.error(
-			chalk.red("❌ ERREUR CRITIQUE : Les secrets suivants sont trop faibles (< 32 caractères) :"),
+		logger.error(
+			"❌ ERREUR CRITIQUE : Les secrets suivants sont trop faibles (< 32 caractères) :",
 			weakSecrets.join(", ")
 		);
-		console.error(chalk.yellow("Utilisez des secrets d'au moins 32 caractères aléatoires."));
+		logger.error("Utilisez des secrets d'au moins 32 caractères aléatoires.");
 		process.exit(1);
 	}
 
-	console.log(chalk.green("✓ Secrets de production validés"));
+	logger.success("Secrets de production validés");
 }
 
 //Test de la connexion
@@ -59,11 +61,11 @@ const retrySequelizeConnection = async (retries = 10, delay = 5000) => {
 	while (retries > 0) {
 		try {
 			await sequelize.authenticate();
-			console.log(chalk.green("Connecté à la base de données MySQL!"));
+			logger.success("Connecté à la base de données MySQL!");
 			return;
 		} catch (error) {
-			console.error(
-				chalk.red(`Erreur de connexion à MySQL, tentatives restantes : ${retries}`),
+			logger.error(
+				`Erreur de connexion à MySQL, tentatives restantes : ${retries}`,
 				error.message
 			);
 			retries -= 1;
@@ -75,7 +77,7 @@ const retrySequelizeConnection = async (retries = 10, delay = 5000) => {
 try {
 	await retrySequelizeConnection();
 } catch (error) {
-	console.error(chalk.red("Erreur critique :"), error.message);
+	logger.error("Erreur critique :", error.message);
 	process.exit(1); // Arrêter le processus en cas d'échec total
 }
 
@@ -257,10 +259,10 @@ const start = async () => {
 		await sequelize
 			.sync({ alter: true })
 			.then(() => {
-				console.log(chalk.green("Base de données synchronisée."));
+				logger.success("Base de données synchronisée.");
 			})
 			.catch((error) => {
-				console.error(
+				logger.error(
 					"Erreur de synchronisation de la base de données :",
 					error
 				);
@@ -268,16 +270,14 @@ const start = async () => {
 		const port = process.env.PORT || 3000;
 		const apiUrl = process.env.APP_URL || `http://localhost:${port}`;
 		await app.listen({ port: parseInt(port), host: "0.0.0.0" });
-		console.log(
-			"Serveur Fastify lancé sur " + chalk.blue(`${apiUrl}`)
+		logger.success(
+			`🚀 Serveur démarré sur ${apiUrl}`
 		);
-		console.log(
-			chalk.bgYellow(
-				`Accéder à la documentation sur ${apiUrl}/api/documentation`
-			)
+		logger.info(
+			`📚 Documentation disponible sur ${apiUrl}/api/documentation`
 		);
 	} catch (err) {
-		console.log(err);
+		logger.error(err);
 		process.exit(1);
 	}
 };

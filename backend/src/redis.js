@@ -1,5 +1,6 @@
 import chalk from "chalk";
 import { createClient } from "redis";
+import { logger } from "./utils/logger.js";
 
 let redisClient = null;
 
@@ -7,10 +8,8 @@ let redisClient = null;
 export async function initRedis() {
   // Si Redis n'est pas configuré, utiliser le fallback en mémoire
   if (!process.env.REDIS_URL) {
-    console.log(
-      chalk.yellow(
-        "⚠️  REDIS_URL non défini - utilisation de la blacklist en mémoire (non recommandé en production)"
-      )
+    logger.warn(
+      "⚠️  REDIS_URL non défini - utilisation de la blacklist en mémoire (non recommandé en production)"
     );
     return null;
   }
@@ -21,21 +20,19 @@ export async function initRedis() {
     });
 
     redisClient.on("error", (err) => {
-      console.error(chalk.red("Erreur Redis:"), err);
+      logger.error("Erreur Redis:", err);
     });
 
     await redisClient.connect();
-    console.log(chalk.green("✓ Connecté à Redis"));
+    logger.success("✓ Connecté à Redis");
     return redisClient;
   } catch (error) {
-    console.error(
-      chalk.red("❌ Impossible de se connecter à Redis:"),
+    logger.error(
+      "❌ Impossible de se connecter à Redis:",
       error.message
     );
-    console.log(
-      chalk.yellow(
-        "⚠️  Utilisation de la blacklist en mémoire (non recommandé en production)"
-      )
+    logger.warn(
+      "⚠️  Utilisation de la blacklist en mémoire (non recommandé en production)"
     );
     return null;
   }
@@ -53,7 +50,7 @@ export async function addToBlacklist(token, expiresIn) {
     await redisClient.setEx(`blacklist:${token}`, expiresIn, "1");
     return true;
   } catch (error) {
-    console.error(chalk.red("Erreur lors de l'ajout à la blacklist Redis:"), error);
+    logger.error("Erreur lors de l'ajout à la blacklist Redis:", error);
     return false;
   }
 }
@@ -69,8 +66,8 @@ export async function isBlacklisted(token) {
     const exists = await redisClient.exists(`blacklist:${token}`);
     return exists === 1;
   } catch (error) {
-    console.error(
-      chalk.red("Erreur lors de la vérification de la blacklist Redis:"),
+    logger.error(
+      "Erreur lors de la vérification de la blacklist Redis:",
       error
     );
     return false;
@@ -81,7 +78,7 @@ export async function isBlacklisted(token) {
 export async function closeRedis() {
   if (redisClient) {
     await redisClient.quit();
-    console.log(chalk.green("✓ Déconnecté de Redis"));
+    logger.success("✓ Déconnecté de Redis");
   }
 }
 

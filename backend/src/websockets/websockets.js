@@ -5,14 +5,14 @@ import { logger } from "../utils/logger.js";
  * Valide les données d'entrée des événements WebSocket
  */
 function validateEventData(socket, data, requiredFields) {
-  if (!data || typeof data !== 'object') {
+  if (!data || typeof data !== "object") {
     socket.emit("error", { message: "Données invalides" });
     return false;
   }
 
   for (const field of requiredFields) {
     if (!data[field]) {
-      socket.emit("error", { message: `Le champ '${field}' est requis` });
+      socket.emit("error", { message: `Le champ "${field}" est requis` });
       return false;
     }
   }
@@ -65,12 +65,12 @@ export async function websockets(app) {
     logger.info(`Joueur connecté : ${socket.username} (${socket.userId}) - socket: ${socket.id}`);
 
     // Ecoute des événements socket
-    playerJoinedGame(socket, app.io);
-    gameSettingsChanged(socket, app.io);
-    startGame(socket, app.io);
-    playMove(socket, app.io);
-    playerPlayAgain(socket, app.io);
-    restartGame(socket, app.io);
+    playerJoinedGame(socket, app.io, app);
+    gameSettingsChanged(socket, app.io, app);
+    startGame(socket, app.io, app);
+    playMove(socket, app.io, app);
+    playerPlayAgain(socket, app.io, app);
+    restartGame(socket, app.io, app);
 
     // Lorsqu'un joueur se déconnecte
     socket.on("disconnect", async () => {
@@ -83,11 +83,11 @@ export async function websockets(app) {
 
 // un joueur rejoint une partie
 // on envoie à tous les joueurs de la partie les informations de la partie
-function playerJoinedGame(socket, io) {
+function playerJoinedGame(socket, io, app) {
 
   socket.on("player-joined-game", async ({ room }) => {
     // Valider les données
-    if (!validateEventData(socket, { room }, ['room'])) return;
+    if (!validateEventData(socket, { room }, ["room"])) return;
 
     // Vérifier le token
     if (!await verifySocketToken(socket, app)) return;
@@ -139,10 +139,10 @@ export async function playerLeftGame(room, userId, io) {
 
 // les paramètres de la partie ont changé
 // on envoie à tous les joueurs de la partie les informations de la partie
-export async function gameSettingsChanged(socket, io) {
+export async function gameSettingsChanged(socket, io, app) {
   socket.on("update-game-params", async ({ room }) => {
     // Valider les données
-    if (!validateEventData(socket, { room }, ['room'])) return;
+    if (!validateEventData(socket, { room }, ["room"])) return;
 
     // Vérifier le token
     if (!await verifySocketToken(socket, app)) return;
@@ -162,10 +162,10 @@ export async function gameSettingsChanged(socket, io) {
 
 // Démarrer une partie
 // on envoie à tous les joueurs de la partie les informations de la partie
-export async function startGame(socket, io) {
+export async function startGame(socket, io, app) {
   socket.on("start-game", async ({ room }) => {
     // Valider les données
-    if (!validateEventData(socket, { room }, ['room'])) return;
+    if (!validateEventData(socket, { room }, ["room"])) return;
 
     // Vérifier le token
     if (!await verifySocketToken(socket, app)) return;
@@ -188,10 +188,10 @@ export async function startGame(socket, io) {
 }
 
 // Un coup est joué
-export async function playMove(socket, io) {
+export async function playMove(socket, io, app) {
   socket.on("initial-turn-card", async ({ room, playerId, cardId }) => {
     // Valider les données
-    if (!validateEventData(socket, { room, playerId, cardId }, ['room', 'playerId', 'cardId'])) return;
+    if (!validateEventData(socket, { room, playerId, cardId }, ["room", "playerId", "cardId"])) return;
 
     // Vérifier le token
     if (!await verifySocketToken(socket, app)) return;
@@ -225,7 +225,7 @@ export async function playMove(socket, io) {
 
   socket.on("play-move", async ({ room, gameData }) => {
     // Valider les données
-    if (!validateEventData(socket, { room, gameData }, ['room', 'gameData'])) return;
+    if (!validateEventData(socket, { room, gameData }, ["room", "gameData"])) return;
 
     // Vérifier le token
     if (!await verifySocketToken(socket, app)) return;
@@ -249,10 +249,10 @@ export async function playMove(socket, io) {
 }
 
 // Joueurs prêts à rejouer
-export async function playerPlayAgain(socket, io) {
-  socket.on("play-again", async ({ room, playersPlayAgain }) => {
+export async function playerPlayAgain(socket, io, app) {
+  socket.on("player-play-again", async ({ room, playersPlayAgain }) => {
     // Valider les données
-    if (!validateEventData(socket, { room, playersPlayAgain }, ['room', 'playersPlayAgain'])) return;
+    if (!validateEventData(socket, { room, playersPlayAgain }, ["room", "playersPlayAgain"])) return;
 
     // Vérifier le token
     if (!await verifySocketToken(socket, app)) return;
@@ -274,10 +274,10 @@ export async function playerPlayAgain(socket, io) {
 
 // Une nouvelle partie est demandée
 // on créée une nouvelle partie avec les joueurs qui ont demandé à rejouer
-export async function restartGame(socket, io) {
+export async function restartGame(socket, io, app) {
   socket.on("restart-game", async ({ room }) => {
     // Valider les données
-    if (!validateEventData(socket, { room }, ['room'])) return;
+    if (!validateEventData(socket, { room }, ["room"])) return;
 
     // Vérifier le token
     if (!await verifySocketToken(socket, app)) return;

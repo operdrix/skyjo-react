@@ -32,9 +32,23 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, 
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        // Récupérer le token depuis les cookies
+        const getAccessToken = () => {
+            const match = document.cookie.match(/(^|;)\s*accessToken\s*=\s*([^;]+)/);
+            return match ? match[2] : null;
+        };
+
+        const token = getAccessToken();
+
         const socketInstance = io(
             url,
-            { transports: ['websocket'], autoConnect: true }
+            {
+                transports: ['websocket'],
+                autoConnect: true,
+                auth: {
+                    token: token
+                }
+            }
         );
 
         setLoading(true); // La connexion commence

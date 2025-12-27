@@ -8,9 +8,16 @@ import {
 	resetPassword,
 	verifyUser,
 } from "../controllers/users.js";
+import { addToBlacklist, isBlacklisted } from "../redis.js";
 
 export function usersRoutes(app, blacklistedTokens) {
 	app.post("/api/login", {
+		config: {
+			rateLimit: {
+				max: 5,
+				timeWindow: "5 minutes",
+			},
+		},
 		schema: {
 			tags: ["Authentification"],
 			summary: "Connexion utilisateur",
@@ -90,6 +97,12 @@ export function usersRoutes(app, blacklistedTokens) {
 	}).post(
 		"/api/auth/refresh",
 		{
+			config: {
+				rateLimit: {
+					max: 10,
+					timeWindow: "1 minute",
+				},
+			},
 			schema: {
 				tags: ["Authentification"],
 				summary: "Renouvellement du token d'accès",
@@ -118,8 +131,9 @@ export function usersRoutes(app, blacklistedTokens) {
 					return reply.status(401).send({ error: "Refresh token manquant" });
 				}
 
-				// Vérifier si le refresh token est dans la liste noire
-				if (blacklistedTokens.includes(refreshToken)) {
+				// Vérifier si le refresh token est dans la liste noire (Redis ou mémoire)
+				const isTokenBlacklisted = await isBlacklisted(refreshToken);
+				if (isTokenBlacklisted || blacklistedTokens.includes(refreshToken)) {
 					return reply.status(401).send({ error: "Refresh token invalide" });
 				}
 
@@ -172,12 +186,20 @@ export function usersRoutes(app, blacklistedTokens) {
 			const accessToken = request.cookies.accessToken;
 			const refreshToken = request.cookies.refreshToken;
 
-			// Ajouter les tokens à la liste noire (si présents)
+			// Ajouter les tokens à la liste noire Redis (fallback en mémoire)
 			if (accessToken) {
-				blacklistedTokens.push(accessToken);
+				const added = await addToBlacklist(accessToken, 15 * 60); // 15 minutes
+				if (!added) {
+					// Fallback en mémoire si Redis n'est pas disponible
+					blacklistedTokens.push(accessToken);
+				}
 			}
 			if (refreshToken) {
-				blacklistedTokens.push(refreshToken);
+				const added = await addToBlacklist(refreshToken, 14 * 24 * 60 * 60); // 14 jours
+				if (!added) {
+					// Fallback en mémoire si Redis n'est pas disponible
+					blacklistedTokens.push(refreshToken);
+				}
 			}
 
 			// Supprimer les deux cookies
@@ -188,6 +210,12 @@ export function usersRoutes(app, blacklistedTokens) {
 	);
 	//inscription
 	app.post("/api/register", {
+		config: {
+			rateLimit: {
+				max: 3,
+				timeWindow: "10 minutes",
+			},
+		},
 		schema: {
 			tags: ["Authentification"],
 			summary: "Inscription utilisateur",
@@ -271,6 +299,12 @@ export function usersRoutes(app, blacklistedTokens) {
 	});
 	// Vérification de l'email de l'utilisateur via le token
 	app.get("/api/verify/:token", {
+		config: {
+			rateLimit: {
+				max: 10,
+				timeWindow: "5 minutes",
+			},
+		},
 		schema: {
 			tags: ["Authentification"],
 			summary: "Vérification d'email",
@@ -327,6 +361,12 @@ export function usersRoutes(app, blacklistedTokens) {
 	});
 
 	app.post("/api/password-reset-request", {
+		config: {
+			rateLimit: {
+				max: 3,
+				timeWindow: "10 minutes",
+			},
+		},
 		schema: {
 			tags: ["Authentification"],
 			summary: "Demande de réinitialisation de mot de passe",
@@ -350,6 +390,12 @@ export function usersRoutes(app, blacklistedTokens) {
 	});
 
 	app.post("/api/password-reset/:token", {
+		config: {
+			rateLimit: {
+				max: 5,
+				timeWindow: "10 minutes",
+			},
+		},
 		schema: {
 			tags: ["Authentification"],
 			summary: "Réinitialisation de mot de passe",

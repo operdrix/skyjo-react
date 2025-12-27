@@ -2,9 +2,33 @@ import { checkGame, createGame, getGame, updateGame } from "../controllers/games
 
 export async function websockets(app) {
   await app.ready();
+
+  // Middleware d'authentification pour les WebSocket
+  app.io.use(async (socket, next) => {
+    try {
+      const token = socket.handshake.auth.token;
+
+      if (!token) {
+        return next(new Error("Authentication token missing"));
+      }
+
+      // Vérifier le token JWT
+      const decoded = app.jwt.verify(token);
+
+      // Attacher l'userId au socket
+      socket.userId = decoded.id;
+      socket.username = decoded.username;
+
+      next();
+    } catch (err) {
+      console.error("WebSocket authentication error:", err.message);
+      next(new Error("Authentication failed"));
+    }
+  });
+
   // Lorsqu'un joueur se connecte
   app.io.on("connection", (socket) => {
-    console.log(`Joueur connecté : ${socket.id} room: ${socket.room}`);
+    console.log(`Joueur connecté : ${socket.username} (${socket.userId}) - socket: ${socket.id}`);
 
     // Ecoute des événements socket
     playerJoinedGame(socket, app.io);
@@ -16,7 +40,7 @@ export async function websockets(app) {
 
     // Lorsqu'un joueur se déconnecte
     socket.on("disconnect", async () => {
-      console.log(`Joueur déconnecté : ${socket.id} room: ${socket.room}`);
+      console.log(`Joueur déconnecté : ${socket.username} (${socket.userId}) - socket: ${socket.id}`);
       // Si le joueur est dans une partie, le retirer de la partie
       await playerLeftGame(socket.room, socket.userId, app.io);
     });
@@ -27,7 +51,9 @@ export async function websockets(app) {
 // on envoie à tous les joueurs de la partie les informations de la partie
 function playerJoinedGame(socket, io) {
 
-  socket.on("player-joined-game", async ({ room, userId }) => {
+  socket.on("player-joined-game", async ({ room }) => {
+    // Utiliser l'userId du socket authentifié au lieu de celui envoyé par le client
+    const userId = socket.userId;
 
     // attente d'un délai pour éviter les problèmes de concurrence
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -47,7 +73,6 @@ function playerJoinedGame(socket, io) {
     // Ajouter le socket à la room
     socket.join(room);
     socket.room = room;
-    socket.userId = userId;
 
     console.log("(player-joined-game) room:", room, "userId:", userId);
 

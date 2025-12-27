@@ -87,7 +87,9 @@ await initRedis();
  * avec fastify
  */
 let blacklistedTokens = [];
-const app = fastify();
+const app = fastify({
+	bodyLimit: 1048576, // Limite de 1MB pour éviter les attaques DoS
+});
 //Ajout du plugin fastify-bcrypt pour le hash du mdp
 await app
 	.register(rateLimit, {

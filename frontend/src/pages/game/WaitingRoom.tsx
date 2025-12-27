@@ -32,7 +32,6 @@ const WaitingRoom = () => {
   //On récupère les informations de la partie
   useEffect(() => {
     if (!gameId || !userId) return;
-    console.log('récupération de la partie', gameId);
 
     const getGame = async () => {
       setLoading(true);
@@ -64,9 +63,7 @@ const WaitingRoom = () => {
 
   // Cas de l'utilisateur qui rejoint la partie
   useEffect(() => {
-    if (loading || userLoading || wsLoading || !gameId || !game || error) return;
-
-    console.log('rejoindre partie', userId);
+    if (loading || userLoading || wsLoading || !gameId || !game || error || !isConnected) return;
 
     const player = game.players.find((player) => player.id === userId);
     if (!player) {
@@ -76,7 +73,6 @@ const WaitingRoom = () => {
         });
         return;
       }
-      console.log('ajout nouveau du joueur à la partie');
 
       const addPlayer = async () => {
         await api.patch(`game/join/${gameId}`, { userId });
@@ -84,20 +80,21 @@ const WaitingRoom = () => {
       addPlayer();
       sendMessage("player-joined-game", { room: gameId, userId });
     }
-  }, [game, gameId, userId, sendMessage, userLoading, wsLoading, loading, navigate, error]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game, gameId, userId, userLoading, wsLoading, loading, navigate, error, isConnected]); // sendMessage retiré pour éviter les boucles infinies
 
   // Avertir les autres joueurs de la connexion du joueur
   useEffect(() => {
-    if (!gameId || !userId || error) return;
+    if (!gameId || !userId || error || !isConnected) return;
     sendMessage("player-joined-game", { room: gameId, userId });
-  }, [gameId, userId, sendMessage, error]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameId, userId, error, isConnected]); // sendMessage retiré pour éviter les boucles infinies
 
   // Ecouter les événements de connexion/déconnexion du socket
   useEffect(() => {
     if (!socket || !isConnected || error) return;
 
     const handlePlayerJoined = async (updatedGame: GameType) => {
-      console.log("Player joined game:", updatedGame);
       notify('join');
       setGame(updatedGame);
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -110,12 +107,11 @@ const WaitingRoom = () => {
         });
         return;
       }
-      console.log("Player left game:", updatedGame);
       setGame(updatedGame);
     }
 
     const handleStartGame = (updatedGame: GameType) => {
-      console.log("Game started:", updatedGame);
+      setGame(updatedGame);
       navigate(`/game/${gameId}`);
     }
 

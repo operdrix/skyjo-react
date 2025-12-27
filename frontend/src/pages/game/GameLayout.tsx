@@ -34,8 +34,8 @@ const GameLayout = () => {
 
   // Ne charger le WebSocket que si l'utilisateur est authentifié
   return (
-    <WebSocketProvider 
-      url={(process.env.VITE_BACKEND_WS as string)} 
+    <WebSocketProvider
+      url={(import.meta.env.VITE_BACKEND_WS as string)}
       enabled={!userLoading && isAuthentified}
     >
       <GameProvider>

@@ -26,43 +26,41 @@ interface WebSocketProviderProps {
     enabled?: boolean; // Ajouter un flag pour contrôler si WebSocket doit se connecter
 }
 
-export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, url }) => {
+export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, url, enabled = true }) => {
     const [socket, setSocket] = useState<Socket | null>(null);
     const [isConnected, setIsConnected] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true); // Ajout de loading pour suivre l’état de connexion
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        // Récupérer le token depuis les cookies
-        const getAccessToken = () => {
-            const match = document.cookie.match(/(^|;)\s*accessToken\s*=\s*([^;]+)/);
-            return match ? match[2] : null;
-        };
+        console.log('[WebSocket] useEffect - enabled:', enabled, 'url:', url);
 
-        const token = getAccessToken();
+        // Ne pas connecter si non activé
+        if (!enabled) {
+            console.log('[WebSocket] Connexion désactivée (enabled=false)');
+            setLoading(false);
+            return;
+        }
 
+        console.log('[WebSocket] Tentative de connexion à:', url);
         const socketInstance = io(
             url,
             {
-                transports: ['websocket'],
+                transports: ['polling', 'websocket'],  // Commence par polling qui transmet mieux les cookies
                 autoConnect: true,
-                auth: {
-                    token: token
-                }
+                withCredentials: true  // Envoie automatiquement les cookies httpOnly
             }
         );
 
         setLoading(true); // La connexion commence
 
         socketInstance.on('connect', () => {
-            console.log('Connected to WebSocket server');
             setIsConnected(true);
             setLoading(false); // La connexion est établie
             setError(null);    // Réinitialiser l'erreur si la connexion est rétablie
         });
 
         socketInstance.on('disconnect', () => {
-            console.log('Disconnected from WebSocket server');
             setIsConnected(false);
             setLoading(false); // Fin du chargement même en cas de déconnexion
             setError('Disconnected from WebSocket server');
@@ -80,7 +78,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, 
         return () => {
             socketInstance.disconnect();
         };
-    }, [url, enabled]); // Ajouter enabled comme dépendance
+    }, [url, enabled]); // enabled contrôle si la connexion doit être établie
 
     const joinRoom = useCallback((gameId: string) => {
         if (socket && isConnected) {
@@ -111,15 +109,8 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, 
 
     const reconnect = useCallback(() => {
         if (socket && !isConnected) {
-            // Récupérer un token frais avant de reconnecter
-            const token = getAccessToken();
-            if (token) {
-                socket.auth = { token };
-                setLoading(true);
-                socket.connect();
-            } else {
-                setError('Cannot reconnect: No authentication token found');
-            }
+            setLoading(true);
+            socket.connect();
         }
     }, [socket, isConnected]);
 

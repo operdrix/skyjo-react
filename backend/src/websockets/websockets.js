@@ -25,9 +25,27 @@ function validateEventData(socket, data, requiredFields) {
  */
 async function verifySocketToken(socket, app) {
   try {
-    app.jwt.verify(socket.handshake.auth.token);
+    // Récupérer le token depuis les cookies
+    const cookies = socket.handshake.headers.cookie;
+    if (!cookies) {
+      socket.emit("error", { message: "Session expirée, veuillez vous reconnecter" });
+      socket.disconnect();
+      return false;
+    }
+
+    const tokenMatch = cookies.match(/(?:^|;)\s*accessToken\s*=\s*([^;]+)/);
+    const token = tokenMatch ? tokenMatch[1] : null;
+
+    if (!token) {
+      socket.emit("error", { message: "Session expirée, veuillez vous reconnecter" });
+      socket.disconnect();
+      return false;
+    }
+
+    app.jwt.verify(token);
     return true;
-  } catch {
+  } catch (err) {
+    logger.error("Token verification failed:", err.message);
     socket.emit("error", { message: "Session expirée, veuillez vous reconnecter" });
     socket.disconnect();
     return false;
@@ -40,9 +58,25 @@ export async function websockets(app) {
   // Middleware d'authentification pour les WebSocket
   app.io.use(async (socket, next) => {
     try {
-      const token = socket.handshake.auth.token;
+      // Récupérer le token depuis les cookies (envoyés automatiquement par le navigateur)
+      const cookies = socket.handshake.headers.cookie;
+
+      logger.debug("WebSocket handshake headers:", socket.handshake.headers);
+      logger.debug("WebSocket cookies:", cookies);
+
+      if (!cookies) {
+        logger.error("WebSocket: No cookies found in handshake");
+        return next(new Error("Authentication token missing"));
+      }
+
+      // Parser les cookies pour extraire accessToken
+      const tokenMatch = cookies.match(/(?:^|;)\s*accessToken\s*=\s*([^;]+)/);
+      const token = tokenMatch ? tokenMatch[1] : null;
+
+      logger.debug("WebSocket: Extracted token:", token ? "Present" : "Absent");
 
       if (!token) {
+        logger.error("WebSocket: accessToken not found in cookies");
         return next(new Error("Authentication token missing"));
       }
 
@@ -53,6 +87,7 @@ export async function websockets(app) {
       socket.userId = decoded.id;
       socket.username = decoded.username;
 
+      logger.info(`WebSocket: User authenticated - ${decoded.username} (${decoded.id})`);
       next();
     } catch (err) {
       logger.error("WebSocket authentication error:", err.message);
@@ -76,7 +111,9 @@ export async function websockets(app) {
     socket.on("disconnect", async () => {
       logger.info(`Joueur déconnecté : ${socket.username} (${socket.userId}) - socket: ${socket.id}`);
       // Si le joueur est dans une partie, le retirer de la partie
-      await playerLeftGame(socket.room, socket.userId, app.io);
+      if (socket.room) {
+        await playerLeftGame(socket.room, socket.userId, app.io);
+      }
     });
   });
 }
@@ -86,14 +123,24 @@ export async function websockets(app) {
 function playerJoinedGame(socket, io, app) {
 
   socket.on("player-joined-game", async ({ room }) => {
+    logger.debug(`[player-joined-game] Received from ${socket.userId} for room: ${room}`);
+
     // Valider les données
-    if (!validateEventData(socket, { room }, ["room"])) return;
+    if (!validateEventData(socket, { room }, ["room"])) {
+      logger.error(`[player-joined-game] Validation failed for room: ${room}`);
+      return;
+    }
 
     // Vérifier le token
-    if (!await verifySocketToken(socket, app)) return;
+    if (!await verifySocketToken(socket, app)) {
+      logger.error("[player-joined-game] Token verification failed");
+      return;
+    }
 
     // Utiliser l'userId du socket authentifié au lieu de celui envoyé par le client
     const userId = socket.userId;
+
+    logger.debug(`[player-joined-game] Processing for user ${userId} in room ${room}`);
 
     // attente d'un délai pour éviter les problèmes de concurrence
     await new Promise((resolve) => setTimeout(resolve, 1000));

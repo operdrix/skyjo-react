@@ -23,6 +23,7 @@ export const WebSocketContext = createContext<WebSocketContextType | undefined>(
 interface WebSocketProviderProps {
     children: React.ReactNode;
     url: string;
+    enabled?: boolean; // Ajouter un flag pour contrôler si WebSocket doit se connecter
 }
 
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, url }) => {
@@ -79,7 +80,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, 
         return () => {
             socketInstance.disconnect();
         };
-    }, [url]);
+    }, [url, enabled]); // Ajouter enabled comme dépendance
 
     const joinRoom = useCallback((gameId: string) => {
         if (socket && isConnected) {
@@ -110,8 +111,15 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, 
 
     const reconnect = useCallback(() => {
         if (socket && !isConnected) {
-            setLoading(true); // Démarrer le chargement lors de la reconnexion
-            socket.connect();
+            // Récupérer un token frais avant de reconnecter
+            const token = getAccessToken();
+            if (token) {
+                socket.auth = { token };
+                setLoading(true);
+                socket.connect();
+            } else {
+                setError('Cannot reconnect: No authentication token found');
+            }
         }
     }, [socket, isConnected]);
 

@@ -32,8 +32,12 @@ const GameLayout = () => {
 
   const isGamePage = location.pathname.startsWith('/game/');
 
+  // Ne charger le WebSocket que si l'utilisateur est authentifié
   return (
-    <WebSocketProvider url={(process.env.VITE_BACKEND_WS as string)}>
+    <WebSocketProvider 
+      url={(process.env.VITE_BACKEND_WS as string)} 
+      enabled={!userLoading && isAuthentified}
+    >
       <GameProvider>
         <Drawer>
           <div className="flex flex-col min-h-screen font-kalam">

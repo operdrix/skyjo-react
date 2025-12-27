@@ -3,6 +3,7 @@ import chalk from "chalk";
 import cookie from "@fastify/cookie";
 import cors from "@fastify/cors";
 import fastifyJWT from "@fastify/jwt";
+import rateLimit from "@fastify/rate-limit";
 import fastifySwagger from "@fastify/swagger";
 import fastifySwaggerUi from "@fastify/swagger-ui";
 import fastify from "fastify";
@@ -84,6 +85,14 @@ let blacklistedTokens = [];
 const app = fastify();
 //Ajout du plugin fastify-bcrypt pour le hash du mdp
 await app
+	.register(rateLimit, {
+		global: false, // Pas de limite globale, on configure par route
+		max: 100,
+		timeWindow: "1 minute",
+		cache: 10000,
+		allowList: ["127.0.0.1"], // Pas de limite pour localhost en dev
+		skipOnError: true,
+	})
 	.register(cookie, {
 		secret: process.env.COOKIE_SECRET || "mon-secret-de-cookie-super-secret",
 		parseOptions: {},

@@ -11,6 +11,12 @@ import {
 
 export function usersRoutes(app, blacklistedTokens) {
 	app.post("/api/login", {
+		config: {
+			rateLimit: {
+				max: 5,
+				timeWindow: "5 minutes",
+			},
+		},
 		schema: {
 			tags: ["Authentification"],
 			summary: "Connexion utilisateur",
@@ -90,6 +96,12 @@ export function usersRoutes(app, blacklistedTokens) {
 	}).post(
 		"/api/auth/refresh",
 		{
+			config: {
+				rateLimit: {
+					max: 10,
+					timeWindow: "1 minute",
+				},
+			},
 			schema: {
 				tags: ["Authentification"],
 				summary: "Renouvellement du token d'accès",
@@ -188,6 +200,12 @@ export function usersRoutes(app, blacklistedTokens) {
 	);
 	//inscription
 	app.post("/api/register", {
+		config: {
+			rateLimit: {
+				max: 3,
+				timeWindow: "10 minutes",
+			},
+		},
 		schema: {
 			tags: ["Authentification"],
 			summary: "Inscription utilisateur",
@@ -271,6 +289,12 @@ export function usersRoutes(app, blacklistedTokens) {
 	});
 	// Vérification de l'email de l'utilisateur via le token
 	app.get("/api/verify/:token", {
+		config: {
+			rateLimit: {
+				max: 10,
+				timeWindow: "5 minutes",
+			},
+		},
 		schema: {
 			tags: ["Authentification"],
 			summary: "Vérification d'email",
@@ -327,6 +351,12 @@ export function usersRoutes(app, blacklistedTokens) {
 	});
 
 	app.post("/api/password-reset-request", {
+		config: {
+			rateLimit: {
+				max: 3,
+				timeWindow: "10 minutes",
+			},
+		},
 		schema: {
 			tags: ["Authentification"],
 			summary: "Demande de réinitialisation de mot de passe",
@@ -350,6 +380,12 @@ export function usersRoutes(app, blacklistedTokens) {
 	});
 
 	app.post("/api/password-reset/:token", {
+		config: {
+			rateLimit: {
+				max: 5,
+				timeWindow: "10 minutes",
+			},
+		},
 		schema: {
 			tags: ["Authentification"],
 			summary: "Réinitialisation de mot de passe",

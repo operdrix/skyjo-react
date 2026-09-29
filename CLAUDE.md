@@ -8,7 +8,7 @@ Jeu de cartes Skyjo en ligne, pour jouer entre amis / famille. Projet ancien en 
 - Déploiement : Dockerfiles + Dokploy (`.github/README-CICD.md`). L'appli est arrêtée, la base est jetable.
 
 ## Commandes (toujours passer par `make`)
-- `make install` / `make dev` (MySQL + Mailpit + back :3000 + front :5173) / `make db-down`
+- `make install` / `make dev` (MySQL, Redis, Mailpit + back :3000 + front :5173) / `make full` (tout en images Docker, front :8081) / `make db-down`
 - Mails : Mailpit en dev et recette (UI http://localhost:8025, SMTP :1025), Gmail uniquement en production. Le transport se choisit via `SMTP_HOST`.
 - `make test`, `make lint`, `make build`, **`make check`** (lint + test + build) avant tout commit.
 

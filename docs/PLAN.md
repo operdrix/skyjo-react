@@ -22,13 +22,13 @@ Branche `feat/socle-projet`. Aucun changement de code applicatif.
   - `skills/verifie/SKILL.md` : porte de sortie avant commit/PR, lance `make check` (lint + tests + build back et front) et rapporte les échecs.
   - `skills/demarre/SKILL.md` : lance/relance la pile locale (`make dev`), vérifie MySQL puis back (:3000) et front (:5173).
   - Les skills existants `/branche` et `/livre` restent le circuit de livraison.
-- `Makefile` à la racine : `install`, `db-up` / `db-down` (docker compose MySQL + phpMyAdmin de `backend/docker-compose.yml`), `env` (copie les `.env.example` s'ils manquent), `dev` (db + back + front), `back`, `front`, `test`, `lint`, `build`, `check` (lint + test + build), `clean`.
+- `Makefile` à la racine : `install`, `db-up` / `db-down` (`docker-compose.yml` racine, projet `skyjo` : MySQL, Redis, phpMyAdmin, Mailpit ; profil `full` avec back et front en images, `make full`), `env` (copie les `.env.example` s'ils manquent), `dev` (db + back + front), `back`, `front`, `test`, `lint`, `build`, `check` (lint + test + build), `clean`.
 
 ## Phases
 TDD obligatoire à partir de la phase 1 : chaque comportement est d'abord couvert par un test rouge.
 
 1. **Filet de sécurité** (branche `fix/tests-base`)
-   - Lancer MySQL via `backend/docker-compose.yml`, démarrer back et front, jouer une partie à la main pour valider l'état initial.
+   - Lancer l'infra via `make db-up` (`docker-compose.yml`), démarrer back et front, jouer une partie à la main pour valider l'état initial.
    - Extraire de `backend/src/controllers/games.js` (`checkGame`, `saveScore`, `checkMaximumScore`, `dealCards`) un module de règles pur, sans accès base.
    - Tests Vitest sur ces règles et 2-3 tests d'API (register/login, création et join de partie).
    - En TDD : transport mail piloté par `SMTP_HOST` (test rouge d'abord), puis vérifier l'inscription bout en bout via l'API Mailpit (`GET :8025/api/v1/messages`).

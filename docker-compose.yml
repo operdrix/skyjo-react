@@ -1,0 +1,102 @@
+# Docker Compose pour le développement local et la recette.
+# Par défaut : infrastructure seule (MySQL, phpMyAdmin, Mailpit, Redis), le back et le front tournent via `make`.
+# Profil `full` : ajoute le back et le front en images (`make full`).
+# Les identifiants MySQL viennent de backend/.env (source unique, via --env-file dans le Makefile).
+
+name: skyjo
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: skyjo-mysql-dev
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_NAME:-skyjo}
+      MYSQL_USER: ${DB_USER:-olivier}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-olivier}
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: skyjo-phpmyadmin-dev
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+
+  # Serveur SMTP de dev/recette : capture tous les mails, aucun n'est réellement envoyé
+  mailpit:
+    image: axllent/mailpit
+    container_name: skyjo-mailpit-dev
+    restart: unless-stopped
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # interface web
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+
+  # Blacklist des tokens JWT (sinon repli en mémoire, comportement différent de la production)
+  redis:
+    image: redis:7-alpine
+    container_name: skyjo-redis-dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      timeout: 5s
+      retries: 10
+
+  backend:
+    profiles: [full]
+    build: ./backend
+    container_name: skyjo-backend-dev
+    restart: unless-stopped
+    env_file: backend/.env
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      REDIS_URL: redis://redis:6379
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      FRONTEND_HOST: http://localhost:8081
+    ports:
+      - "3000:3000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+
+  frontend:
+    profiles: [full]
+    build:
+      context: ./frontend
+      args:
+        VITE_BACKEND_HOST: http://localhost:3000
+        VITE_BACKEND_WS: http://localhost:3000
+    container_name: skyjo-frontend-dev
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:

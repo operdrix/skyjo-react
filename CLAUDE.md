@@ -15,7 +15,8 @@ Jeu de cartes Skyjo en ligne, pour jouer entre amis / famille. Projet ancien en 
 ## Règles de travail
 - **TDD obligatoire** : test rouge d'abord, code minimal, refactor. Voir le skill `/tdd`. Pas de code de production sans test qui échoue au préalable (hors config/doc/style).
 - Tests avec Vitest. Les règles du jeu vivent dans un module pur (sans accès base ni socket) pour rester testables.
-- Livraison : `/branche` puis `/livre`, une PR par phase du plan. Ne jamais travailler directement sur `main`.
+- Branches : `dev` (défaut) intègre les nouveautés, `main` est la version stable déployée. Flux : `feat/*`/`fix/*` → PR vers `dev` → PR de release `dev` → `main`. Ne jamais travailler directement sur `dev` ni `main`.
+- Livraison : `/branche` puis `/livre` (ils ciblent la branche par défaut, donc `dev`), une PR par phase du plan.
 - Commits conventionnels en français (`feat(scope): …`, `fix(scope): …`). Code, commentaires et messages utilisateur en français.
 - `/verifie` avant de déclarer une tâche terminée.
 - Pas de `console.log` : utiliser `backend/src/utils/logger`.

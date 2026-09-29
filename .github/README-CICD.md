@@ -39,12 +39,21 @@ Déploiement automatique
 - **Build** : Via [frontend/Dockerfile](../frontend/Dockerfile)
 - **Variables** : Définies dans Dokploy (Build Args)
 
+## 🌿 Flux de branches
+
+```
+feat/* ou fix/*  →  PR vers dev (branche par défaut)  →  PR de release dev → main  →  Dokploy
+```
+
+- `dev` : intégration de toutes les nouveautés, PR validées par `validate-pr.yml`.
+- `main` : version stable, c'est elle que Dokploy déploie (la recette peut suivre `dev` en changeant la branche source du service dans Dokploy).
+
 ## 🚀 Pour déployer
 
 ### Déploiement automatique (recommandé)
 
 1. Activez **Auto Deploy** dans chaque service Dokploy
-2. Push votre code sur `main`
+2. Push votre code sur la branche déployée (`main`)
 3. Dokploy détecte le changement et rebuild automatiquement
 
 ### Déploiement manuel

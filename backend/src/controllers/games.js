@@ -3,6 +3,9 @@ import User from "../models/users.js";
 import * as rules from "../game/rules.js";
 import { logger } from "../utils/logger.js";
 
+// Seuls attributs de joueur exposés dans les réponses de partie
+const PUBLIC_USER_ATTRIBUTES = ["id", "username"];
+
 // Liste des parties avec filtres
 export async function getGames(query) {
   const { userId, state, privateRoom, creatorId } = query;
@@ -158,7 +161,7 @@ export async function updateGame(request) {
 
   // Rechercher la partie
   const game = await Game.findByPk(gameId, {
-    include: [{ model: User, as: "players" }]
+    include: [{ model: User, as: "players", attributes: PUBLIC_USER_ATTRIBUTES }]
   });
 
   if (!game) {
@@ -269,7 +272,7 @@ export async function updateGameSettings(gameId, settings) {
 // Distribuer les cartes aux joueurs
 export async function dealCards(gameId) {
   const game = await Game.findByPk(gameId, {
-    include: [{ model: User, as: "players" }]
+    include: [{ model: User, as: "players", attributes: PUBLIC_USER_ATTRIBUTES }]
   });
 
   if (!game) {

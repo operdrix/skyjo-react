@@ -8,7 +8,7 @@ import { api } from "@/services/apiService";
 import type { ErrorType, GameType } from "@/types/types";
 import notify from "@/utils/notify";
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router";
 
 const WaitingRoom = () => {
   const { userId, loading: userLoading } = useUser();

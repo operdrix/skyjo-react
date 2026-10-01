@@ -4,7 +4,7 @@ import PrivacyPolicy from '@/components/nav/PrivacyPolicy';
 import { register } from '@/services/authService';
 import { Field, Form, Formik } from 'formik';
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router';
 import * as yup from 'yup';
 
 function Register() {

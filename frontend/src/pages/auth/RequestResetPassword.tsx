@@ -3,7 +3,7 @@ import { MessageType } from '@/components/Modal';
 import { api } from '@/services/apiService';
 import { Field, Form, Formik } from 'formik';
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import * as yup from 'yup';
 
 

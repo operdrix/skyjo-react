@@ -7,7 +7,7 @@ import { GameProvider } from "@/context/GameContext"
 import { WebSocketProvider } from "@/context/WebSocketContext"
 import { useUser } from "@/hooks/User"
 import { useEffect } from "react"
-import { Outlet, useLocation, useNavigate } from "react-router-dom"
+import { Outlet, useLocation, useNavigate } from "react-router"
 
 const GameLayout = () => {
   const { isAuthentified, loading: userLoading } = useUser();

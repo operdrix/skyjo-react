@@ -3,7 +3,7 @@ import { useUser } from "@/hooks/User";
 import { useWebSocket } from "@/hooks/WebSocket";
 import { GameType } from "@/types/types";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 const ModalScoreEndGame = () => {
   const { game, setGame } = useGame();

@@ -1,6 +1,6 @@
 import AuthHeader from "@/components/nav/AuthHeader";
 import Footer from "@/components/nav/Footer";
-import { Outlet } from "react-router-dom";
+import { Outlet } from "react-router";
 
 export default function Layout() {
   return (

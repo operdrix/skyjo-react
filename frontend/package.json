@@ -16,7 +16,7 @@
     "jwt-decode": "^4.0.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "react-router-dom": "^6.26.2",
+    "react-router": "^8.4.0",
     "socket.io-client": "^4.8.4",
     "theme-change": "^2.5.0",
     "yup": "^1.7.1"

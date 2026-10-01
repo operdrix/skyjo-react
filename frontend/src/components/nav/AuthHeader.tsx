@@ -1,5 +1,5 @@
 import ToggleTheme from "@/components/nav/ToggleTheme";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router";
 
 const AuthHeader = () => {
   return (

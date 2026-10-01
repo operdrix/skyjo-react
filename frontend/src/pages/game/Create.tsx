@@ -3,7 +3,7 @@ import { useUser } from "@/hooks/User";
 import { useWebSocket } from "@/hooks/WebSocket";
 import { api } from "@/services/apiService";
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 
 const Create = () => {
   const { userId, loading: userLoading } = useUser();

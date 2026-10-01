@@ -6,12 +6,14 @@ Jeu de cartes Skyjo en ligne, pour jouer entre amis / famille. Projet ancien en 
 État d'avancement, bugs trouvés et astuces de test : @.claude/memoire/reprise.md (à mettre à jour en fin de session).
 
 ## Stack
-- `backend/` : Fastify 5, Socket.io, JWT en cookies httpOnly, Redis optionnel (blacklist de tokens), MySQL. Migration en cours vers **TypeScript + Drizzle** (remplace Sequelize).
+- `backend/` : TypeScript exécuté par Node 24 (pas de build), Fastify 5, Socket.io, Drizzle + MySQL (schéma `src/db/schema.ts`, migrations `drizzle/`), JWT en cookies httpOnly, Redis optionnel (blacklist de tokens).
+- `shared/types.ts` : types de partie communs au back et au front (contextes Docker à la racine du dépôt).
 - `frontend/` : React, Vite, TypeScript, Tailwind + DaisyUI, Formik + Yup, react-router.
 - Déploiement : Dockerfiles + Dokploy (`.github/README-CICD.md`). L'appli est arrêtée, la base est jetable.
 
 ## Commandes (toujours passer par `make`)
 - `make install` / `make dev` (MySQL, Redis, Mailpit + back :3000 + front :5173) / `make full` (tout en images Docker, front :8081) / `make db-down`
+- Base : modifier `backend/src/db/schema.ts` puis `make db-generate` (migration versionnée) ; `make db-reset` vide la base de dev et la migre. Les migrations sont appliquées au démarrage du back.
 - Mails : Mailpit en dev et recette (UI http://localhost:8025, SMTP :1025), Gmail uniquement en production. Le transport se choisit via `SMTP_HOST`.
 - `make test`, `make lint`, `make build`, **`make check`** (lint + test + build) avant tout commit.
 
@@ -27,5 +29,4 @@ Jeu de cartes Skyjo en ligne, pour jouer entre amis / famille. Projet ancien en 
 ## Pièges connus
 - Le serveur fait confiance au `gameData` envoyé par le client (`play-move`). Choix assumé : garde-fous légers (membre de la room, tour du joueur), pas de serveur autoritaire complet.
 - `userId` ne doit jamais venir du body : le prendre dans le JWT (`request.user`).
-- `sequelize.sync({ alter: true })` est à supprimer au profit de migrations Drizzle.
 - Pas de valeur par défaut codée en dur pour `JWT_SECRET` / `COOKIE_SECRET`.

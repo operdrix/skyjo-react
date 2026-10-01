@@ -30,13 +30,14 @@ Déploiement automatique
 - Pas de build nécessaire
 
 ### 2. Backend
-- **Source** : GitHub → branche `main` → context `./backend`
-- **Build** : Via [backend/Dockerfile](../backend/Dockerfile)
+- **Source** : GitHub → branche `main` → context `.` (racine : le back importe `shared/`)
+- **Build** : Via [backend/Dockerfile](../backend/Dockerfile) (Docker File : `backend/Dockerfile`). Typecheck pendant le build, Node 24 exécute le TypeScript directement.
+- **Base** : les migrations Drizzle (`backend/drizzle/`) sont appliquées au démarrage du conteneur
 - **Variables** : Définies dans Dokploy (Environment)
 
 ### 3. Frontend
-- **Source** : GitHub → branche `main` → context `./frontend`
-- **Build** : Via [frontend/Dockerfile](../frontend/Dockerfile)
+- **Source** : GitHub → branche `main` → context `.` (racine : le front importe `shared/`)
+- **Build** : Via [frontend/Dockerfile](../frontend/Dockerfile) (Docker File : `frontend/Dockerfile`)
 - **Variables** : Définies dans Dokploy (Build Args)
 
 ## 🌿 Flux de branches

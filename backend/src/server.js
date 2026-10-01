@@ -4,7 +4,7 @@ import { sequelize } from "./bdd.js";
 //redis
 import { initRedis } from "./redis.js";
 //logger
-import { logger } from "./utils/logger.js";
+import { logger } from "./utils/logger.ts";
 
 import dotenv from "dotenv";
 

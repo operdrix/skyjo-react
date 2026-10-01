@@ -1,5 +1,5 @@
 import { checkGame, createGame, getGame, updateGame } from "../controllers/games.js";
-import { logger } from "../utils/logger.js";
+import { logger } from "../utils/logger.ts";
 
 /**
  * Valide les données d'entrée des événements WebSocket

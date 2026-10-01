@@ -1,8 +1,8 @@
 import { sequelize } from "../bdd.js";
 import Game from "../models/games.js";
 import User from "../models/users.js";
-import * as rules from "../game/rules.js";
-import { logger } from "../utils/logger.js";
+import * as rules from "../game/rules.ts";
+import { logger } from "../utils/logger.ts";
 
 // Seuls attributs de joueur exposés dans les réponses de partie
 const PUBLIC_USER_ATTRIBUTES = ["id", "username"];

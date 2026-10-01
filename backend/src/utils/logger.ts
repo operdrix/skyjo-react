@@ -10,7 +10,7 @@ export const logger = {
   /**
    * Informations générales (uniquement en dev)
    */
-  info: (...args) => {
+  info: (...args: unknown[]) => {
     if (isDev) {
       console.log(chalk.blue("[INFO]"), ...args);
     }
@@ -19,21 +19,21 @@ export const logger = {
   /**
    * Erreurs critiques (toujours affichées)
    */
-  error: (...args) => {
+  error: (...args: unknown[]) => {
     console.error(chalk.red("[ERROR]"), ...args);
   },
 
   /**
    * Avertissements (toujours affichés)
    */
-  warn: (...args) => {
+  warn: (...args: unknown[]) => {
     console.warn(chalk.yellow("[WARN]"), ...args);
   },
 
   /**
    * Messages de debug (uniquement en dev)
    */
-  debug: (...args) => {
+  debug: (...args: unknown[]) => {
     if (isDev) {
       console.log(chalk.gray("[DEBUG]"), ...args);
     }
@@ -42,7 +42,7 @@ export const logger = {
   /**
    * Messages de succès (toujours affichés)
    */
-  success: (...args) => {
+  success: (...args: unknown[]) => {
     console.log(chalk.green("[SUCCESS]"), ...args);
   },
 };

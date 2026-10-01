@@ -1,5 +1,5 @@
 import { createClient } from "redis";
-import { logger } from "./utils/logger.js";
+import { logger } from "./utils/logger.ts";
 
 let redisClient = null;
 let memoryBlacklist = new Map(); // Fallback en mémoire

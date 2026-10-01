@@ -1,8 +1,11 @@
 import js from "@eslint/js";
 import globals from "globals";
+import tseslint from "typescript-eslint";
 
-export default [
+export default tseslint.config(
+  { ignores: ["drizzle"] },
   js.configs.recommended,
+  ...tseslint.configs.recommended,
   {
     languageOptions: {
       ecmaVersion: "latest",
@@ -12,7 +15,8 @@ export default [
       }
     },
     rules: {
-      "no-unused-vars": ["warn", {
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": ["warn", {
         argsIgnorePattern: "^_",
         varsIgnorePattern: "^_"
       }],
@@ -22,4 +26,4 @@ export default [
       "no-console": "off" // Permettre console.log pour le développement
     }
   }
-]; 
+);

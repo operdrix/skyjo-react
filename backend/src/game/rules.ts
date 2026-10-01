@@ -1,12 +1,16 @@
 // Règles du Skyjo : module pur, sans accès base ni socket.
 
+import type { Card, CardColor, GameData } from "../../../shared/types.ts";
+
+export type Scores = Record<string, number>;
+
 export const CARDS_PER_PLAYER = 12;
 export const MAXIMUM_SCORE = 100;
 
 // Set de cartes du skyjo (5 cartes -2, 10 cartes -1, 15 cartes 0 et 10 cartes de chaque de 1 à 12)
-export function createDeck() {
-  const cards = [];
-  const addCards = (value, count, color) => {
+export function createDeck(): Card[] {
+  const cards: Card[] = [];
+  const addCards = (value: number, count: number, color: CardColor) => {
     for (let i = 0; i < count; i++) {
       cards.push({ id: "card_" + cards.length, value, color, revealed: false, onHand: false });
     }
@@ -23,7 +27,7 @@ export function createDeck() {
 }
 
 // Mélange de Fisher-Yates, `random` injectable pour les tests
-export function shuffle(items, random = Math.random) {
+export function shuffle<T>(items: T[], random = Math.random): T[] {
   const shuffled = [...items];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(random() * (i + 1));
@@ -33,15 +37,15 @@ export function shuffle(items, random = Math.random) {
 }
 
 // Distribue 12 cartes par joueur et retourne la première carte de la pioche sur la défausse
-export function dealCards(playerIds, random = Math.random) {
+export function dealCards(playerIds: string[], random = Math.random): GameData {
   const cards = shuffle(createDeck(), random);
 
-  const playersCards = {};
+  const playersCards: Record<string, Card[]> = {};
   for (const playerId of playerIds) {
     playersCards[playerId] = cards.splice(-CARDS_PER_PLAYER).reverse();
   }
 
-  const firstCard = cards.pop();
+  const firstCard = cards.pop()!;
   firstCard.revealed = true;
 
   return {
@@ -59,7 +63,7 @@ export function dealCards(playerIds, random = Math.random) {
 // Fait avancer la manche après un coup (modifie gameData) :
 // - initialReveal : passe à "draw" quand tous les joueurs ont révélé 2 cartes
 // - endTurn : colonnes, dernier tour, fin de manche ou joueur suivant
-export function advanceGame(gameData) {
+export function advanceGame(gameData: GameData): GameData {
   if (gameData.currentStep === "initialReveal") {
     checkAllPlayersHaveTwoRevealed(gameData);
   }
@@ -70,7 +74,7 @@ export function advanceGame(gameData) {
     checkLastTurn(gameData);
 
     if (gameData.lastTurn) {
-      revealAllCards(gameData, gameData.currentPlayer);
+      revealAllCards(gameData, gameData.currentPlayer!);
       checkColumn(gameData);
     }
 
@@ -80,14 +84,14 @@ export function advanceGame(gameData) {
   return gameData;
 }
 
-export function countPoints(cards) {
+export function countPoints(cards: Card[]): number {
   return cards.reduce((total, card) => total + card.value, 0);
 }
 
 // Score de la manche par joueur. Le joueur qui a terminé en premier voit son score doublé
 // s'il n'a pas strictement le plus petit score.
-export function computeRoundScores(gameData) {
-  const scores = {};
+export function computeRoundScores(gameData: GameData): Scores {
+  const scores: Scores = {};
   for (const [playerId, cards] of Object.entries(gameData.playersCards)) {
     scores[playerId] = countPoints(cards);
   }
@@ -107,10 +111,10 @@ export function computeRoundScores(gameData) {
 
 // Fin de partie si un joueur atteint le score maximum ; le gagnant a le plus petit total.
 // `totals` : { [playerId]: scoreTotal }
-export function checkMaximumScore(totals) {
+export function checkMaximumScore(totals: Scores) {
   let finished = false;
-  let winnerScore = null;
-  let winner = null;
+  let winnerScore: number | null = null;
+  let winner: string | null = null;
 
   for (const [playerId, score] of Object.entries(totals)) {
     if (score >= MAXIMUM_SCORE) {
@@ -125,18 +129,18 @@ export function checkMaximumScore(totals) {
   return { finished, winner, winnerScore };
 }
 
-function revealAllCards(gameData, playerId) {
+function revealAllCards(gameData: GameData, playerId: string) {
   for (const card of gameData.playersCards[playerId]) {
     card.revealed = true;
   }
 }
 
-function countUnrevealedCards(cards) {
+function countUnrevealedCards(cards: Card[]) {
   return cards.reduce((count, card) => count + (card.revealed ? 0 : 1), 0);
 }
 
 // Fin de manche si tous les joueurs ont révélé toutes leurs cartes, sinon joueur suivant
-function checkEndGame(gameData) {
+function checkEndGame(gameData: GameData) {
   for (const playerId of gameData.turnOrder) {
     if (countUnrevealedCards(gameData.playersCards[playerId]) > 0) {
       nextPlayer(gameData);
@@ -148,7 +152,7 @@ function checkEndGame(gameData) {
 }
 
 // Dernier tour dès qu'un joueur n'a plus de cartes non révélées
-function checkLastTurn(gameData) {
+function checkLastTurn(gameData: GameData) {
   for (const playerId of gameData.turnOrder) {
     if (countUnrevealedCards(gameData.playersCards[playerId]) === 0) {
       gameData.lastTurn = true;
@@ -160,7 +164,7 @@ function checkLastTurn(gameData) {
 }
 
 // Une colonne de 3 cartes révélées identiques part à la défausse
-function checkColumn(gameData) {
+function checkColumn(gameData: GameData) {
   for (const cards of Object.values(gameData.playersCards)) {
     const offset = cards.length / 3;
     for (let i = 0; i < offset; i++) {
@@ -182,7 +186,7 @@ function checkColumn(gameData) {
   }
 }
 
-function checkAllPlayersHaveTwoRevealed(gameData) {
+function checkAllPlayersHaveTwoRevealed(gameData: GameData) {
   for (const playerId of gameData.turnOrder) {
     const cards = gameData.playersCards[playerId] || [];
     const revealedCount = cards.reduce((count, card) => count + (card.revealed ? 1 : 0), 0);
@@ -195,17 +199,17 @@ function checkAllPlayersHaveTwoRevealed(gameData) {
   determineFirstPlayer(gameData);
 }
 
-function nextPlayer(gameData) {
-  const currentUserIndex = gameData.turnOrder.indexOf(gameData.currentPlayer);
+function nextPlayer(gameData: GameData) {
+  const currentUserIndex = gameData.turnOrder.indexOf(gameData.currentPlayer!);
   const nextPlayerIndex = (currentUserIndex + 1) % gameData.turnOrder.length;
   gameData.currentPlayer = gameData.turnOrder[nextPlayerIndex];
 }
 
 // Le joueur dont les cartes révélées valent le plus commence.
 // En cas d'égalité, celui qui a la carte révélée la plus haute.
-function determineFirstPlayer(gameData) {
+function determineFirstPlayer(gameData: GameData) {
   let highestValue = -10;
-  let highestPlayer = null;
+  let highestPlayer: string | null = null;
 
   for (const playerId of gameData.turnOrder) {
     const cards = gameData.playersCards[playerId].filter(card => card.revealed);
@@ -216,7 +220,7 @@ function determineFirstPlayer(gameData) {
       highestPlayer = playerId;
     } else if (totalValue === highestValue) {
       const highestCard = Math.max(...cards.map(card => card.value));
-      const playerCards = gameData.playersCards[highestPlayer].filter(card => card.revealed);
+      const playerCards = gameData.playersCards[highestPlayer!].filter(card => card.revealed);
       const highestPlayerCard = Math.max(...playerCards.map(card => card.value));
 
       if (highestCard > highestPlayerCard) {

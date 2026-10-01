@@ -1,7 +1,7 @@
 import { Sequelize } from "@sequelize/core";
 import { MySqlDialect } from "@sequelize/mysql";
 import dotenv from "dotenv";
-import { logger } from "./utils/logger.js";
+import { logger } from "./utils/logger.ts";
 
 dotenv.config({ quiet: true });
 

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createTransporter } from "./mailer.js";
+import { createTransporter } from "./mailer.ts";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -24,6 +24,6 @@ describe("createTransporter", () => {
     const { options } = createTransporter();
 
     expect(options.service).toBe("gmail");
-    expect(options.auth.user).toBe("skyjo@example.com");
+    expect(options.auth?.user).toBe("skyjo@example.com");
   });
 });

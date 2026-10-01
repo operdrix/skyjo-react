@@ -3,8 +3,8 @@ import fs from "fs";
 import mjml2html from "mjml";
 import { Op } from "@sequelize/core";
 import User from "../models/users.js";
-import { logger } from "../utils/logger.js";
-import { createTransporter } from "../utils/mailer.js";
+import { logger } from "../utils/logger.ts";
+import { createTransporter } from "../utils/mailer.ts";
 
 import dotenv from "dotenv";
 

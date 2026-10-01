@@ -83,11 +83,11 @@ function FlipCard({ card, onClick, disabled }: { card: Card; onClick?: () => voi
       <div className="perspective">
         <div className={`play-card transform transform-style-preserve-3d ${shouldAnimate ? 'transition-transform duration-500' : ''} ${isFlipped ? 'rotate-y-180' : ''}`}>
           {/* Face avant (cachée) */}
-          <div className={`absolute w-full h-full flex justify-center items-center rounded border-2 border-black backface-hidden ${cardColorClass}`}>
+          <div className={`absolute w-full h-full flex justify-center items-center rounded-sm border-2 border-black backface-hidden ${cardColorClass}`}>
             ?
           </div>
           {/* Face arrière (révélée) */}
-          <div className={`absolute w-full h-full flex justify-center items-center rounded border-2 border-black backface-hidden rotate-y-180 ${cardColorClass}`}>
+          <div className={`absolute w-full h-full flex justify-center items-center rounded-sm border-2 border-black backface-hidden rotate-y-180 ${cardColorClass}`}>
             {card.revealed ? card.value : '?'}
           </div>
         </div>

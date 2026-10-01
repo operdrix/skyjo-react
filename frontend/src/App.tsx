@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router";
 import { useUser } from "./hooks/User";
 import { api } from "./services/apiService";
 
@@ -78,7 +78,7 @@ function App() {
               <p className="flex flex-wrap justify-center gap-4">
                 <button
                   onClick={handleCreateGame}
-                  className="btn bg-card-green text-black w-full sm:w-auto"
+                  className="btn [--btn-color:var(--color-card-green)] [--btn-fg:black] w-full sm:w-auto"
                   disabled={loading}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">

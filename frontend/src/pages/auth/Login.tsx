@@ -4,7 +4,7 @@ import { useUser } from '@/hooks/User';
 import { login } from '@/services/authService';
 import { Field, Form, Formik } from 'formik';
 import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router";
 import * as yup from 'yup';
 
 
@@ -80,13 +80,13 @@ function Login() {
               </div>
             )}
 
-            <div className="bg-base-200 shadow w-full rounded-lg divide-y divide-base-100">
+            <div className="bg-base-200 shadow-sm w-full rounded-lg divide-y divide-base-100">
               <div className="px-5 py-7">
                 <Field component={CustomField} name="email" label="E-mail" type='email' autoComplete="username" />
                 <Field component={CustomField} name="password" label="Mot de passe" type='password' autoComplete="current-password" />
                 <button
                   type="submit"
-                  className="btn btn-primary w-full py-2.5 text-sm shadow-sm hover:shadow-md font-semibold text-center inline-block"
+                  className="btn btn-primary w-full py-2.5 text-sm shadow-xs hover:shadow-md font-semibold text-center inline-block"
                 >
                   <span className="inline-block mr-2">Me connecter</span>
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4 inline-block">

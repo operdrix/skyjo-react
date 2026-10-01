@@ -3,7 +3,7 @@ import mysql from "mysql2/promise";
 
 // Crée la base de test et donne les droits à l'utilisateur applicatif
 export default async function setup() {
-  dotenv.config();
+  dotenv.config({ quiet: true });
   const { DB_HOST, DB_PORT, DB_USER, DB_ROOT_PASSWORD } = process.env;
 
   const connection = await mysql.createConnection({

@@ -6,9 +6,9 @@ import fastifyJWT from "@fastify/jwt";
 import rateLimit from "@fastify/rate-limit";
 import fastifySwagger from "@fastify/swagger";
 import fastifySwaggerUi from "@fastify/swagger-ui";
+import bcrypt from "bcryptjs";
 import fastify from "fastify";
-import fastifyBcrypt from "fastify-bcrypt";
-import socketioServer from "fastify-socket.io";
+import { Server as SocketServer } from "socket.io";
 //routes
 import { gamesRoutes } from "./routes/games.js";
 import { usersRoutes } from "./routes/users.js";
@@ -26,7 +26,24 @@ export async function buildApp() {
 	const app = fastify({
 		bodyLimit: 1048576, // Limite de 1MB pour éviter les attaques DoS
 	});
-	//Ajout du plugin fastify-bcrypt pour le hash du mdp
+	// Hash des mots de passe (remplace fastify-bcrypt, abandonné)
+	app.decorate("bcrypt", {
+		hash: (password) => bcrypt.hash(password, 12),
+		compare: (password, hash) => bcrypt.compare(password, hash),
+	});
+	// Socket.io branché sur le serveur HTTP de Fastify (remplace fastify-socket.io, abandonné)
+	app.decorate("io", new SocketServer(app.server, {
+		cors: {
+			origin: [process.env.FRONTEND_HOST || "http://localhost:5173", "http://localhost:4173"],
+			credentials: true,
+		},
+	}));
+	app.addHook("preClose", async () => {
+		app.io.local.disconnectSockets(true);
+	});
+	app.addHook("onClose", async () => {
+		await app.io.close();
+	});
 	await app
 		.register(helmet, {
 			// Configuration des headers de sécurité
@@ -60,19 +77,10 @@ export async function buildApp() {
 			secret: process.env.COOKIE_SECRET || "mon-secret-de-cookie-super-secret",
 			parseOptions: {},
 		})
-		.register(fastifyBcrypt, {
-			saltWorkFactor: 12,
-		})
 		.register(cors, {
 			// Autoriser la valeur définie via FRONTEND_HOST ET localhost:4173 pour le dev (Vite)
 			origin: [process.env.FRONTEND_HOST || "http://localhost:5173", "http://localhost:4173"],
 			credentials: true,
-		})
-		.register(socketioServer, {
-			cors: {
-				origin: [process.env.FRONTEND_HOST || "http://localhost:5173", "http://localhost:4173"],
-				credentials: true,
-			},
 		})
 		.register(fastifySwagger, {
 			openapi: {

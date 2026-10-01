@@ -1,6 +1,6 @@
 import { api } from '@/services/apiService';
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router";
 
 const VerifyEmail = () => {
     const { token } = useParams<string>()

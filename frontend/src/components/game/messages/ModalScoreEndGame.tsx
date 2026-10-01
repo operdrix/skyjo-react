@@ -3,7 +3,7 @@ import { useUser } from "@/hooks/User";
 import { useWebSocket } from "@/hooks/WebSocket";
 import { GameType } from "@/types/types";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 const ModalScoreEndGame = () => {
   const { game, setGame } = useGame();
@@ -72,7 +72,7 @@ const ModalScoreEndGame = () => {
         ${position === 1 || position === 3 ? 'modal-bottom' : 'modal-top'} 
         ${position === 1 || position === 3 ? 'sm:modal-middle' : position === 2 ? 'sm:modal-bottom' : 'sm:modal-top'}
         `}>
-        <div className="modal-box !max-w-2xl glass">
+        <div className="modal-box max-w-2xl! glass">
           <div className="tooltip tooltip-left absolute right-2 top-2" data-tip="Déplacer">
             <button
               className="btn btn-sm btn-circle btn-ghost"
@@ -141,7 +141,7 @@ const ModalScoreEndGame = () => {
                   }
                   {finished && index + 1} {player.username}<sup className="text-xs">{game.creator === player.id && '👑'}</sup>
                 </div>
-                <ul className="flex-grow flex gap-3 justify-end flex-wrap">
+                <ul className="grow flex gap-3 justify-end flex-wrap">
                   {player.game_players.scoreByRound.map((score, index) => (
                     <li className="w-5" key={index}>{score}</li>
                   ))}
@@ -173,7 +173,7 @@ const ModalScoreEndGame = () => {
                       </p>
                     }
                   </div>
-                  <div className="flex flex-grow justify-end max-sm:p-2">
+                  <div className="flex grow justify-end max-sm:p-2">
                     <button
                       className="btn btn-success"
                       onClick={handleRequestNewGame}

@@ -37,7 +37,7 @@ export default function ErrorMessage({
               {error}
             </p>
             {button &&
-              <button onClick={button.action} className="btn bg-card-red border-card-red text-base-100">
+              <button onClick={button.action} className="btn [--btn-color:var(--color-card-red)] [--btn-fg:var(--color-base-100)]">
                 {button.label}
               </button>
             }

@@ -3,7 +3,7 @@ import { useUser } from "@/hooks/User";
 import { api } from "@/services/apiService";
 import { GameType } from "@/types/types";
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 
 const JoinPublic = () => {
   const { userId, loading: userLoading } = useUser();

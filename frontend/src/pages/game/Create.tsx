@@ -3,7 +3,7 @@ import { useUser } from "@/hooks/User";
 import { useWebSocket } from "@/hooks/WebSocket";
 import { api } from "@/services/apiService";
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 
 const Create = () => {
   const { userId, loading: userLoading } = useUser();
@@ -60,7 +60,7 @@ const Create = () => {
               <div className="flex flex-wrap justify-center gap-4">
                 <div className="tooltip w-full sm:w-auto" data-tip="Partagez le lien avec vos amis seulement">
                   <button
-                    className="btn btn-neutral w-full sm:w-auto bg-card-negative border-card-negative text-base-100"
+                    className="btn btn-neutral w-full sm:w-auto [--btn-color:var(--color-card-negative)] [--btn-fg:var(--color-base-100)]"
                     disabled={loading}
                     onClick={() => handleCreateGame(true)}
                   >
@@ -75,7 +75,7 @@ const Create = () => {
                 </div>
                 <div className="tooltip w-full sm:w-auto" data-tip="Laissez les autres joueurs vous rejoindre">
                   <button
-                    className="btn btn-neutral w-full sm:w-auto bg-card-green border-card-green text-base-100"
+                    className="btn btn-neutral w-full sm:w-auto [--btn-color:var(--color-card-green)] [--btn-fg:var(--color-base-100)]"
                     disabled={loading}
                     onClick={() => handleCreateGame(false)}
                   >

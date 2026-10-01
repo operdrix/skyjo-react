@@ -19,6 +19,10 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      // Règles React Compiler (react-hooks 7) : mutations de gameData et setState
+      // dans des effets, à corriger au découpage des composants (phase 5)
+      'react-hooks/immutability': 'warn',
+      'react-hooks/set-state-in-effect': 'warn',
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true },

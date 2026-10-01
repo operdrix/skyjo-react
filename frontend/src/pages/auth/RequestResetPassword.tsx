@@ -3,7 +3,7 @@ import { MessageType } from '@/components/Modal';
 import { api } from '@/services/apiService';
 import { Field, Form, Formik } from 'formik';
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import * as yup from 'yup';
 
 
@@ -52,7 +52,7 @@ function RequestResetPassword() {
               <p className="py-6 text-xl">
                 {message.message}
               </p>
-              <Link to={'/'} className="btn bg-card-green border-card-green text-base-100">
+              <Link to={'/'} className="btn [--btn-color:var(--color-card-green)] [--btn-fg:var(--color-base-100)]">
                 Retour à l'accueil
               </Link>
             </div>
@@ -77,7 +77,7 @@ function RequestResetPassword() {
               <p className="py-6 text-xl">
                 {errorMessage}
               </p>
-              <Link to={'/auth/login'} className="btn bg-card-red border-card-red text-base-100">
+              <Link to={'/auth/login'} className="btn [--btn-color:var(--color-card-red)] [--btn-fg:var(--color-base-100)]">
                 Retour à la page de login
               </Link>
             </div>
@@ -97,12 +97,12 @@ function RequestResetPassword() {
         >
           <Form className='w-full max-w-lg'>
             <h1 className="font-bold text-center text-2xl mb-5">Mot de passe perdu ! 🤷‍♂️</h1>
-            <div className="bg-base-200 shadow w-full md:rounded-lg divide-y divide-base-100">
+            <div className="bg-base-200 shadow-sm w-full md:rounded-lg divide-y divide-base-100">
               <div className="px-5 py-7">
                 <Field component={CustomField} name="email" label="E-mail" type='email' autoComplete="username" />
                 <button
                   type="submit"
-                  className="btn btn-primary w-full py-2.5 text-sm shadow-sm hover:shadow-md font-semibold text-center inline-block space-x-4"
+                  className="btn btn-primary w-full py-2.5 text-sm shadow-xs hover:shadow-md font-semibold text-center inline-block space-x-4"
                   disabled={loading}
                 >
                   <span>Envoyer de mail de réinitialisation</span>

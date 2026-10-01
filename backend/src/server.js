@@ -8,7 +8,7 @@ import { logger } from "./utils/logger.js";
 
 import dotenv from "dotenv";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 // Vérification des secrets obligatoires en production
 if (process.env.NODE_ENV === "production") {

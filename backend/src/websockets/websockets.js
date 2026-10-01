@@ -145,8 +145,7 @@ function playerJoinedGame(socket, io, app) {
     // attente d'un délai pour éviter les problèmes de concurrence
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    let game = null;
-    game = await getGame(room);
+    let game = await getGame(room);
     if (!game) {
       logger.error("Game not found for room:", room);
       return;

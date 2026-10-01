@@ -3,7 +3,7 @@ import { MessageType } from '@/components/Modal';
 import { api } from '@/services/apiService';
 import { Field, Form, Formik } from 'formik';
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router";
 import * as yup from 'yup';
 
 
@@ -54,7 +54,7 @@ function ResetPassword() {
               <p className="py-6 text-xl">
                 {message.message}
               </p>
-              <Link to={'/auth/login'} className="btn bg-card-green border-card-green text-base-100">
+              <Link to={'/auth/login'} className="btn [--btn-color:var(--color-card-green)] [--btn-fg:var(--color-base-100)]">
                 Me connecter
               </Link>
             </div>
@@ -79,7 +79,7 @@ function ResetPassword() {
               <p className="py-6 text-xl">
                 {errorMessage}
               </p>
-              <Link to={'/auth/request-reset-password'} className="btn bg-card-red border-card-red text-base-100">
+              <Link to={'/auth/request-reset-password'} className="btn [--btn-color:var(--color-card-red)] [--btn-fg:var(--color-base-100)]">
                 Demander un nouveau mot de passe
               </Link>
             </div>
@@ -99,13 +99,13 @@ function ResetPassword() {
         >
           <Form className='w-full max-w-lg'>
             <h1 className="font-bold text-center text-2xl mb-5">Réinitialisez votre mot de passe</h1>
-            <div className="bg-base-200 shadow w-full md:rounded-lg divide-y divide-base-100">
+            <div className="bg-base-200 shadow-sm w-full md:rounded-lg divide-y divide-base-100">
               <div className="px-5 py-7">
                 <Field component={CustomField} name="newPassword" label="Nouveau mot de passe" type='password' autocomplete="new-password" />
                 <Field component={CustomField} name="passwordConfirm" label="Confirmer le mot de passe" type='password' autocomplete="new-password" />
                 <button
                   type="submit"
-                  className="btn btn-primary w-full py-2.5 text-sm shadow-sm hover:shadow-md font-semibold text-center inline-block space-x-4"
+                  className="btn btn-primary w-full py-2.5 text-sm shadow-xs hover:shadow-md font-semibold text-center inline-block space-x-4"
                   disabled={loading}
                 >
                   <span>Valider le nouveau mot de passe</span>

@@ -214,9 +214,16 @@ export async function updateGameSettings(gameId: string, settings: { maxPlayers?
 // Enregistre un coup : fait avancer la partie ; en fin de manche, enregistre les scores
 // et termine la partie si un joueur atteint le score maximum
 export async function playMove(gameId: string, gameData: GameData) {
+  return applyMove(gameId, () => gameData);
+}
+
+// Applique un coup calculé à partir des données courantes, lues sous verrou
+// (null : coup invalide, rien n'est enregistré)
+async function applyMove(gameId: string, move: (current: GameData) => GameData | null) {
   return db.transaction(async (tx) => {
     const game = await lockGame(tx, gameId);
-    if (!game) {
+    const gameData = game && move(game.gameData);
+    if (!game || !gameData) {
       return null;
     }
 
@@ -253,13 +260,14 @@ async function saveScores(tx: Tx, game: GameType, gameData: GameData) {
 
 // Révèle une carte pendant la phase de révélation initiale
 export async function revealInitialCard(gameId: string, playerId: string, cardId: string) {
-  const game = await loadGame(gameId);
-  const card = game?.gameData.playersCards?.[playerId]?.find(candidate => candidate.id === cardId);
-  if (!game || !card) {
-    return null;
-  }
-  card.revealed = true;
-  return playMove(gameId, game.gameData);
+  return applyMove(gameId, (gameData) => {
+    const card = gameData.playersCards?.[playerId]?.find(candidate => candidate.id === cardId);
+    if (!card) {
+      return null;
+    }
+    card.revealed = true;
+    return gameData;
+  });
 }
 
 // Joueurs prêts à rejouer

@@ -93,6 +93,21 @@ describe("déroulé d'une partie par websocket", () => {
     expect(stored.gameData.playersCards[alice.id][0].revealed).toBe(true);
   });
 
+  it("révèle deux cartes initiales envoyées en même temps", async () => {
+    const { gameId, game, socket } = await startedGame();
+    const [first, second] = game.gameData.playersCards[alice.id];
+
+    let moves = 0;
+    const bothMoved = new Promise<void>(resolve => socket.on("play-move", () => ++moves === 2 && resolve()));
+    socket.emit("initial-turn-card", { room: gameId, playerId: alice.id, cardId: first.id });
+    socket.emit("initial-turn-card", { room: gameId, playerId: alice.id, cardId: second.id });
+    await bothMoved;
+
+    const stored = (await app.inject({ method: "GET", url: `/api/game/${gameId}` })).json<GameType>();
+    const revealed = stored.gameData.playersCards[alice.id].filter(card => card.revealed).map(card => card.id);
+    expect(revealed.sort()).toEqual([first.id, second.id].sort());
+  });
+
   it("enregistre les scores de fin de manche sans terminer la partie", async () => {
     const { gameId, game, socket } = await startedGame();
 

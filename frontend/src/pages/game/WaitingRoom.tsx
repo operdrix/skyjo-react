@@ -249,7 +249,7 @@ const WaitingRoom = () => {
           <div className="divider"></div>
           <h3 className="text-xl">Partage cet URL à tes amis</h3>
           <div className="flex">
-            <label className="input input-bordered flex items-center gap-2 flex-1 mr-2">
+            <label className="input flex items-center gap-2 flex-1 mr-2">
               Lien
               <input
                 type="text"
@@ -297,7 +297,7 @@ const WaitingRoom = () => {
               </div>
               <div className="flex flex-1 items-end justify-center">
                 <button
-                  className="btn btn-neutral bg-card-red border-card-red text-base-100 text-xl w-full"
+                  className="btn btn-neutral [--btn-color:var(--color-card-red)] [--btn-fg:var(--color-base-100)] text-xl w-full"
                   onClick={handleStartGame}
                   disabled={game.players.length < 2 || creationLoading}
                 >
@@ -324,7 +324,7 @@ const WaitingRoom = () => {
           <ul className="flex flex-wrap gap-4">
             {game?.players.map((player, index) => (
               <li key={index} className="flex items-center gap-2">
-                <div className="avatar online placeholder">
+                <div className="avatar avatar-online avatar-placeholder">
                   <div className="bg-neutral text-neutral-content w-12 mask mask-squircle">
                     <span className="text-xl">{player?.username.charAt(0)}</span>
                   </div>

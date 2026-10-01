@@ -135,7 +135,7 @@ const Dashboard = () => {
 
   return (
     <div className="flex-1 flex items-center container mx-auto flex-col px-4 mt-5">
-      <div className="stats stats-vertical md:stats-horizontal shadow">
+      <div className="stats stats-vertical md:stats-horizontal shadow-sm">
         <div className="stat">
           <div className="stat-figure text-card-negative">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-8">
@@ -188,7 +188,7 @@ const Dashboard = () => {
 
         <div className="stat">
           <div className="stat-figure text-secondary">
-            <div className="avatar online placeholder">
+            <div className="avatar avatar-online avatar-placeholder">
               <div className="bg-neutral text-neutral-content w-16 rounded-full">
                 <span className="text-xl">{userName?.slice(0, 1)}</span>
               </div>

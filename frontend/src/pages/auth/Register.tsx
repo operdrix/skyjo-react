@@ -97,7 +97,7 @@ function Register() {
         >
           <Form>
             <h1 className="font-bold text-center text-2xl mb-5">S'inscrire au jeu</h1>
-            <div className="bg-base-200 shadow w-full rounded-lg divide-y divide-base-100">
+            <div className="bg-base-200 shadow-sm w-full rounded-lg divide-y divide-base-100">
               <div className="px-5 py-7 grid sm:grid-cols-2 gap-2">
                 <Field component={CustomField} name="firstname" label="Prénom" type='text' />
                 <Field component={CustomField} name="lastname" label="Nom" type='text' />
@@ -125,7 +125,7 @@ function Register() {
                 <div className='sm:col-span-2'>
                   <button
                     type="submit"
-                    className="btn btn-primary w-full py-2.5 text-sm shadow-sm hover:shadow-md font-semibold text-center inline-block"
+                    className="btn btn-primary w-full py-2.5 text-sm shadow-xs hover:shadow-md font-semibold text-center inline-block"
                     disabled={!acceptedPrivacy || loading}
                   >
                     <span className="inline-block mr-2">Créer mon compte</span>

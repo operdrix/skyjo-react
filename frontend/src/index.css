@@ -1,6 +1,65 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@plugin 'daisyui' {
+  themes:
+    light --default,
+    dark --prefersdark;
+}
+
+/* Thèmes DaisyUI 5 ajustés pour garder le rendu de la v4 et la couleur du logo */
+@plugin 'daisyui/theme' {
+  name: 'light';
+  default: true;
+  --logo-text: #001f3f;
+  /* hauteur des champs et boutons de DaisyUI 4 (3rem au lieu de 2.5rem) */
+  --size-field: 0.3rem;
+  /* neutral de DaisyUI 4 (gris ardoise), plus doux que celui de la v5 */
+  --color-neutral: #2b3440;
+  --color-neutral-content: #d7dde4;
+}
+
+@plugin 'daisyui/theme' {
+  name: 'dark';
+  prefersdark: true;
+  --logo-text: #4692e1;
+  --size-field: 0.3rem;
+  --color-neutral: #2a323c;
+  --color-neutral-content: #a6adbb;
+}
+
+@theme {
+  --font-kalam: Kalam, sans-serif;
+  --font-courgette: Courgette, cursive;
+
+  --color-card-negative: #5992e7;
+  --color-card-zero: #a0c4ff;
+  --color-card-green: #7ace7a;
+  --color-card-yellow: #f3e948;
+  --color-card-red: #f56e6e;
+  --color-title: #ff5630;
+}
+
+@theme inline {
+  --color-logo-text: var(--logo-text);
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
 
 @font-face {
   font-family: 'Kalam';
@@ -74,7 +133,7 @@
 
 .play-card {
   /* h-8 w-5 md:h-16 md:w-12 md:text-2xl */
-  @apply bg-base-200 rounded flex justify-center items-center select-none h-16 w-12 text-2xl;
+  @apply bg-base-200 rounded-sm flex justify-center items-center select-none h-16 w-12 text-2xl;
 }
 
 .small-set {
@@ -90,7 +149,7 @@
 }
 
 .play-card-discard {
-  @apply border-2 border-red-600 border-dashed !bg-base-200 rounded-md text-red-600;
+  @apply border-2 border-red-600 border-dashed bg-base-200! rounded-md text-red-600;
 }
 
 .perspective {

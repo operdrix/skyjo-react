@@ -48,23 +48,23 @@ const Header = () => {
             </div>
             <ul
               tabIndex={0}
-              className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-screen shadow">
-              <li><Link className="!text-2xl" to={'/'}>Accueil</Link></li>
+              className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-screen shadow-sm">
+              <li><Link className="text-2xl!" to={'/'}>Accueil</Link></li>
               <li>
-                <Link className="!text-2xl" to={'/create'}>Jouer</Link>
+                <Link className="text-2xl!" to={'/create'}>Jouer</Link>
                 <ul className="p-2">
-                  <li><Link className="!text-2xl" to={'/create'}>Créer partie</Link></li>
-                  <li><Link className="!text-2xl" to={'/public-rooms'}>Rejoindre partie</Link></li>
+                  <li><Link className="text-2xl!" to={'/create'}>Créer partie</Link></li>
+                  <li><Link className="text-2xl!" to={'/public-rooms'}>Rejoindre partie</Link></li>
                 </ul>
               </li>
               {isAuthentified ? (
                 <>
-                  <li><button className="!text-2xl" onClick={handleLogout}>Déconnexion</button></li>
+                  <li><button className="text-2xl!" onClick={handleLogout}>Déconnexion</button></li>
                 </>
               ) : (
                 <>
-                  <li><Link className="!text-2xl" to={'/auth/login'}>Connexion</Link></li>
-                  <li><Link className="!text-2xl" to={'/auth/register'}>Créer un compte</Link></li>
+                  <li><Link className="text-2xl!" to={'/auth/login'}>Connexion</Link></li>
+                  <li><Link className="text-2xl!" to={'/auth/register'}>Créer un compte</Link></li>
                 </>
               )}
               <li><ToggleTheme /></li>

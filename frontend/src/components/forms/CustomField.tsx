@@ -27,7 +27,7 @@ const CustomField: React.FC<CustomFieldProps> = ({
                 type={type}
                 {...field}
                 {...props}
-                className={`input input-bordered px-3 py-2 mt-1 first-letter:text-sm w-full${errors[field.name] && touched[field.name] ? " border-error" : ""}`}
+                className={`input px-3 py-2 mt-1 first-letter:text-sm w-full${errors[field.name] && touched[field.name] ? " border-error" : ""}`}
             />
             {errors[field.name] && touched[field.name] ? (
                 <div className="text-error text-sm">{errors[field.name]?.toString()}</div>

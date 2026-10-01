@@ -2,6 +2,9 @@
 
 Jeu de cartes Skyjo en ligne, pour jouer entre amis / famille. Projet ancien en cours de remise en route : voir `docs/PLAN.md` (phases, décisions, vérification).
 
+## Mémoire et reprise
+État d'avancement, bugs trouvés et astuces de test : @.claude/memoire/reprise.md (à mettre à jour en fin de session).
+
 ## Stack
 - `backend/` : Fastify 5, Socket.io, JWT en cookies httpOnly, Redis optionnel (blacklist de tokens), MySQL. Migration en cours vers **TypeScript + Drizzle** (remplace Sequelize).
 - `frontend/` : React, Vite, TypeScript, Tailwind + DaisyUI, Formik + Yup, react-router.

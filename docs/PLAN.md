@@ -27,10 +27,12 @@ Branche `feat/socle-projet`. Aucun changement de code applicatif.
 ## Phases
 TDD obligatoire à partir de la phase 1 : chaque comportement est d'abord couvert par un test rouge.
 
-1. **Filet de sécurité** (branche `fix/tests-base`)
+1. **Filet de sécurité** (branche `feat/tests-base`)
    - Lancer l'infra via `make db-up` (`docker-compose.yml`), démarrer back et front, jouer une partie à la main pour valider l'état initial.
    - Extraire de `backend/src/controllers/games.js` (`checkGame`, `saveScore`, `checkMaximumScore`, `dealCards`) un module de règles pur, sans accès base.
    - Tests Vitest sur ces règles et 2-3 tests d'API (register/login, création et join de partie).
+   - Test rouge prioritaire : aucune réponse de route de partie ne doit contenir `password`, `email` ni tokens (fuite constatée sur `PATCH /api/game/join/:id`).
+   - Test rouge : une déconnexion pendant l'attente ne doit pas corrompre une partie qui démarre (voir `.claude/memoire/reprise.md`).
    - En TDD : transport mail piloté par `SMTP_HOST` (test rouge d'abord), puis vérifier l'inscription bout en bout via l'API Mailpit (`GET :8025/api/v1/messages`).
 2. **Dépendances** : tout monter à la dernière majeure, backend puis frontend. Remplacer l'import `Op` de `sequelize` v6 (`controllers/users.js:5`) le temps de la transition. Le front doit repasser `tsc -b`, le build et le lint. Tailwind 4/DaisyUI 5 : vérifier visuellement les pages.
 3. **Drizzle + TypeScript** : schéma `users`, `games`, `game_players` (colonnes JSON typées avec `GameData`), migration initiale, réécriture des contrôleurs, `bdd.ts`, conversion des fichiers `.js`. Corriger le typo `bestScrore`. Retirer `sequelize`, `@sequelize/*`. Dockerfile : étape de build TS. Types `GameData`/`GameType` à partager avec le front.

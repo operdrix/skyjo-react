@@ -63,7 +63,9 @@ services:
 
   backend:
     profiles: [full]
-    build: ./backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: skyjo-backend-dev
     restart: unless-stopped
     env_file: backend/.env
@@ -87,7 +89,8 @@ services:
   frontend:
     profiles: [full]
     build:
-      context: ./frontend
+      context: .
+      dockerfile: frontend/Dockerfile
       args:
         VITE_BACKEND_HOST: http://localhost:3000
         VITE_BACKEND_WS: http://localhost:3000

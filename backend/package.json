@@ -34,7 +34,8 @@
     "typecheck": "tsc",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "build": "tsc"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

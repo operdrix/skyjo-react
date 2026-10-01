@@ -1,13 +1,15 @@
+# Contexte de build : racine du dépôt (docker build -f frontend/Dockerfile .)
 # Build stage
 FROM node:24 AS builder
-WORKDIR /app
+WORKDIR /app/frontend
 
 # Copier les fichiers de dépendances
-COPY package*.json ./
+COPY frontend/package*.json ./
 RUN npm ci
 
-# Copier le code source
-COPY . .
+# Copier le code source et les types partagés
+COPY shared ../shared
+COPY frontend ./
 
 # Variables d'environnement pour Vite (à définir dans Dokploy Build Args)
 ARG VITE_BACKEND_HOST
@@ -22,10 +24,10 @@ RUN npm run build
 FROM nginx:alpine
 
 # Copier les fichiers buildés
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /app/frontend/dist /usr/share/nginx/html
 
 # Copier la configuration nginx
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

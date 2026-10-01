@@ -1,0 +1,11 @@
+# Contexte de build = racine du dépôt (back et front partagent shared/)
+**/node_modules
+**/dist
+**/.env
+**/.env.*
+!**/.env.example
+.git
+.github
+.claude
+docs
+graphify-out

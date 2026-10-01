@@ -1,42 +1,42 @@
 import crypto from "crypto";
 import fs from "fs";
 import mjml2html from "mjml";
-import { Op } from "sequelize";
+import { Op } from "@sequelize/core";
 import User from "../models/users.js";
 import { logger } from "../utils/logger.js";
 import { createTransporter } from "../utils/mailer.js";
 
 import dotenv from "dotenv";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
-function getMJMLTemplate(firstname, confirmLink) {
+async function getMJMLTemplate(firstname, confirmLink) {
 	const mjmlFilePath = "./src/templates/confirmation.mjml";
 	const emailTemplate = fs.readFileSync(mjmlFilePath, "utf8");
 	const mjmlTemplate = emailTemplate
 		.replace(/{{firstname}}/g, firstname)
 		.replace(/{{confirmLink}}/g, confirmLink);
-	const { html } = mjml2html(mjmlTemplate);
+	const { html } = await mjml2html(mjmlTemplate);
 	return html;
 }
 
-function getMJMLTemplateResetPassword(username, confirmLink) {
+async function getMJMLTemplateResetPassword(username, confirmLink) {
 	const mjmlFilePath = "./src/templates/reset-password.mjml";
 	const emailTemplate = fs.readFileSync(mjmlFilePath, "utf8");
 	const mjmlTemplate = emailTemplate
 		.replace(/{{username}}/g, username)
 		.replace(/{{confirmLink}}/g, confirmLink);
-	const { html } = mjml2html(mjmlTemplate);
+	const { html } = await mjml2html(mjmlTemplate);
 	return html;
 }
 
-function getMJMLTemplateResetPasswordConfirm(firstname, confirmLink) {
+async function getMJMLTemplateResetPasswordConfirm(firstname, confirmLink) {
 	const mjmlFilePath = "./src/templates/reset-password-confirm.mjml";
 	const emailTemplate = fs.readFileSync(mjmlFilePath, "utf8");
 	const mjmlTemplate = emailTemplate
 		.replace(/{{firstname}}/g, firstname)
 		.replace(/{{confirmLink}}/g, confirmLink);
-	const { html } = mjml2html(mjmlTemplate);
+	const { html } = await mjml2html(mjmlTemplate);
 	return html;
 }
 
@@ -140,7 +140,7 @@ export async function registerUser(userDatas, bcrypt) {
 			from: "olivperdrix@gmail.com",
 			to: newUser.email,
 			subject: "Confirmation d'inscription",
-			html: getMJMLTemplate(newUser.firstname, `${process.env.FRONTEND_HOST}/auth/verify/${newUser.verifiedtoken}`),
+			html: await getMJMLTemplate(newUser.firstname, `${process.env.FRONTEND_HOST}/auth/verify/${newUser.verifiedtoken}`),
 		};
 
 		try {
@@ -249,7 +249,7 @@ export async function requestPasswordReset(email) {
 		from: "olivperdrix@gmail.com",
 		to: user.email,
 		subject: "Réinitialisation de mot de passe",
-		html: getMJMLTemplateResetPassword(user.username, resetLink),
+		html: await getMJMLTemplateResetPassword(user.username, resetLink),
 	};
 
 	try {
@@ -289,7 +289,7 @@ export async function resetPassword(token, newPassword, bcrypt) {
 		from: "olivperdrix@gmail.com",
 		to: user.email,
 		subject: "Mot de passe réinitialisé",
-		html: getMJMLTemplateResetPasswordConfirm(user.firstname, resetLink),
+		html: await getMJMLTemplateResetPasswordConfirm(user.firstname, resetLink),
 	};
 
 	try {

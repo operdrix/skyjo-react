@@ -3,7 +3,7 @@ import { MySqlDialect } from "@sequelize/mysql";
 import dotenv from "dotenv";
 import { logger } from "./utils/logger.js";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const { DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, DB_PORT } = process.env;
 if (!DB_HOST || !DB_NAME || !DB_USER || !DB_PASSWORD || !DB_PORT) {

@@ -107,3 +107,32 @@ describe("aucune donnée sensible dans les réponses de partie", () => {
     expect(findSensitiveFields(response.json())).toEqual([]);
   });
 });
+
+describe("démarrage de partie", () => {
+  it("une déconnexion pendant le démarrage ne laisse pas de cartes à un joueur absent", async () => {
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const gameId = await createGame(alice);
+      await app.inject({
+        method: "PATCH",
+        url: `/api/game/join/${gameId}`,
+        cookies: bob.cookies,
+        payload: { userId: bob.id },
+      });
+
+      await Promise.all([
+        app.inject({ method: "PATCH", url: `/api/game/start/${gameId}`, cookies: alice.cookies, payload: {} }),
+        app.inject({
+          method: "PATCH",
+          url: `/api/game/leave/${gameId}`,
+          cookies: bob.cookies,
+          payload: { userId: bob.id },
+        }),
+      ]);
+
+      const game = (await app.inject({ method: "GET", url: `/api/game/${gameId}` })).json();
+      const players = game.players.map(player => player.id).sort();
+      const dealtTo = Object.keys(game.gameData.playersCards ?? {}).sort();
+      expect(dealtTo, `tentative ${attempt}`).toEqual(players);
+    }
+  });
+});

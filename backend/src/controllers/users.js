@@ -1,24 +1,14 @@
 import crypto from "crypto";
 import fs from "fs";
 import mjml2html from "mjml";
-import nodemailer from "nodemailer";
 import { Op } from "sequelize";
 import User from "../models/users.js";
 import { logger } from "../utils/logger.js";
+import { createTransporter } from "../utils/mailer.js";
 
 import dotenv from "dotenv";
 
 dotenv.config();
-
-function createTransporter() {
-	return nodemailer.createTransport({
-		service: "gmail",
-		auth: {
-			user: process.env.GMAIL_APP_EMAIL,
-			pass: process.env.GMAIL_APP_PASSWORD,
-		}
-	});
-}
 
 function getMJMLTemplate(firstname, confirmLink) {
 	const mjmlFilePath = "./src/templates/confirmation.mjml";

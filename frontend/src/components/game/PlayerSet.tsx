@@ -21,11 +21,7 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false, smallSet = false }: {
 
   const playerCards = game.gameData?.playersCards?.[playerId] || [];
   const player = game.players.find(player => player.id === playerId);
-  const revealedCards = () => {
-    if (!game || !userId) return 0;
-    const playerCards = game.gameData.playersCards[playerId];
-    return playerCards.filter(card => card.revealed).length;
-  };
+  const revealedCards = () => playerCards.filter(card => card.revealed).length;
   const playerTurn = (
     game.gameData.currentPlayer === playerId && game.gameData.currentStep !== 'endGame'
   ) || (

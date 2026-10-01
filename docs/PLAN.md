@@ -27,7 +27,7 @@ Branche `feat/socle-projet`. Aucun changement de code applicatif.
 ## Phases
 TDD obligatoire à partir de la phase 1 : chaque comportement est d'abord couvert par un test rouge.
 
-1. **Filet de sécurité** (branche `feat/tests-base`)
+1. **Filet de sécurité** (branche `feat/tests-base`) : **fait**
    - Lancer l'infra via `make db-up` (`docker-compose.yml`), démarrer back et front, jouer une partie à la main pour valider l'état initial.
    - Extraire de `backend/src/controllers/games.js` (`checkGame`, `saveScore`, `checkMaximumScore`, `dealCards`) un module de règles pur, sans accès base.
    - Tests Vitest sur ces règles et 2-3 tests d'API (register/login, création et join de partie).

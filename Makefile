@@ -3,7 +3,7 @@ COMPOSE = docker compose --env-file backend/.env
 
 .DEFAULT_GOAL := help
 # backend/.env est la source unique des identifiants (lus aussi par docker-compose.yml)
-.PHONY: help install env db-up db-down full dev back front test lint build check clean
+.PHONY: help install env db-up db-down db-reset db-generate full dev back front test lint build check clean
 
 help: ## Liste les commandes
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk -F':.*?## ' '{printf "  %-10s %s\n", $$1, $$2}'
@@ -22,6 +22,13 @@ db-up: env ## Démarre MySQL (:3306), Redis, phpMyAdmin (:8080) et Mailpit (:802
 
 db-down: ## Arrête toute la stack Docker (profil full inclus)
 	$(COMPOSE) --profile full down
+
+db-reset: db-up ## Vide la base de dev (jetable) et applique les migrations Drizzle
+	$(COMPOSE) exec -T mysql sh -c 'mysql -uroot -p"$$MYSQL_ROOT_PASSWORD" -e "DROP DATABASE IF EXISTS $$MYSQL_DATABASE; CREATE DATABASE $$MYSQL_DATABASE; GRANT ALL PRIVILEGES ON $$MYSQL_DATABASE.* TO \`$$MYSQL_USER\`@\`%\`;"'
+	cd backend && npm run db:migrate
+
+db-generate: ## Génère une migration Drizzle depuis backend/src/db/schema.ts
+	cd backend && npm run db:generate
 
 full: env ## Lance toute la stack en images Docker (front :8081, back :3000)
 	$(COMPOSE) --profile full up -d --build --wait

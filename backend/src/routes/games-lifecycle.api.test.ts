@@ -1,9 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { closeApp, createPlayer, setupApp } from "../../test/helpers.js";
+import type { FastifyInstance } from "fastify";
+import type { GameType } from "../../../shared/types.ts";
+import { closeApp, type TestPlayer, createPlayer, setupApp } from "../../test/helpers.ts";
 
-let app;
-let alice;
-let bob;
+let app: FastifyInstance;
+let alice: TestPlayer;
+let bob: TestPlayer;
 
 beforeAll(async () => {
   app = await setupApp();
@@ -15,22 +17,22 @@ afterAll(async () => {
   await closeApp(app);
 });
 
-async function createGame(player, privateRoom = false) {
+async function createGame(player: TestPlayer, privateRoom = false) {
   const response = await app.inject({
     method: "POST",
     url: "/api/game",
     cookies: player.cookies,
     payload: { userId: player.id, privateRoom },
   });
-  return response.json().gameId;
+  return response.json<{ gameId: string }>().gameId;
 }
 
-function act(action, gameId, player, payload = { userId: player.id }) {
+function act(action: string, gameId: string, player: TestPlayer, payload: object = { userId: player.id }) {
   return app.inject({ method: "PATCH", url: `/api/game/${action}/${gameId}`, cookies: player.cookies, payload });
 }
 
-async function getGame(gameId) {
-  return (await app.inject({ method: "GET", url: `/api/game/${gameId}` })).json();
+async function getGame(gameId: string) {
+  return (await app.inject({ method: "GET", url: `/api/game/${gameId}` })).json<GameType>();
 }
 
 describe("forme d'une partie renvoyée par l'API", () => {
@@ -81,7 +83,7 @@ describe("liste des parties", () => {
     const publicId = await createGame(alice, false);
     const privateId = await createGame(alice, true);
 
-    const games = (await app.inject({ method: "GET", url: "/api/games?state=pending&privateRoom=false" })).json();
+    const games = (await app.inject({ method: "GET", url: "/api/games?state=pending&privateRoom=false" })).json<GameType[]>();
     const ids = games.map(game => game.id);
 
     expect(ids).toContain(publicId);
@@ -94,7 +96,7 @@ describe("liste des parties", () => {
     await act("join", withBob, bob);
     const withoutBob = await createGame(alice);
 
-    const games = (await app.inject({ method: "GET", url: `/api/games?userId=${bob.id}` })).json();
+    const games = (await app.inject({ method: "GET", url: `/api/games?userId=${bob.id}` })).json<GameType[]>();
     const ids = games.map(game => game.id);
 
     expect(ids).toContain(withBob);
@@ -105,7 +107,7 @@ describe("liste des parties", () => {
     const gameId = await createGame(bob);
 
     const response = await app.inject({ method: "GET", url: `/api/users/${bob.id}/games` });
-    const game = response.json().find(game => game.id === gameId);
+    const game = response.json<GameType[]>().find(game => game.id === gameId)!;
 
     expect(response.statusCode).toBe(200);
     expect(game.creatorPlayer).toEqual({ id: bob.id, username: "bob" });
@@ -177,7 +179,7 @@ describe("cycle de vie", () => {
     await act("join", gameId, bob);
 
     const response = await act("start", gameId, alice, {});
-    const game = response.json();
+    const game = response.json<GameType>();
 
     expect(game.state).toBe("playing");
     expect(game.roundNumber).toBe(1);
@@ -195,7 +197,7 @@ describe("cycle de vie", () => {
     await act("join", gameId, bob);
     const back = await getGame(gameId);
 
-    const status = (game) => game.players.find(player => player.id === bob.id).game_players.status;
+    const status = (game: GameType) => game.players.find(player => player.id === bob.id)!.game_players.status;
     expect(left.players).toHaveLength(2);
     expect(status(left)).toBe("disconnected");
     expect(status(back)).toBe("connected");

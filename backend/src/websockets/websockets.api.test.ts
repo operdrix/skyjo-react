@@ -1,10 +1,11 @@
-import { io as connectClient } from "socket.io-client";
+import { io as connectClient, type Socket } from "socket.io-client";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { closeApp, createPlayer, setupApp } from "../../test/helpers.js";
+import type { FastifyInstance } from "fastify";
+import { closeApp, type TestPlayer, createPlayer, setupApp } from "../../test/helpers.ts";
 
-let app;
-let alice;
-let url;
+let app: FastifyInstance;
+let alice: TestPlayer;
+let url: string;
 
 beforeAll(async () => {
   app = await setupApp();
@@ -17,7 +18,7 @@ afterAll(async () => {
 });
 
 // Ouvre une connexion socket et attend la connexion ou l'erreur
-function connect(cookie) {
+function connect(cookie?: string): Promise<{ socket: Socket; error: Error | null }> {
   const socket = connectClient(url, {
     transports: ["websocket"],
     reconnection: false,

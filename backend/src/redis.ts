@@ -1,8 +1,8 @@
-import { createClient } from "redis";
+import { createClient, type RedisClientType } from "redis";
 import { logger } from "./utils/logger.ts";
 
-let redisClient = null;
-let memoryBlacklist = new Map(); // Fallback en mémoire
+let redisClient: RedisClientType | null = null;
+const memoryBlacklist = new Map<string, number>(); // Fallback en mémoire
 
 // Nettoyer automatiquement la blacklist mémoire toutes les 5 minutes
 setInterval(() => {
@@ -32,21 +32,22 @@ export async function initRedis() {
   }
 
   try {
-    redisClient = createClient({
+    const client: RedisClientType = createClient({
       url: process.env.REDIS_URL,
     });
+    redisClient = client;
 
-    redisClient.on("error", (err) => {
+    client.on("error", (err) => {
       logger.error("Erreur Redis:", err);
     });
 
-    await redisClient.connect();
+    await client.connect();
     logger.success("✓ Connecté à Redis");
     return redisClient;
   } catch (error) {
     logger.error(
       "❌ Impossible de se connecter à Redis:",
-      error.message
+      (error as Error).message
     );
     logger.warn(
       "⚠️  Utilisation de la blacklist en mémoire (non recommandé en production)"
@@ -56,7 +57,7 @@ export async function initRedis() {
 }
 
 // Ajouter un token à la blacklist
-export async function addToBlacklist(token, expiresIn) {
+export async function addToBlacklist(token: string, expiresIn: number) {
   if (!redisClient) {
     // Fallback en mémoire si Redis n'est pas disponible
     const expiryTimestamp = Date.now() + expiresIn * 1000;
@@ -76,7 +77,7 @@ export async function addToBlacklist(token, expiresIn) {
 }
 
 // Vérifier si un token est blacklisté
-export async function isBlacklisted(token) {
+export async function isBlacklisted(token: string) {
   if (!redisClient) {
     // Fallback en mémoire si Redis n'est pas disponible
     const expiry = memoryBlacklist.get(token);

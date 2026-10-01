@@ -15,7 +15,7 @@ export default defineConfig({
         test: {
           name: "api",
           include: ["src/**/*.api.test.{js,ts}"],
-          globalSetup: ["test/global-setup.js"],
+          globalSetup: ["test/global-setup.ts"],
           fileParallelism: false,
           env: {
             NODE_ENV: "test",

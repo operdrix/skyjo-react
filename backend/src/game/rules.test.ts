@@ -6,23 +6,41 @@ import {
   createDeck,
   dealCards,
   shuffle,
-} from "./rules.js";
+} from "./rules.ts";
+import type { Card, GameData } from "../../../shared/types.ts";
 
 // Main de 12 cartes à partir des valeurs ; `revealed` : indices révélés ou true pour toutes
-function hand(values, revealed = []) {
+function hand(values: number[], revealed: number[] | true = []): Card[] {
   return values.map((value, index) => ({
     id: `c${index}_${value}`,
     value,
+    color: "green",
+    onHand: false,
     revealed: revealed === true || revealed.includes(index),
   }));
 }
 
-const twelve = (value) => Array(12).fill(value);
+const twelve = (value: number): number[] => Array(12).fill(value);
+
+// Partie complète à partir des seuls champs utiles au test
+function game(partial: Partial<GameData>): GameData {
+  return {
+    playersCards: {},
+    deckCards: [],
+    discardPile: [],
+    currentPlayer: null,
+    currentStep: "draw",
+    turnOrder: [],
+    lastTurn: false,
+    firstPlayerToEnd: null,
+    ...partial,
+  };
+}
 
 describe("createDeck", () => {
   it("contient les 150 cartes du Skyjo", () => {
     const deck = createDeck();
-    const count = (value) => deck.filter(card => card.value === value).length;
+    const count = (value: number) => deck.filter(card => card.value === value).length;
 
     expect(deck).toHaveLength(150);
     expect(count(-2)).toBe(5);
@@ -77,12 +95,12 @@ describe("dealCards", () => {
 
 describe("advanceGame : révélation initiale", () => {
   it("attend que tous les joueurs aient révélé 2 cartes", () => {
-    const gameData = {
+    const gameData = game({
       currentStep: "initialReveal",
       currentPlayer: null,
       turnOrder: ["a", "b"],
       playersCards: { a: hand(twelve(1), [0, 1]), b: hand(twelve(1), [0]) },
-    };
+    });
 
     advanceGame(gameData);
 
@@ -91,7 +109,7 @@ describe("advanceGame : révélation initiale", () => {
   });
 
   it("fait commencer le joueur dont les cartes révélées valent le plus", () => {
-    const gameData = {
+    const gameData = game({
       currentStep: "initialReveal",
       currentPlayer: null,
       turnOrder: ["a", "b"],
@@ -99,7 +117,7 @@ describe("advanceGame : révélation initiale", () => {
         a: hand([3, 4, ...Array(10).fill(0)], [0, 1]),
         b: hand([5, 6, ...Array(10).fill(0)], [0, 1]),
       },
-    };
+    });
 
     advanceGame(gameData);
 
@@ -108,7 +126,7 @@ describe("advanceGame : révélation initiale", () => {
   });
 
   it("départage une égalité par la carte révélée la plus haute", () => {
-    const gameData = {
+    const gameData = game({
       currentStep: "initialReveal",
       currentPlayer: null,
       turnOrder: ["a", "b"],
@@ -116,7 +134,7 @@ describe("advanceGame : révélation initiale", () => {
         a: hand([5, 5, ...Array(10).fill(0)], [0, 1]),
         b: hand([1, 9, ...Array(10).fill(0)], [0, 1]),
       },
-    };
+    });
 
     advanceGame(gameData);
 
@@ -125,17 +143,14 @@ describe("advanceGame : révélation initiale", () => {
 });
 
 describe("advanceGame : fin de tour", () => {
-  function endTurn(playersCards, extra = {}) {
-    return {
+  function endTurn(playersCards: GameData["playersCards"], extra: Partial<GameData> = {}): GameData {
+    return game({
       currentStep: "endTurn",
       currentPlayer: "a",
       turnOrder: ["a", "b"],
-      lastTurn: false,
-      firstPlayerToEnd: null,
-      discardPile: [],
       playersCards,
       ...extra,
-    };
+    });
   }
 
   it("passe au joueur suivant tant qu'il reste des cartes cachées", () => {
@@ -196,28 +211,28 @@ describe("advanceGame : fin de tour", () => {
 
 describe("computeRoundScores", () => {
   it("additionne les cartes de chaque joueur", () => {
-    const scores = computeRoundScores({
+    const scores = computeRoundScores(game({
       firstPlayerToEnd: "a",
       playersCards: { a: hand([1, 2, -2]), b: hand([5, 5, 5]) },
-    });
+    }));
 
     expect(scores).toEqual({ a: 1, b: 15 });
   });
 
   it("double le score de celui qui termine sans avoir le plus petit score", () => {
-    const scores = computeRoundScores({
+    const scores = computeRoundScores(game({
       firstPlayerToEnd: "a",
       playersCards: { a: hand([5, 5]), b: hand([1, 1]) },
-    });
+    }));
 
     expect(scores).toEqual({ a: 20, b: 2 });
   });
 
   it("double aussi en cas d'égalité avec le plus petit score", () => {
-    const scores = computeRoundScores({
+    const scores = computeRoundScores(game({
       firstPlayerToEnd: "a",
       playersCards: { a: hand([3]), b: hand([3]) },
-    });
+    }));
 
     expect(scores).toEqual({ a: 6, b: 3 });
   });

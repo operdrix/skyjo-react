@@ -7,14 +7,14 @@ import rateLimit from "@fastify/rate-limit";
 import fastifySwagger from "@fastify/swagger";
 import fastifySwaggerUi from "@fastify/swagger-ui";
 import bcrypt from "bcryptjs";
-import fastify from "fastify";
+import fastify, { type FastifyReply, type FastifyRequest } from "fastify";
 import { Server as SocketServer } from "socket.io";
 //routes
-import { gamesRoutes } from "./routes/games.js";
-import { usersRoutes } from "./routes/users.js";
+import { gamesRoutes } from "./routes/games.ts";
+import { usersRoutes } from "./routes/users.ts";
 //websockets
-import { websockets } from "./websockets/websockets.js";
-import { isBlacklisted } from "./redis.js";
+import { websockets } from "./websockets/websockets.ts";
+import { isBlacklisted } from "./redis.ts";
 
 // Construit l'application Fastify (plugins, routes, websockets) sans la démarrer
 export async function buildApp() {
@@ -22,14 +22,14 @@ export async function buildApp() {
 	 * API
 	 * avec fastify
 	 */
-	const blacklistedTokens = [];
+	const blacklistedTokens: string[] = [];
 	const app = fastify({
 		bodyLimit: 1048576, // Limite de 1MB pour éviter les attaques DoS
 	});
 	// Hash des mots de passe (remplace fastify-bcrypt, abandonné)
 	app.decorate("bcrypt", {
-		hash: (password) => bcrypt.hash(password, 12),
-		compare: (password, hash) => bcrypt.compare(password, hash),
+		hash: (password: string) => bcrypt.hash(password, 12),
+		compare: (password: string, hash: string) => bcrypt.compare(password, hash),
 	});
 	// Socket.io branché sur le serveur HTTP de Fastify (remplace fastify-socket.io, abandonné)
 	app.decorate("io", new SocketServer(app.server, {
@@ -88,7 +88,7 @@ export async function buildApp() {
 				info: {
 					title: "API SkyJo d'Olivier",
 					description:
-						"API du jeu Skyjo développée avec Fastify, Sequelize et Socket.io",
+						"API du jeu Skyjo développée avec Fastify, Drizzle et Socket.io",
 					version: "1.0.0",
 					contact: {
 						name: "Olivier Perdrix",
@@ -126,14 +126,6 @@ export async function buildApp() {
 				docExpansion: "list",
 				deepLinking: false,
 			},
-			uiHooks: {
-				onRequest: function (request, reply, next) {
-					next();
-				},
-				preHandler: function (request, reply, next) {
-					next();
-				},
-			},
 			staticCSP: true,
 			transformStaticCSP: (header) => header,
 			transformSpecification: (swaggerObject, _request, _reply) => {
@@ -167,7 +159,7 @@ export async function buildApp() {
 		reply.send({ documentationURL: `${apiUrl}/api/documentation` });
 	});
 	// Fonction pour décoder et vérifier le token (access token)
-	app.decorate("authenticate", async (request, reply) => {
+	app.decorate("authenticate", async (request: FastifyRequest, reply: FastifyReply) => {
 		try {
 			// Essayer de récupérer l'access token depuis le cookie d'abord, sinon depuis l'header Authorization
 			let token = request.cookies.accessToken;
@@ -189,7 +181,7 @@ export async function buildApp() {
 			}
 
 			// Vérifier et décoder le token JWT
-			const decoded = app.jwt.verify(token);
+			const decoded = app.jwt.verify<{ id: string; username: string; email?: string }>(token);
 
 			// Ajouter les infos utilisateur décodées à la requête
 			request.user = decoded;

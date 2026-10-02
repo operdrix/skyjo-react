@@ -2,7 +2,6 @@
   "name": "skyjo-api",
   "version": "2.0.0",
   "description": "API pour le jeu Skyjo",
-  "main": "index.js",
   "author": "Olivier Perdrix",
   "type": "module",
   "dependencies": {
@@ -13,11 +12,10 @@
     "@fastify/rate-limit": "^11.2.0",
     "@fastify/swagger": "^9.9.1",
     "@fastify/swagger-ui": "^6.1.1",
-    "@sequelize/core": "^7.0.0-alpha.48",
-    "@sequelize/mysql": "^7.0.0-alpha.48",
     "bcryptjs": "^3.0.3",
     "chalk": "^6.0.1",
     "dotenv": "^18.0.5",
+    "drizzle-orm": "^0.45.3",
     "fastify": "^5.12.5",
     "mjml": "^5.4.1",
     "mysql2": "^3.24.5",
@@ -27,18 +25,38 @@
     "socket.io": "^4.8.4"
   },
   "scripts": {
-    "dev": "node --watch src/server.js",
-    "start": "node src/server.js",
+    "dev": "tsx watch src/server.ts",
+    "start": "node src/server.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
+    "build": "tsc"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/mjml": "^5.0.0",
+    "@types/node": "^24.19.0",
+    "@types/nodemailer": "^8.0.2",
+    "drizzle-kit": "^0.31.11",
     "eslint": "^10.11.0",
     "globals": "^17.13.0",
     "socket.io-client": "^4.8.4",
+    "tsx": "^4.23.15",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.0",
     "vitest": "^5.0.3"
+  },
+  "overrides": {
+    "@esbuild-kit/core-utils": {
+      "esbuild": "^0.25.0"
+    }
+  },
+  "engines": {
+    "node": ">=22.22"
   }
 }

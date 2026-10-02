@@ -1,4 +1,5 @@
-import { getUserGames } from "../controllers/games.js";
+import type { FastifyInstance } from "fastify";
+import { getUserGames } from "../controllers/games.ts";
 import {
 	getUserById,
 	getUsers,
@@ -7,11 +8,14 @@ import {
 	requestPasswordReset,
 	resetPassword,
 	verifyUser,
-} from "../controllers/users.js";
-import { addToBlacklist, isBlacklisted } from "../redis.js";
+} from "../controllers/users.ts";
+import { addToBlacklist, isBlacklisted } from "../redis.ts";
+import { sendResult } from "./reply.ts";
 
-export function usersRoutes(app, blacklistedTokens) {
-	app.post("/api/login", {
+type IdParams = { Params: { id: string } };
+
+export function usersRoutes(app: FastifyInstance, blacklistedTokens: string[]) {
+	app.post<{ Body: { email: string; password: string } }>("/api/login", {
 		config: {
 			rateLimit: {
 				max: 5,
@@ -50,9 +54,9 @@ export function usersRoutes(app, blacklistedTokens) {
 			},
 		},
 	}, async (request, reply) => {
-		const response = await loginUser(request.body, app);
-		if (response.error) {
-			reply.status(response.code).send(response);
+		const response = await loginUser(request.body, app.bcrypt);
+		if ("error" in response) {
+			return sendResult(reply, response);
 		} else {
 			// Créer un access token de courte durée
 			const accessToken = app.jwt.sign(
@@ -138,7 +142,7 @@ export function usersRoutes(app, blacklistedTokens) {
 				}
 
 				// Vérifier et décoder le refresh token
-				const decoded = app.jwt.verify(refreshToken);
+				const decoded = app.jwt.verify<{ id: string; username: string; email?: string }>(refreshToken);
 
 				// Créer un nouvel access token
 				const newAccessToken = app.jwt.sign(
@@ -209,7 +213,7 @@ export function usersRoutes(app, blacklistedTokens) {
 		}
 	);
 	//inscription
-	app.post("/api/register", {
+	app.post<{ Body: Parameters<typeof registerUser>[0] }>("/api/register", {
 		config: {
 			rateLimit: {
 				max: 3,
@@ -244,12 +248,7 @@ export function usersRoutes(app, blacklistedTokens) {
 			},
 		},
 	}, async (request, reply) => {
-		const response = await registerUser(request.body, app.bcrypt);
-		if (response.error) {
-			reply.status(response.code).send(response);
-		} else {
-			reply.send(response);
-		}
+		return sendResult(reply, await registerUser(request.body, app.bcrypt));
 	});
 	//récupération de la liste des utilisateurs
 	app.get("/api/users", {
@@ -260,11 +259,11 @@ export function usersRoutes(app, blacklistedTokens) {
 			description: "Récupère la liste de tous les utilisateurs (authentification requise)",
 			security: [{ bearerAuth: [] }],
 		},
-	}, async (request, reply) => {
+	}, async (_request, reply) => {
 		reply.send(await getUsers());
 	});
 	//récupération d'un utilisateur par son id
-	app.get("/api/users/:id", {
+	app.get<IdParams>("/api/users/:id", {
 		preHandler: [app.authenticate],
 		schema: {
 			tags: ["Authentification"],
@@ -274,7 +273,7 @@ export function usersRoutes(app, blacklistedTokens) {
 			params: {
 				type: "object",
 				properties: {
-					id: { type: "number", description: "ID de l'utilisateur" },
+					id: { type: "string", description: "ID de l'utilisateur" },
 				},
 			},
 		},
@@ -282,7 +281,7 @@ export function usersRoutes(app, blacklistedTokens) {
 		reply.send(await getUserById(request.params.id));
 	});
 	//Récupération des parties d'un utilisateur
-	app.get("/api/users/:id/games", {
+	app.get<IdParams>("/api/users/:id/games", {
 		schema: {
 			tags: ["Parties"],
 			summary: "Parties d'un utilisateur",
@@ -298,7 +297,7 @@ export function usersRoutes(app, blacklistedTokens) {
 		reply.send(await getUserGames(request.params.id));
 	});
 	// Vérification de l'email de l'utilisateur via le token
-	app.get("/api/verify/:token", {
+	app.get<{ Params: { token: string } }>("/api/verify/:token", {
 		config: {
 			rateLimit: {
 				max: 10,
@@ -317,12 +316,7 @@ export function usersRoutes(app, blacklistedTokens) {
 			},
 		},
 	}, async (request, reply) => {
-		const response = await verifyUser(request.params.token);
-		if (response.error) {
-			reply.status(response.code).send(response);
-		} else {
-			reply.send(response);
-		}
+		return sendResult(reply, await verifyUser(request.params.token));
 	});
 
 	// Vérification du token jwt (depuis cookie ou header)
@@ -360,7 +354,7 @@ export function usersRoutes(app, blacklistedTokens) {
 		});
 	});
 
-	app.post("/api/password-reset-request", {
+	app.post<{ Body: { email: string } }>("/api/password-reset-request", {
 		config: {
 			rateLimit: {
 				max: 3,
@@ -381,15 +375,10 @@ export function usersRoutes(app, blacklistedTokens) {
 		},
 	}, async (request, reply) => {
 		const { email } = request.body;
-		const response = await requestPasswordReset(email);
-		if (response.error) {
-			reply.status(response.code).send(response);
-		} else {
-			reply.send(response);
-		}
+		return sendResult(reply, await requestPasswordReset(email));
 	});
 
-	app.post("/api/password-reset/:token", {
+	app.post<{ Params: { token: string }; Body: { newPassword: string } }>("/api/password-reset/:token", {
 		config: {
 			rateLimit: {
 				max: 5,
@@ -417,11 +406,6 @@ export function usersRoutes(app, blacklistedTokens) {
 	}, async (request, reply) => {
 		const { token } = request.params;
 		const { newPassword } = request.body;
-		const response = await resetPassword(token, newPassword, app.bcrypt);
-		if (response.error) {
-			reply.status(response.code).send(response);
-		} else {
-			reply.send(response);
-		}
+		return sendResult(reply, await resetPassword(token, newPassword, app.bcrypt));
 	});
 }

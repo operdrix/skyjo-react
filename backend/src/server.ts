@@ -1,10 +1,10 @@
-import { buildApp } from "./app.js";
+import { buildApp } from "./app.ts";
 //bdd
-import { sequelize } from "./bdd.js";
+import { pool, runMigrations } from "./db/index.ts";
 //redis
-import { initRedis } from "./redis.js";
+import { initRedis } from "./redis.ts";
 //logger
-import { logger } from "./utils/logger.js";
+import { logger } from "./utils/logger.ts";
 
 import dotenv from "dotenv";
 
@@ -26,7 +26,7 @@ if (process.env.NODE_ENV === "production") {
 
 	// Vérifier que les secrets sont suffisamment forts (minimum 32 caractères)
 	const weakSecrets = requiredSecrets.filter(
-		secret => process.env[secret] && process.env[secret].length < 32
+		secret => (process.env[secret]?.length ?? 32) < 32
 	);
 
 	if (weakSecrets.length > 0) {
@@ -42,16 +42,16 @@ if (process.env.NODE_ENV === "production") {
 }
 
 //Test de la connexion
-const retrySequelizeConnection = async (retries = 10, delay = 5000) => {
+const retryDatabaseConnection = async (retries = 10, delay = 5000) => {
 	while (retries > 0) {
 		try {
-			await sequelize.authenticate();
+			await pool.query("SELECT 1");
 			logger.success("Connecté à la base de données MySQL!");
 			return;
 		} catch (error) {
 			logger.error(
 				`Erreur de connexion à MySQL, tentatives restantes : ${retries}`,
-				error.message
+				(error as Error).message
 			);
 			retries -= 1;
 			await new Promise((resolve) => setTimeout(resolve, delay)); // Attendre avant de réessayer
@@ -60,9 +60,11 @@ const retrySequelizeConnection = async (retries = 10, delay = 5000) => {
 	throw new Error("Impossible de se connecter à MySQL après plusieurs tentatives.");
 };
 try {
-	await retrySequelizeConnection();
+	await retryDatabaseConnection();
+	await runMigrations();
+	logger.success("Migrations de la base appliquées.");
 } catch (error) {
-	logger.error("Erreur critique :", error.message);
+	logger.error("Erreur critique :", (error as Error).message);
 	process.exit(1); // Arrêter le processus en cas d'échec total
 }
 
@@ -76,20 +78,9 @@ const app = await buildApp();
  **********/
 const start = async () => {
 	try {
-		await sequelize
-			.sync({ alter: true })
-			.then(() => {
-				logger.success("Base de données synchronisée.");
-			})
-			.catch((error) => {
-				logger.error(
-					"Erreur de synchronisation de la base de données :",
-					error
-				);
-			});
 		const port = process.env.PORT || 3000;
 		const apiUrl = process.env.APP_URL || `http://localhost:${port}`;
-		await app.listen({ port: parseInt(port), host: "0.0.0.0" });
+		await app.listen({ port: Number(port), host: "0.0.0.0" });
 		logger.success(
 			`🚀 Serveur démarré sur ${apiUrl}`
 		);

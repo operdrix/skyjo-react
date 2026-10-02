@@ -1,9 +1,22 @@
-import { createGame, deleteGame, getGame, getGames, updateGame, updateGameSettings } from "../controllers/games.js";
+import type { FastifyInstance } from "fastify";
+import {
+	createGame,
+	deleteGame,
+	getGame,
+	getGames,
+	updateGame,
+	updateGameSettings,
+	type GameActionBody,
+	type GamesQuery,
+} from "../controllers/games.ts";
+import { sendResult } from "./reply.ts";
 
-export function gamesRoutes(app) {
+type GameParams = { Params: { gameId: string } };
+
+export function gamesRoutes(app: FastifyInstance) {
 
 	// Liste des parties
-	app.get("/api/games", {
+	app.get<{ Querystring: GamesQuery }>("/api/games", {
 		schema: {
 			tags: ["Parties"],
 			summary: "Liste des parties",
@@ -17,16 +30,11 @@ export function gamesRoutes(app) {
 			},
 		},
 	}, async (request, reply) => {
-		const response = await getGames(request.query);
-		if (response.error) {
-			reply.status(response.code).send(response);
-		} else {
-			reply.send(response);
-		}
+		return sendResult(reply, await getGames(request.query));
 	});
 
 	// Consulter une partie
-	app.get("/api/game/:gameId", {
+	app.get<GameParams>("/api/game/:gameId", {
 		schema: {
 			tags: ["Parties"],
 			summary: "Détails d'une partie",
@@ -39,16 +47,11 @@ export function gamesRoutes(app) {
 			},
 		},
 	}, async (request, reply) => {
-		const response = await getGame(request.params.gameId);
-		if (response.error) {
-			reply.status(response.code).send(response);
-		} else {
-			reply.send(response);
-		}
+		return sendResult(reply, await getGame(request.params.gameId));
 	});
 
 	// Création d'un jeu
-	app.post("/api/game", {
+	app.post<{ Body: { userId: string; privateRoom?: boolean } }>("/api/game", {
 		preHandler: [app.authenticate],
 		schema: {
 			tags: ["Parties"],
@@ -73,16 +76,11 @@ export function gamesRoutes(app) {
 			},
 		},
 	}, async (request, reply) => {
-		const response = await createGame(request.body.userId, request.body.privateRoom);
-		if (response.error) {
-			reply.status(response.code || 400).send(response); // Utilisez le code HTTP approprié
-		} else {
-			reply.send(response);
-		}
+		return sendResult(reply, await createGame(request.body.userId, request.body.privateRoom));
 	});
 
 	// Rejoindre un jeu
-	app.patch("/api/game/:action/:gameId", {
+	app.patch<{ Params: { action: string; gameId: string }; Body: GameActionBody }>("/api/game/:action/:gameId", {
 		preHandler: [app.authenticate],
 		schema: {
 			tags: ["Parties"],
@@ -106,16 +104,11 @@ export function gamesRoutes(app) {
 			},
 		},
 	}, async (request, reply) => {
-		const response = await updateGame(request);
-		if (response.error) {
-			reply.status(response.code || 400).send(response); // Utilisez le code HTTP approprié
-		} else {
-			reply.send(response);
-		}
+		return sendResult(reply, await updateGame(request));
 	});
 
 	// Changer les paramètres d'une partie
-	app.patch("/api/game/:gameId", {
+	app.patch<GameParams & { Body: { maxPlayers?: number; private?: boolean } }>("/api/game/:gameId", {
 		preHandler: [app.authenticate],
 		schema: {
 			tags: ["Parties"],
@@ -137,16 +130,11 @@ export function gamesRoutes(app) {
 			},
 		},
 	}, async (request, reply) => {
-		const response = await updateGameSettings(request.params.gameId, request.body);
-		if (response.error) {
-			reply.status(response.code).send(response);
-		} else {
-			reply.send(response);
-		}
+		return sendResult(reply, await updateGameSettings(request.params.gameId, request.body));
 	});
 
 	// Supprimer une partie
-	app.delete("/api/game/:gameId", {
+	app.delete<GameParams>("/api/game/:gameId", {
 		preHandler: [app.authenticate],
 		schema: {
 			tags: ["Parties"],
@@ -161,11 +149,6 @@ export function gamesRoutes(app) {
 			},
 		},
 	}, async (request, reply) => {
-		const response = await deleteGame(request.params.gameId, request.user.id);
-		if (response.error) {
-			reply.status(response.code).send(response);
-		} else {
-			reply.send(response);
-		}
+		return sendResult(reply, await deleteGame(request.params.gameId, request.user.id));
 	});
 }

@@ -1,9 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { closeApp, createPlayer, findSensitiveFields, setupApp } from "../../test/helpers.js";
+import type { FastifyInstance, InjectOptions } from "fastify";
+import type { GameType } from "../../../shared/types.ts";
+import { closeApp, type TestPlayer, createPlayer, findSensitiveFields, setupApp } from "../../test/helpers.ts";
 
-let app;
-let alice;
-let bob;
+let app: FastifyInstance;
+let alice: TestPlayer;
+let bob: TestPlayer;
 
 beforeAll(async () => {
   app = await setupApp();
@@ -15,14 +17,14 @@ afterAll(async () => {
   await closeApp(app);
 });
 
-async function createGame(player) {
+async function createGame(player: TestPlayer) {
   const response = await app.inject({
     method: "POST",
     url: "/api/game",
     cookies: player.cookies,
     payload: { userId: player.id },
   });
-  return response.json().gameId;
+  return response.json<{ gameId: string }>().gameId;
 }
 
 describe("parties", () => {
@@ -32,7 +34,7 @@ describe("parties", () => {
     const response = await app.inject({ method: "GET", url: `/api/game/${gameId}` });
 
     expect(response.statusCode).toBe(200);
-    expect(response.json().players.map(player => player.id)).toEqual([alice.id]);
+    expect(response.json<GameType>().players.map(player => player.id)).toEqual([alice.id]);
   });
 
   it("refuse la création sans être connecté", async () => {
@@ -52,13 +54,13 @@ describe("parties", () => {
     });
 
     expect(response.statusCode).toBe(200);
-    const game = (await app.inject({ method: "GET", url: `/api/game/${gameId}` })).json();
+    const game = (await app.inject({ method: "GET", url: `/api/game/${gameId}` })).json<GameType>();
     expect(game.players.map(player => player.id).sort()).toEqual([alice.id, bob.id].sort());
   });
 });
 
 describe("aucune donnée sensible dans les réponses de partie", () => {
-  let gameId;
+  let gameId: string;
 
   beforeAll(async () => {
     gameId = await createGame(alice);
@@ -71,15 +73,15 @@ describe("aucune donnée sensible dans les réponses de partie", () => {
   });
 
   it.each([
-    ["GET /api/game/:id", () => ({ method: "GET", url: `/api/game/${gameId}` })],
-    ["GET /api/games", () => ({ method: "GET", url: "/api/games" })],
-    ["PATCH /api/game/start/:id", () => ({
+    ["GET /api/game/:id", (): InjectOptions => ({ method: "GET", url: `/api/game/${gameId}` })],
+    ["GET /api/games", (): InjectOptions => ({ method: "GET", url: "/api/games" })],
+    ["PATCH /api/game/start/:id", (): InjectOptions => ({
       method: "PATCH",
       url: `/api/game/start/${gameId}`,
       cookies: alice.cookies,
       payload: {},
     })],
-    ["PATCH /api/game/join/:id (déjà membre, partie en cours)", () => ({
+    ["PATCH /api/game/join/:id (déjà membre, partie en cours)", (): InjectOptions => ({
       method: "PATCH",
       url: `/api/game/join/${gameId}`,
       cookies: bob.cookies,
@@ -129,7 +131,7 @@ describe("démarrage de partie", () => {
         }),
       ]);
 
-      const game = (await app.inject({ method: "GET", url: `/api/game/${gameId}` })).json();
+      const game = (await app.inject({ method: "GET", url: `/api/game/${gameId}` })).json<GameType>();
       const players = game.players.map(player => player.id).sort();
       const dealtTo = Object.keys(game.gameData.playersCards ?? {}).sort();
       expect(dealtTo, `tentative ${attempt}`).toEqual(players);

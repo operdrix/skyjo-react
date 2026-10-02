@@ -40,7 +40,12 @@ TDD obligatoire à partir de la phase 1 : chaque comportement est d'abord couver
    - TypeScript reste en 6.0 : `typescript-eslint` ne supporte pas encore TS 7.
    - Node 24 dans les Dockerfiles et la CI (react-router 8 exige Node ≥ 22.22).
    - Vérification visuelle ancien/nouveau front côte à côte : accueil, inscription, salle d'attente, partie, dashboard, thèmes clair et sombre.
-3. **Drizzle + TypeScript** : schéma `users`, `games`, `game_players` (colonnes JSON typées avec `GameData`), migration initiale, réécriture des contrôleurs, `bdd.ts`, conversion des fichiers `.js`. Corriger le typo `bestScrore`. Retirer `sequelize`, `@sequelize/*`. Dockerfile : étape de build TS. Types `GameData`/`GameType` à partager avec le front.
+3. **Drizzle + TypeScript** (branche `feat/drizzle-ts`) : **fait**
+   - Tests de caractérisation écrits sur Sequelize avant la réécriture (forme des réponses, cycle de vie, déroulé websocket), restés verts après.
+   - Schéma Drizzle `users`, `games`, `game_players` (colonnes JSON typées), migration initiale `backend/drizzle/0000_init.sql` appliquée au démarrage ; `sync({alter:true})` supprimé. `make db-reset` (base jetable) et `make db-generate`.
+   - Backend entièrement en TypeScript. Pas d'émission JS : Node 24 exécute le `.ts` (type stripping), `tsx watch` en dev, `tsc` en typecheck (`npm run build`, build Docker).
+   - Types partagés dans `shared/types.ts` (back et front) ; contextes Docker passés à la racine du dépôt (compose et Dokploy).
+   - Correctifs : `bestScore`, id texte sur `/api/users/:id`, `/api/verify/:token` sans hash ni jeton, deux révélations initiales simultanées ne s'écrasent plus (lecture sous verrou).
 4. **Garde-fous d'autorisation**
    - `userId` pris dans le JWT (`request.user`) et non dans le body de `POST/PATCH /api/game`.
    - Sur `play-move` (`websockets.js:273`) : l'émetteur est membre de la partie et `currentPlayer` est bien lui ; idem pour `player-play-again`, `start-game`, `update-game-params` (créateur seulement).

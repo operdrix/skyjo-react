@@ -1,34 +1,38 @@
-import { buildApp } from "../src/app.js";
-import { sequelize } from "../src/bdd.js";
-import "../src/models/games.js";
-import User from "../src/models/users.js";
+import type { FastifyInstance } from "fastify";
+import { buildApp } from "../src/app.ts";
+import { db } from "../src/db/index.ts";
+import { gamePlayers, games, users } from "../src/db/schema.ts";
 
 const PASSWORD = "secret-de-test";
 
-// App neuve sur une base vide
+export type TestPlayer = { id: string; cookies: Record<string, string> };
+
+// App neuve sur une base vide (schéma créé par test/global-setup.ts)
 export async function setupApp() {
-  await sequelize.sync({ force: true });
+  await db.delete(gamePlayers);
+  await db.delete(games);
+  await db.delete(users);
   const app = await buildApp();
   await app.ready();
   return app;
 }
 
-export async function closeApp(app) {
+export async function closeApp(app: FastifyInstance) {
   await app.close();
 }
 
 // Crée un compte vérifié et retourne ses cookies de session
-export async function createPlayer(app, name) {
-  const hashed = await app.bcrypt.hash(PASSWORD);
-  const user = await User.create({
+export async function createPlayer(app: FastifyInstance, name: string): Promise<TestPlayer> {
+  const user = {
     id: name.toUpperCase(),
     firstname: name,
     lastname: name,
     username: name,
     email: `${name}@test.local`,
-    password: hashed,
+    password: await app.bcrypt.hash(PASSWORD),
     verified: true,
-  });
+  };
+  await db.insert(users).values(user);
 
   const response = await app.inject({
     method: "POST",
@@ -39,10 +43,10 @@ export async function createPlayer(app, name) {
   return { id: user.id, cookies };
 }
 
-export const SENSITIVE_FIELDS = ["password", "email", "verifiedtoken", "resetPasswordToken"];
+export const SENSITIVE_FIELDS = ["password", "email", "verifiedToken", "resetPasswordToken"];
 
 // Liste les clés sensibles présentes à n'importe quelle profondeur
-export function findSensitiveFields(value, path = "") {
+export function findSensitiveFields(value: unknown, path = ""): string[] {
   if (Array.isArray(value)) {
     return value.flatMap((item, index) => findSensitiveFields(item, `${path}[${index}]`));
   }

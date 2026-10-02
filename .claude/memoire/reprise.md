@@ -1,14 +1,17 @@
-# Mémoire projet : état et reprise (maj 2026-10-01, fin phase 2)
+# Mémoire projet : état et reprise (maj 2026-10-01, fin phase 3)
 
 Fichier versionné pour reprendre le travail sur n'importe quel PC. Chargé par `CLAUDE.md`. À tenir à jour en fin de session.
 
 ## Où on en est
 - Socle posé et mergé (PR #22 `CLAUDE.md`/Makefile/skills/Mailpit, PR #23 flux de branches). `dev` est la branche par défaut, `main` la version stable.
 - Décisions validées : voir `docs/PLAN.md` (jeu entre amis, base jetable, garde-fous légers, Drizzle + backend TS, dernières majeures, Vitest, TDD obligatoire, ordre : tests → dépendances → Drizzle+TS → garde-fous → ménage).
-- **Phase 1 terminée** (PR #24 mergée). **Phase 2 terminée** sur `feat/dependances` (détail dans `docs/PLAN.md`). Prochaine : phase 3 (Drizzle + TypeScript).
+- Phases 1 (PR #24) et 2 (PR #25) mergées. **Phase 3 terminée** sur `feat/drizzle-ts` (détail dans `docs/PLAN.md`). Prochaine : phase 4 (garde-fous d'autorisation).
+  - Après un pull qui touche au schéma : `make db-reset` (base jetable). Le back applique les migrations au démarrage.
+  - Dokploy : contexte de build `.` + Docker File `backend/Dockerfile` / `frontend/Dockerfile` (à régler au prochain déploiement).
+  - Contrôleur parties : `loadGame` renvoie le format API (`players[].game_players`, `creatorPlayer`) ; les coups passent par `applyMove` (transaction + `FOR UPDATE`).
   - Node local ≥ 22.22 requis par react-router 8 (Docker/CI en Node 24).
   - Lint front : 11 warnings React Compiler volontaires (traités en phase 5).
-  - Test d'API websocket : `backend/src/websockets/websockets.api.test.js` (`socket.io-client` en devDependency du back, `app.listen({ port: 0 })`).
+  - Tests websocket : `backend/src/websockets/*.api.test.ts` (`socket.io-client` en devDependency du back, `app.listen({ port: 0 })`).
   - Règles pures : `backend/src/game/rules.js` (+ `rules.test.js`). `controllers/games.js` ne garde que l'accès base.
   - `backend/src/app.js` exporte `buildApp()` ; `server.js` = connexion, sync, listen.
   - Tests back : projets Vitest `unit` (sans base) et `api` (`*.api.test.js`, base `skyjo_test` créée par `test/global-setup.js` avec le compte root, **MySQL et Mailpit requis** : `make db-up`). Helpers dans `backend/test/helpers.js` (`createPlayer`, `findSensitiveFields`).
@@ -27,19 +30,21 @@ Non testé : fin de partie (score ≥ 100), manche suivante, reconnexion, double
 ## Bugs et failles
 Corrigés en phase 1 (tests de non-régression) : fuite `password`/`email`/jetons dans les réponses de partie, mails via `SMTP_HOST` (Mailpit), partie corrompue par un départ pendant le démarrage (transaction + verrou dans `updateGame`), crash `PlayerSet` sans cartes, gagnant mal désigné quand un joueur a 0 point au total.
 Restent :
-1. `GET /api/users` renvoie l'email de tous les comptes à tout utilisateur connecté.
+1. `GET /api/users` et `GET /api/users/:id` renvoient l'email à tout utilisateur connecté.
 2. `PATCH /api/game/join/:id` renvoie la partie lue avant l'ajout du joueur (liste de joueurs périmée).
 3. Formulaire d'inscription : bouton grisé tant que la case confidentialité (état React) n'est pas cliquée ; remplissage DOM programmatique insuffisant pour tester.
-4. Phase 4 : `gameData` client de confiance (`play-move`), `userId` pris dans le body, secrets par défaut codés en dur, blacklist en tableau qui grossit. Phase 3 : `sync({alter:true})`.
+4. Phase 4 : `gameData` client de confiance (`play-move`), `userId` pris dans le body, secrets par défaut codés en dur, blacklist en tableau qui grossit.
 5. Non testé à la main : fin de partie (≥ 100), manche suivante, reconnexion.
 6. Salle d'attente : un joueur (même le créateur) qui quitte la page est retiré de la partie et n'est pas réintégré en revenant sur `/join/:id` (constaté avant et après phase 2).
-7. Premier démarrage après changement de schéma : `sync({alter:true})` peut échouer (`Constraint 'games_ibfk_1' does not exist`), disparaît en phase 3.
+7. `restartGame` ajoute toujours le créateur à la nouvelle partie, même s'il n'a pas demandé à rejouer (comportement d'origine conservé).
+8. Le serveur fait confiance au `gameData` de `play-move` (phase 4).
 
 ## Astuces de test manuel
 - Comparer avant/après un changement visuel : `git worktree add <scratch>/old dev`, `npm ci`, Vite ancien sur :4173 (autorisé par le CORS) et nouveau sur un autre port avec `FRONTEND_HOST=http://localhost:<port>` pour le back. Les cookies `localhost` sont partagés entre ports : une connexion sert aux deux.
 - Un navigateur partage ses cookies : pour un 2e joueur, utiliser un script Node avec `socket.io-client` (dans `frontend/node_modules`) et les cookies `accessToken`/`refreshToken` obtenus via `POST /api/login` (`curl -c`). Le protocole du client React est dans `frontend/src/components/game/PlayerSet.tsx`, `Deck.tsx`, `Discard.tsx`.
 - Événements socket : `player-joined-game`, `start-game`, `initial-turn-card {room, playerId, cardId}`, `play-move {room, gameData}`. Pendant `initialReveal`, `currentPlayer` vaut `null` : chaque joueur révèle 2 cartes sans attendre son tour.
 - Vérifier un compte sans passer par le mail : `docker exec skyjo-mysql-dev mysql -uolivier -polivier skyjo -e "update users set verified=1 where username='…'"`.
+- Tester l'image de prod en local : `make full` (front :8081, back :3000), puis `docker compose --env-file backend/.env --profile full rm -sf backend frontend` pour libérer :3000.
 - Routes front : `/auth/register`, `/auth/login`, `/create`, `/join/:id` (salle d'attente), `/game/:id`.
 - Dans un shell, ne pas faire `pkill -f nom` avec le nom visible dans la commande elle-même (le shell se tue). Utiliser `pkill -f "motif[x]"`.
 - Ne jamais écrire de mots de passe de test dans le dépôt.

@@ -51,7 +51,7 @@ export function gamesRoutes(app: FastifyInstance) {
 	});
 
 	// Création d'un jeu
-	app.post<{ Body: { userId: string; privateRoom?: boolean } }>("/api/game", {
+	app.post<{ Body: { privateRoom?: boolean } }>("/api/game", {
 		preHandler: [app.authenticate],
 		schema: {
 			tags: ["Parties"],
@@ -60,9 +60,7 @@ export function gamesRoutes(app: FastifyInstance) {
 			security: [{ bearerAuth: [] }],
 			body: {
 				type: "object",
-				required: ["userId"],
 				properties: {
-					userId: { type: "string", description: "ID de l'utilisateur créateur" },
 					privateRoom: { type: "boolean", description: "Partie privée ou publique", default: false },
 				},
 			},
@@ -76,7 +74,7 @@ export function gamesRoutes(app: FastifyInstance) {
 			},
 		},
 	}, async (request, reply) => {
-		return sendResult(reply, await createGame(request.body.userId, request.body.privateRoom));
+		return sendResult(reply, await createGame(request.user.id, request.body?.privateRoom));
 	});
 
 	// Rejoindre un jeu
@@ -85,7 +83,7 @@ export function gamesRoutes(app: FastifyInstance) {
 		schema: {
 			tags: ["Parties"],
 			summary: "Action sur une partie",
-			description: "Exécute une action sur une partie (join, leave, start, finish)",
+			description: "Exécute une action sur une partie pour l'utilisateur connecté (join, leave ; start et finish réservés au créateur)",
 			security: [{ bearerAuth: [] }],
 			params: {
 				type: "object",
@@ -97,14 +95,14 @@ export function gamesRoutes(app: FastifyInstance) {
 			body: {
 				type: "object",
 				properties: {
-					userId: { type: "string", description: "ID du joueur (requis pour join/leave)" },
 					winner: { type: "string", description: "ID du gagnant (pour finish)" },
 					winnerScore: { type: "number", description: "Score du gagnant (pour finish)" },
 				},
 			},
 		},
 	}, async (request, reply) => {
-		return sendResult(reply, await updateGame(request));
+		const body = { ...request.body, userId: request.user.id };
+		return sendResult(reply, await updateGame({ params: request.params, body }));
 	});
 
 	// Changer les paramètres d'une partie
@@ -113,7 +111,7 @@ export function gamesRoutes(app: FastifyInstance) {
 		schema: {
 			tags: ["Parties"],
 			summary: "Modifier les paramètres d'une partie",
-			description: "Modifie les paramètres d'une partie existante (authentification requise). Uniquement possible si la partie est en attente (pending).",
+			description: "Modifie les paramètres d'une partie existante (réservé au créateur). Uniquement possible si la partie est en attente (pending).",
 			security: [{ bearerAuth: [] }],
 			params: {
 				type: "object",
@@ -130,7 +128,7 @@ export function gamesRoutes(app: FastifyInstance) {
 			},
 		},
 	}, async (request, reply) => {
-		return sendResult(reply, await updateGameSettings(request.params.gameId, request.body));
+		return sendResult(reply, await updateGameSettings(request.params.gameId, request.body, request.user.id));
 	});
 
 	// Supprimer une partie

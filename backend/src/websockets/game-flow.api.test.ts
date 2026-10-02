@@ -1,8 +1,11 @@
-import { io as connectClient, type Socket } from "socket.io-client";
+import type { Socket } from "socket.io-client";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { FastifyInstance } from "fastify";
 import type { Card, GameType } from "../../../shared/types.ts";
-import { closeApp, type TestPlayer, createPlayer, setupApp } from "../../test/helpers.ts";
+import { eq } from "drizzle-orm";
+import { db } from "../db/index.ts";
+import { games } from "../db/schema.ts";
+import { closeApp, connectPlayer, type TestPlayer, createPlayer, nextEvent as nextSocketEvent, setupApp } from "../../test/helpers.ts";
 
 let app: FastifyInstance;
 let url: string;
@@ -24,11 +27,7 @@ afterAll(async () => {
 
 // Socket connecté et entré dans la room de la partie
 async function joinRoom(player: TestPlayer, room: string) {
-  const socket = connectClient(url, {
-    transports: ["websocket"],
-    reconnection: false,
-    extraHeaders: { cookie: `accessToken=${player.cookies.accessToken}` },
-  });
+  const socket = connectPlayer(url, player);
   sockets.push(socket);
   const joined = nextEvent(socket, "player-joined-game");
   socket.emit("player-joined-game", { room, userId: player.id });
@@ -36,9 +35,7 @@ async function joinRoom(player: TestPlayer, room: string) {
   return socket;
 }
 
-function nextEvent<T = GameType>(socket: Socket, event: string): Promise<T> {
-  return new Promise(resolve => socket.once(event, resolve));
-}
+const nextEvent = <T = GameType>(socket: Socket, event: string) => nextSocketEvent<T>(socket, event);
 
 function act(action: string, gameId: string, player: TestPlayer, payload: object = { userId: player.id }) {
   return app.inject({ method: "PATCH", url: `/api/game/${action}/${gameId}`, cookies: player.cookies, payload });
@@ -62,6 +59,12 @@ function revealedHand(prefix: string, top: number, middle: number): Card[] {
   return values.map((value, index) => ({
     id: `${prefix}${index}`, value, color: "green" as const, revealed: true, onHand: false,
   }));
+}
+
+// Passe la partie au tour d'Alice
+async function aliceTurn(gameId: string, game: GameType) {
+  await db.update(games).set({ gameData: { ...game.gameData, currentStep: "draw", currentPlayer: alice.id } })
+    .where(eq(games.id, gameId));
 }
 
 // Fin du tour d'Alice alors que toutes les cartes sont révélées : fin de manche
@@ -110,6 +113,7 @@ describe("déroulé d'une partie par websocket", () => {
 
   it("enregistre les scores de fin de manche sans terminer la partie", async () => {
     const { gameId, game, socket } = await startedGame();
+    await aliceTurn(gameId, game);
 
     const moved = nextEvent(socket, "play-move");
     socket.emit("play-move", { room: gameId, gameData: lastMove(game, revealedHand("a", 0, 1), revealedHand("b", 5, 6)) });
@@ -125,6 +129,7 @@ describe("déroulé d'une partie par websocket", () => {
 
   it("termine la partie quand un joueur atteint 100 points", async () => {
     const { gameId, game, socket } = await startedGame();
+    await aliceTurn(gameId, game);
 
     const moved = nextEvent(socket, "play-move");
     socket.emit("play-move", { room: gameId, gameData: lastMove(game, revealedHand("a", 0, 1), revealedHand("b", 12, 11)) });
@@ -136,9 +141,13 @@ describe("déroulé d'une partie par websocket", () => {
   it("relance une nouvelle partie avec les joueurs qui veulent rejouer", async () => {
     const { gameId, socket } = await startedGame();
 
-    const playAgain = nextEvent(socket, "play-again");
-    socket.emit("player-play-again", { room: gameId, playersPlayAgain: [alice.id, bob.id] });
-    expect((await playAgain).playersPlayAgain).toEqual([alice.id, bob.id]);
+    const bobSocket = await joinRoom(bob, gameId);
+    const aliceAgain = nextEvent(socket, "play-again");
+    socket.emit("player-play-again", { room: gameId });
+    await aliceAgain;
+    const bobAgain = nextEvent(socket, "play-again");
+    bobSocket.emit("player-play-again", { room: gameId });
+    expect((await bobAgain).playersPlayAgain).toEqual([alice.id, bob.id]);
 
     const newGameEvent = nextEvent<{ gameId: string; players: string[] }>(socket, "go-to-new-game");
     socket.emit("restart-game", { room: gameId });

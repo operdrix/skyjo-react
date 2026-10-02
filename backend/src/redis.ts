@@ -19,7 +19,7 @@ setInterval(() => {
   if (cleaned > 0) {
     logger.debug(`Nettoyage blacklist mémoire: ${cleaned} tokens expirés supprimés`);
   }
-}, 5 * 60 * 1000); // 5 minutes
+}, 5 * 60 * 1000).unref(); // 5 minutes, sans empêcher l'arrêt du processus
 
 // Initialiser le client Redis
 export async function initRedis() {
@@ -56,41 +56,37 @@ export async function initRedis() {
   }
 }
 
-// Ajouter un token à la blacklist
+// Ajouter un token à la blacklist (en mémoire si Redis est absent ou en erreur)
 export async function addToBlacklist(token: string, expiresIn: number) {
-  if (!redisClient) {
-    // Fallback en mémoire si Redis n'est pas disponible
-    const expiryTimestamp = Date.now() + expiresIn * 1000;
-    memoryBlacklist.set(token, expiryTimestamp);
-    logger.debug(`Token ajouté à la blacklist mémoire (expire dans ${expiresIn}s)`);
-    return true;
+  if (redisClient) {
+    try {
+      // Stocker le token avec expiration (en secondes)
+      await redisClient.setEx(`blacklist:${token}`, expiresIn, "1");
+      return;
+    } catch (error) {
+      logger.error("Erreur lors de l'ajout à la blacklist Redis, repli en mémoire:", error);
+    }
   }
-
-  try {
-    // Stocker le token avec expiration (en secondes)
-    await redisClient.setEx(`blacklist:${token}`, expiresIn, "1");
-    return true;
-  } catch (error) {
-    logger.error("Erreur lors de l'ajout à la blacklist Redis:", error);
-    return false;
-  }
+  memoryBlacklist.set(token, Date.now() + expiresIn * 1000);
+  logger.debug(`Token ajouté à la blacklist mémoire (expire dans ${expiresIn}s)`);
 }
 
-// Vérifier si un token est blacklisté
-export async function isBlacklisted(token: string) {
-  if (!redisClient) {
-    // Fallback en mémoire si Redis n'est pas disponible
-    const expiry = memoryBlacklist.get(token);
-    if (!expiry) return false;
+function isInMemoryBlacklist(token: string) {
+  const expiry = memoryBlacklist.get(token);
+  if (!expiry) return false;
 
-    // Vérifier si le token a expiré
-    if (Date.now() > expiry) {
-      memoryBlacklist.delete(token);
-      return false;
-    }
-
-    return true;
+  // Vérifier si le token a expiré
+  if (Date.now() > expiry) {
+    memoryBlacklist.delete(token);
+    return false;
   }
+  return true;
+}
+
+// Vérifier si un token est blacklisté (mémoire, puis Redis)
+export async function isBlacklisted(token: string) {
+  if (isInMemoryBlacklist(token)) return true;
+  if (!redisClient) return false;
 
   try {
     const exists = await redisClient.exists(`blacklist:${token}`);

@@ -21,6 +21,8 @@ export default defineConfig({
             NODE_ENV: "test",
             DB_NAME: "skyjo_test",
             REDIS_URL: "",
+            JWT_SECRET: "secret-jwt-de-test",
+            COOKIE_SECRET: "secret-cookie-de-test",
             SMTP_HOST: "localhost",
             SMTP_PORT: "1025",
           },

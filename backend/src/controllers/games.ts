@@ -10,6 +10,8 @@ export type GameAction = "join" | "leave" | "start" | "finish";
 export type GameActionBody = { userId?: string; winner?: string; winnerScore?: number } | null | undefined;
 export type GamesQuery = { userId?: string; state?: GameType["state"]; privateRoom?: string; creatorId?: string };
 
+const CREATOR_ONLY = { error: "Seul le créateur de la partie peut faire cela.", code: 403 };
+
 const isError = <T extends object>(value: T | ErrorType): value is ErrorType => "error" in value;
 
 // Seuls attributs de joueur exposés dans les réponses de partie
@@ -110,6 +112,8 @@ export async function createGame(userId: string | undefined, privateRoom = false
 }
 
 // Mettre à jour une partie (joindre, quitter, démarrer, terminer)
+// body.userId est l'utilisateur qui agit : il rejoint ou quitte, et doit être le créateur pour démarrer
+// ou terminer (absent uniquement pour les appels internes, comme le démarrage d'une partie relancée)
 export async function updateGame(request: { params: { action: string; gameId: string }; body?: GameActionBody }) {
   const { action, gameId } = request.params;
   const body = request.body ?? {};
@@ -144,6 +148,9 @@ async function applyGameAction(tx: Tx, game: GameType, action: string, body: Non
     return { error: "Cette partie est déjà terminée !", code: 400 };
   }
   const userId = body.userId!;
+  if ((action === "start" || action === "finish") && userId && userId !== game.creator) {
+    return CREATOR_ONLY;
+  }
   const isPlayer = game.players.some(player => player.id === userId);
   const player = and(eq(gamePlayers.gameId, game.id), eq(gamePlayers.userId, userId));
 
@@ -195,11 +202,15 @@ async function applyGameAction(tx: Tx, game: GameType, action: string, body: Non
 }
 
 // Mettre à jour les paramètres d'une partie
-export async function updateGameSettings(gameId: string, settings: { maxPlayers?: number; private?: boolean }) {
-  const game = await db.query.games.findFirst({ where: eq(games.id, gameId), columns: { state: true } });
+export async function updateGameSettings(gameId: string, settings: { maxPlayers?: number; private?: boolean }, userId: string) {
+  const game = await db.query.games.findFirst({ where: eq(games.id, gameId), columns: { state: true, creator: true } });
 
   if (!game) {
     return { error: "La partie n'existe pas.", code: 404 };
+  }
+
+  if (game.creator !== userId) {
+    return CREATOR_ONLY;
   }
 
   if (game.state !== "pending") {
@@ -211,18 +222,21 @@ export async function updateGameSettings(gameId: string, settings: { maxPlayers?
   return (await loadGame(gameId))!;
 }
 
-// Enregistre un coup : fait avancer la partie ; en fin de manche, enregistre les scores
-// et termine la partie si un joueur atteint le score maximum
-export async function playMove(gameId: string, gameData: GameData) {
-  return applyMove(gameId, () => gameData);
+// Enregistre un coup du joueur dont c'est le tour : fait avancer la partie ; en fin de manche,
+// enregistre les scores et termine la partie si un joueur atteint le score maximum
+export async function playMove(gameId: string, gameData: GameData, userId: string) {
+  return applyMove(gameId, (current, game) => {
+    const isPlayer = game.players.some(player => player.id === userId);
+    return isPlayer && current.currentPlayer === userId ? gameData : null;
+  });
 }
 
 // Applique un coup calculé à partir des données courantes, lues sous verrou
 // (null : coup invalide, rien n'est enregistré)
-async function applyMove(gameId: string, move: (current: GameData) => GameData | null) {
+async function applyMove(gameId: string, move: (current: GameData, game: GameType) => GameData | null) {
   return db.transaction(async (tx) => {
     const game = await lockGame(tx, gameId);
-    const gameData = game && move(game.gameData);
+    const gameData = game && move(game.gameData, game);
     if (!game || !gameData) {
       return null;
     }
@@ -270,10 +284,18 @@ export async function revealInitialCard(gameId: string, playerId: string, cardId
   });
 }
 
-// Joueurs prêts à rejouer
-export async function setPlayersPlayAgain(gameId: string, playersPlayAgain: string[]) {
-  const updated = await db.update(games).set({ playersPlayAgain }).where(eq(games.id, gameId));
-  return updated[0].affectedRows ? loadGame(gameId) : null;
+// Ajoute un joueur de la partie à ceux qui veulent rejouer (null s'il n'en fait pas partie)
+export async function addPlayerPlayAgain(gameId: string, userId: string) {
+  return db.transaction(async (tx) => {
+    const game = await lockGame(tx, gameId);
+    if (!game?.players.some(player => player.id === userId)) {
+      return null;
+    }
+    if (!game.playersPlayAgain.includes(userId)) {
+      await tx.update(games).set({ playersPlayAgain: [...game.playersPlayAgain, userId] }).where(eq(games.id, gameId));
+    }
+    return (await loadGame(gameId, tx))!;
+  });
 }
 
 // Nouvelle partie privée, démarrée, avec le créateur et les joueurs qui ont demandé à rejouer

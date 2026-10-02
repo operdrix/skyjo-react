@@ -1,12 +1,12 @@
 import type { FastifyInstance } from "fastify";
 import type { Server, Socket } from "socket.io";
-import type { GameData } from "../../../shared/types.ts";
+import type { GameData, GameType } from "../../../shared/types.ts";
 import {
+  addPlayerPlayAgain,
   getGame,
   playMove as savePlayMove,
   restartGame as createNextGame,
   revealInitialCard,
-  setPlayersPlayAgain,
   updateGame,
 } from "../controllers/games.ts";
 import { logger } from "../utils/logger.ts";
@@ -17,6 +17,8 @@ type GameSocket = Socket<Record<string, never>, Record<string, never>, Record<st
 type Payload = Record<string, unknown>;
 
 const SESSION_EXPIRED = { message: "Session expirée, veuillez vous reconnecter" };
+const MOVE_REFUSED = { message: "Coup refusé" };
+const CREATOR_ONLY = { message: "Seul le créateur de la partie peut faire cela" };
 
 function readAccessToken(socket: Socket) {
   const cookies = socket.handshake.headers.cookie;
@@ -74,6 +76,20 @@ function on(socket: GameSocket, app: FastifyInstance, event: string, requiredFie
   });
 }
 
+function refuse(socket: GameSocket, error: { message: string }) {
+  (socket as Socket).emit("error", error);
+}
+
+// Partie de la room si l'émetteur en est le créateur ; sinon refus envoyé à l'émetteur
+async function creatorGame(socket: GameSocket, room: string): Promise<GameType | null> {
+  const game = await getGame(room);
+  if ("error" in game || game.creator !== socket.data.userId) {
+    refuse(socket, CREATOR_ONLY);
+    return null;
+  }
+  return game;
+}
+
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export async function websockets(app: FastifyInstance) {
@@ -125,8 +141,8 @@ export async function websockets(app: FastifyInstance) {
 
     // Les paramètres de la partie ont changé
     on(socket, app, "update-game-params", ["room"], async ({ room }) => {
-      const game = await getGame(room as string);
-      if (!("error" in game)) {
+      const game = await creatorGame(socket, room as string);
+      if (game) {
         io.to(game.id).emit("update-game-params", game);
       }
     });
@@ -134,41 +150,49 @@ export async function websockets(app: FastifyInstance) {
     // Démarrer une partie
     on(socket, app, "start-game", ["room"], async ({ room }) => {
       const gameId = room as string;
+      if (!(await creatorGame(socket, gameId))) return;
       io.to(gameId).emit("waiting-deal");
-      await updateGame({ params: { action: "start", gameId } });
+      await updateGame({ params: { action: "start", gameId }, body: { userId } });
       const game = await getGame(gameId);
       if ("error" in game) return;
       await wait(3000);
       io.to(gameId).emit("start-game", game);
     });
 
-    // Révélation d'une carte pendant la phase initiale
-    on(socket, app, "initial-turn-card", ["room", "playerId", "cardId"], async ({ room, playerId, cardId }) => {
-      const game = await revealInitialCard(room as string, playerId as string, cardId as string);
-      if (game) {
-        io.to(game.id).emit("play-move", game);
+    // Révélation d'une de ses cartes pendant la phase initiale
+    on(socket, app, "initial-turn-card", ["room", "cardId"], async ({ room, cardId }) => {
+      const game = await revealInitialCard(room as string, userId, cardId as string);
+      if (!game) {
+        refuse(socket, MOVE_REFUSED);
+        return;
       }
+      io.to(game.id).emit("play-move", game);
     });
 
-    // Un coup est joué
+    // Un coup est joué par le joueur dont c'est le tour
     on(socket, app, "play-move", ["room", "gameData"], async ({ room, gameData }) => {
-      const game = await savePlayMove(room as string, gameData as GameData);
-      if (game) {
-        io.to(game.id).emit("play-move", game);
+      const game = await savePlayMove(room as string, gameData as GameData, userId);
+      if (!game) {
+        refuse(socket, MOVE_REFUSED);
+        return;
       }
+      io.to(game.id).emit("play-move", game);
     });
 
-    // Joueurs prêts à rejouer
-    on(socket, app, "player-play-again", ["room", "playersPlayAgain"], async ({ room, playersPlayAgain }) => {
-      const game = await setPlayersPlayAgain(room as string, playersPlayAgain as string[]);
-      if (game) {
-        io.to(game.id).emit("play-again", game);
+    // L'émetteur veut rejouer
+    on(socket, app, "player-play-again", ["room"], async ({ room }) => {
+      const game = await addPlayerPlayAgain(room as string, userId);
+      if (!game) {
+        refuse(socket, MOVE_REFUSED);
+        return;
       }
+      io.to(game.id).emit("play-again", game);
     });
 
     // Nouvelle partie avec les joueurs qui ont demandé à rejouer
     on(socket, app, "restart-game", ["room"], async ({ room }) => {
       const gameId = room as string;
+      if (!(await creatorGame(socket, gameId))) return;
       io.to(gameId).emit("waiting-deal");
       const next = await createNextGame(gameId);
       if (!next) return;

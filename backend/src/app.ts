@@ -16,13 +16,23 @@ import { usersRoutes } from "./routes/users.ts";
 import { websockets } from "./websockets/websockets.ts";
 import { isBlacklisted } from "./redis.ts";
 
+// Secret lu dans l'environnement, sans valeur par défaut
+function requireSecret(name: "JWT_SECRET" | "COOKIE_SECRET") {
+	const secret = process.env[name];
+	if (!secret) {
+		throw new Error(`Variable d'environnement ${name} manquante`);
+	}
+	return secret;
+}
+
 // Construit l'application Fastify (plugins, routes, websockets) sans la démarrer
 export async function buildApp() {
 	/**
 	 * API
 	 * avec fastify
 	 */
-	const blacklistedTokens: string[] = [];
+	const jwtSecret = requireSecret("JWT_SECRET");
+	const cookieSecret = requireSecret("COOKIE_SECRET");
 	const app = fastify({
 		bodyLimit: 1048576, // Limite de 1MB pour éviter les attaques DoS
 	});
@@ -74,7 +84,7 @@ export async function buildApp() {
 			skipOnError: true,
 		})
 		.register(cookie, {
-			secret: process.env.COOKIE_SECRET || "mon-secret-de-cookie-super-secret",
+			secret: cookieSecret,
 			parseOptions: {},
 		})
 		.register(cors, {
@@ -134,7 +144,7 @@ export async function buildApp() {
 			transformSpecificationClone: true,
 		})
 		.register(fastifyJWT, {
-			secret: process.env.JWT_SECRET || "unanneaupourlesgouvernertous",
+			secret: jwtSecret,
 		});
 	/**********
 	 * Routes
@@ -174,7 +184,7 @@ export async function buildApp() {
 
 			// Vérifier si le token est dans la liste noire (Redis ou mémoire)
 			const isTokenBlacklisted = await isBlacklisted(token);
-			if (isTokenBlacklisted || blacklistedTokens.includes(token)) {
+			if (isTokenBlacklisted) {
 				return reply
 					.status(401)
 					.send({ error: "Access token invalide ou expiré" });
@@ -195,7 +205,7 @@ export async function buildApp() {
 		}
 	});
 	//gestion utilisateur
-	usersRoutes(app, blacklistedTokens);
+	usersRoutes(app);
 	//gestion des jeux
 	gamesRoutes(app);
 

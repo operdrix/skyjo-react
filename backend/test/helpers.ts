@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import { io as connectClient, type Socket } from "socket.io-client";
 import { buildApp } from "../src/app.ts";
 import { db } from "../src/db/index.ts";
 import { gamePlayers, games, users } from "../src/db/schema.ts";
@@ -57,4 +58,17 @@ export function findSensitiveFields(value: unknown, path = ""): string[] {
     ]);
   }
   return [];
+}
+
+// Socket connecté avec la session du joueur
+export function connectPlayer(url: string, player: TestPlayer): Socket {
+  return connectClient(url, {
+    transports: ["websocket"],
+    reconnection: false,
+    extraHeaders: { cookie: `accessToken=${player.cookies.accessToken}` },
+  });
+}
+
+export function nextEvent<T>(socket: Socket, event: string): Promise<T> {
+  return new Promise(resolve => socket.once(event, resolve));
 }

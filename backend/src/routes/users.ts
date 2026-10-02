@@ -14,7 +14,7 @@ import { sendResult } from "./reply.ts";
 
 type IdParams = { Params: { id: string } };
 
-export function usersRoutes(app: FastifyInstance, blacklistedTokens: string[]) {
+export function usersRoutes(app: FastifyInstance) {
 	app.post<{ Body: { email: string; password: string } }>("/api/login", {
 		config: {
 			rateLimit: {
@@ -137,7 +137,7 @@ export function usersRoutes(app: FastifyInstance, blacklistedTokens: string[]) {
 
 				// Vérifier si le refresh token est dans la liste noire (Redis ou mémoire)
 				const isTokenBlacklisted = await isBlacklisted(refreshToken);
-				if (isTokenBlacklisted || blacklistedTokens.includes(refreshToken)) {
+				if (isTokenBlacklisted) {
 					return reply.status(401).send({ error: "Refresh token invalide" });
 				}
 
@@ -190,20 +190,12 @@ export function usersRoutes(app: FastifyInstance, blacklistedTokens: string[]) {
 			const accessToken = request.cookies.accessToken;
 			const refreshToken = request.cookies.refreshToken;
 
-			// Ajouter les tokens à la liste noire Redis (fallback en mémoire)
+			// Ajouter les tokens à la liste noire (Redis, sinon mémoire avec expiration)
 			if (accessToken) {
-				const added = await addToBlacklist(accessToken, 15 * 60); // 15 minutes
-				if (!added) {
-					// Fallback en mémoire si Redis n'est pas disponible
-					blacklistedTokens.push(accessToken);
-				}
+				await addToBlacklist(accessToken, 15 * 60); // 15 minutes
 			}
 			if (refreshToken) {
-				const added = await addToBlacklist(refreshToken, 14 * 24 * 60 * 60); // 14 jours
-				if (!added) {
-					// Fallback en mémoire si Redis n'est pas disponible
-					blacklistedTokens.push(refreshToken);
-				}
+				await addToBlacklist(refreshToken, 14 * 24 * 60 * 60); // 14 jours
 			}
 
 			// Supprimer les deux cookies

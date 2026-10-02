@@ -46,10 +46,11 @@ TDD obligatoire à partir de la phase 1 : chaque comportement est d'abord couver
    - Backend entièrement en TypeScript. Pas d'émission JS : Node 24 exécute le `.ts` (type stripping), `tsx watch` en dev, `tsc` en typecheck (`npm run build`, build Docker).
    - Types partagés dans `shared/types.ts` (back et front) ; contextes Docker passés à la racine du dépôt (compose et Dokploy).
    - Correctifs : `bestScore`, id texte sur `/api/users/:id`, `/api/verify/:token` sans hash ni jeton, deux révélations initiales simultanées ne s'écrasent plus (lecture sous verrou).
-4. **Garde-fous d'autorisation**
-   - `userId` pris dans le JWT (`request.user`) et non dans le body de `POST/PATCH /api/game`.
-   - Sur `play-move` (`websockets.js:273`) : l'émetteur est membre de la partie et `currentPlayer` est bien lui ; idem pour `player-play-again`, `start-game`, `update-game-params` (créateur seulement).
-   - Secrets sans valeur par défaut codée en dur ; une seule blacklist de tokens (Redis, sinon Map avec expiration) à la place du tableau qui grossit.
+4. **Garde-fous d'autorisation** (branche `feat/garde-fous`) : **fait**
+   - `userId` pris dans le JWT (`request.user`) : un `userId` envoyé dans le body de `POST/PATCH /api/game` est ignoré. `start`/`finish` et `PATCH /api/game/:id` (paramètres) réservés au créateur (403).
+   - Websockets : `play-move` accepté seulement d'un membre dont c'est le tour (`currentPlayer` lu en base, sous verrou) ; `initial-turn-card` ne révèle que les cartes de l'émetteur ; `player-play-again` ajoute l'émetteur s'il est membre (la liste du client est ignorée) ; `start-game`, `update-game-params`, `restart-game` réservés au créateur. Refus : événement `error` à l'émetteur.
+   - Correctif : le front émettait `play-again` au lieu de `player-play-again` (rejouer ne marchait pas).
+   - `buildApp()` refuse de démarrer sans `JWT_SECRET`/`COOKIE_SECRET`. Une seule blacklist (`redis.ts` : Redis, repli en mémoire avec expiration, y compris si Redis échoue).
 5. **Ménage** : corriger les avertissements React Compiler (`react-hooks/immutability` : mutations directes de `game.gameData` dans `Deck`, `Discard`, `PlayerSet` ; `react-hooks/set-state-in-effect`) puis les repasser en erreur, découper le bundle (> 500 kB), retirer les `console.log`, unifier le style (indentation, Prettier), découper `Game.tsx`, `WaitingRoom.tsx`, `Dashboard.tsx`, README racine + `CLAUDE.md`, CI stricte (lint, build, tests bloquants), CORS sans `localhost:4173` en dur.
 
 ## Vérification

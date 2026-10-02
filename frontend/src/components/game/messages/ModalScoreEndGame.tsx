@@ -39,10 +39,8 @@ const ModalScoreEndGame = () => {
 
   const handleRequestNewGame = () => {
     if (!game || !userId) return;
-    const playersPlayAgain = game.playersPlayAgain || [];
-    playersPlayAgain.push(userId);
-    sendMessage("play-again", { room: game.id, playersPlayAgain });
-    return
+    // Le serveur ajoute l'émetteur à la liste des joueurs qui veulent rejouer
+    sendMessage("player-play-again", { room: game.id });
   }
 
   const handleChangePosition = () => {

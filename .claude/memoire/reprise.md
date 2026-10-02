@@ -1,11 +1,13 @@
-# Mémoire projet : état et reprise (maj 2026-10-01, fin phase 3)
+# Mémoire projet : état et reprise (maj 2026-10-02, fin phase 4)
 
 Fichier versionné pour reprendre le travail sur n'importe quel PC. Chargé par `CLAUDE.md`. À tenir à jour en fin de session.
 
 ## Où on en est
 - Socle posé et mergé (PR #22 `CLAUDE.md`/Makefile/skills/Mailpit, PR #23 flux de branches). `dev` est la branche par défaut, `main` la version stable.
 - Décisions validées : voir `docs/PLAN.md` (jeu entre amis, base jetable, garde-fous légers, Drizzle + backend TS, dernières majeures, Vitest, TDD obligatoire, ordre : tests → dépendances → Drizzle+TS → garde-fous → ménage).
-- Phases 1 (PR #24) et 2 (PR #25) mergées. **Phase 3 terminée** sur `feat/drizzle-ts` (détail dans `docs/PLAN.md`). Prochaine : phase 4 (garde-fous d'autorisation).
+- Phases 1 (PR #24), 2 (PR #25) et 3 (PR #26) mergées. **Phase 4 terminée** sur `feat/garde-fous` (détail dans `docs/PLAN.md`). Prochaine : phase 5 (ménage).
+  - Tests des garde-fous : `backend/src/routes/games-auth.api.test.ts`, `backend/src/websockets/guards.api.test.ts`. Pour jouer un coup en test, passer d'abord la partie au tour du joueur en base (`currentPlayer`), sinon `play-move` est refusé.
+  - Les tests d'API ont leurs propres `JWT_SECRET`/`COOKIE_SECRET` (`backend/vitest.config.ts`) ; le back refuse de démarrer sans eux.
   - Après un pull qui touche au schéma : `make db-reset` (base jetable). Le back applique les migrations au démarrage.
   - Dokploy : contexte de build `.` + Docker File `backend/Dockerfile` / `frontend/Dockerfile` (à régler au prochain déploiement).
   - Contrôleur parties : `loadGame` renvoie le format API (`players[].game_players`, `creatorPlayer`) ; les coups passent par `applyMove` (transaction + `FOR UPDATE`).
@@ -33,11 +35,11 @@ Restent :
 1. `GET /api/users` et `GET /api/users/:id` renvoient l'email à tout utilisateur connecté.
 2. `PATCH /api/game/join/:id` renvoie la partie lue avant l'ajout du joueur (liste de joueurs périmée).
 3. Formulaire d'inscription : bouton grisé tant que la case confidentialité (état React) n'est pas cliquée ; remplissage DOM programmatique insuffisant pour tester.
-4. Phase 4 : `gameData` client de confiance (`play-move`), `userId` pris dans le body, secrets par défaut codés en dur, blacklist en tableau qui grossit.
+4. Le front envoie encore `userId` dans `POST /api/game` et `PATCH /api/game/join/:id` (ignoré par le serveur, à retirer en phase 5).
 5. Non testé à la main : fin de partie (≥ 100), manche suivante, reconnexion.
 6. Salle d'attente : un joueur (même le créateur) qui quitte la page est retiré de la partie et n'est pas réintégré en revenant sur `/join/:id` (constaté avant et après phase 2).
 7. `restartGame` ajoute toujours le créateur à la nouvelle partie, même s'il n'a pas demandé à rejouer (comportement d'origine conservé).
-8. Le serveur fait confiance au `gameData` de `play-move` (phase 4).
+8. Le contenu du `gameData` de `play-move` reste de confiance (choix assumé) : seuls l'appartenance et le tour sont vérifiés.
 
 ## Astuces de test manuel
 - Comparer avant/après un changement visuel : `git worktree add <scratch>/old dev`, `npm ci`, Vite ancien sur :4173 (autorisé par le CORS) et nouveau sur un autre port avec `FRONTEND_HOST=http://localhost:<port>` pour le back. Les cookies `localhost` sont partagés entre ports : une connexion sert aux deux.

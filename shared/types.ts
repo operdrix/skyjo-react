@@ -16,14 +16,7 @@ export type Card = {
 };
 
 export type GameStep =
-  | "initialReveal"
-  | "draw"
-  | "replace-discard"
-  | "decide-deck"
-  | "replace-deck"
-  | "flip-deck"
-  | "endTurn"
-  | "endGame";
+  "initialReveal" | "draw" | "replace-discard" | "decide-deck" | "replace-deck" | "flip-deck" | "endTurn" | "endGame";
 
 export type GameData = {
   playersCards: Record<string, Card[]>;

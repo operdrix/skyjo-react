@@ -1,60 +1,81 @@
-name: Validate Code
+name: Validate
 
+# Lint, tests et build bloquants sur chaque push (hors main) et chaque PR vers dev ou main
 on:
   push:
     branches-ignore:
       - main
     paths-ignore:
       - '**.md'
-      - '.github/**'
-      - '!.github/workflows/validate.yml'
+  pull_request:
+    branches: [dev, main]
+
+permissions:
+  contents: read
 
 jobs:
   validate:
     runs-on: ubuntu-latest
+
+    # Tests d'API du back : MySQL (base skyjo_test créée par test/global-setup.ts) et Mailpit
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: skyjo
+          MYSQL_USER: skyjo
+          MYSQL_PASSWORD: skyjo
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+      mailpit:
+        image: axllent/mailpit
+        ports:
+          - 1025:1025
+          - 8025:8025
+
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_NAME: skyjo
+      DB_USER: skyjo
+      DB_PASSWORD: skyjo
+      DB_ROOT_PASSWORD: root
+
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Node.js (backend)
+      - name: Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '24'
           cache: 'npm'
-          cache-dependency-path: 'backend/package-lock.json'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
 
-      # Validation du backend
-      - name: Install backend dependencies
-        run: cd backend && npm ci
-        
-      - name: Lint backend
-        run: cd backend && npm run lint
-        continue-on-error: true  # Ne pas faire échouer le workflow pour des erreurs de lint
-        
-      - name: Build backend check
-        run: cd backend && npm run build --if-present
+      - name: Install
+        run: |
+          cd backend && npm ci
+          cd ../frontend && npm ci
 
-      - name: Set up Node.js (frontend)
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: 'frontend/package-lock.json'
+      - name: Lint
+        run: |
+          cd backend && npm run lint
+          cd ../frontend && npm run lint
 
-      # Validation du frontend
-      - name: Install frontend dependencies
-        run: cd frontend && npm ci
-        
-      - name: Lint frontend
-        run: cd frontend && npm run lint
-        continue-on-error: true  # Ne pas faire échouer le workflow pour des erreurs de lint
-        
-      - name: Build frontend check
-        run: cd frontend && npm run build --if-present
+      - name: Tests
+        run: |
+          cd backend && npm test
+          cd ../frontend && npm test
 
-      # Si vous avez des tests
-      # - name: Run backend tests
-      #   run: cd backend && npm test
-      #   
-      # - name: Run frontend tests
-      #   run: cd frontend && npm test 
+      - name: Build
+        run: |
+          cd backend && npm run build
+          cd ../frontend && npm run build

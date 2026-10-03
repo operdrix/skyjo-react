@@ -4,8 +4,6 @@ import Drawer from "./components/nav/Drawer";
 import RequirePseudo from "@/components/auth/RequirePseudo";
 
 const AppLayout = () => {
-
-
   return (
     <Drawer>
       <div className="flex flex-col min-h-screen font-kalam">
@@ -14,7 +12,7 @@ const AppLayout = () => {
         <Footer />
       </div>
     </Drawer>
-  )
-}
+  );
+};
 
-export default AppLayout
+export default AppLayout;

@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @plugin 'daisyui' {
   themes:
@@ -8,7 +8,7 @@
 
 /* Thèmes DaisyUI 5 ajustés pour garder le rendu de la v4 et la couleur du logo */
 @plugin 'daisyui/theme' {
-  name: 'light';
+  name: "light";
   default: true;
   --logo-text: #001f3f;
   /* hauteur des champs et boutons de DaisyUI 4 (3rem au lieu de 2.5rem) */
@@ -19,7 +19,7 @@
 }
 
 @plugin 'daisyui/theme' {
-  name: 'dark';
+  name: "dark";
   prefersdark: true;
   --logo-text: #4692e1;
   --size-field: 0.3rem;
@@ -62,29 +62,29 @@
 }
 
 @font-face {
-  font-family: 'Kalam';
-  src: url('/fonts/Kalam-Light.ttf') format('truetype');
+  font-family: "Kalam";
+  src: url("/fonts/Kalam-Light.ttf") format("truetype");
   font-weight: 300;
   font-style: normal;
 }
 
 @font-face {
-  font-family: 'Kalam';
-  src: url('/fonts/Kalam-Regular.ttf') format('truetype');
+  font-family: "Kalam";
+  src: url("/fonts/Kalam-Regular.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
 }
 
 @font-face {
-  font-family: 'Kalam';
-  src: url('/fonts/Kalam-Bold.ttf') format('truetype');
+  font-family: "Kalam";
+  src: url("/fonts/Kalam-Bold.ttf") format("truetype");
   font-weight: 700;
   font-style: normal;
 }
 
 @font-face {
-  font-family: 'Courgette';
-  src: url('/fonts/Courgette-Regular.ttf') format('truetype');
+  font-family: "Courgette";
+  src: url("/fonts/Courgette-Regular.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
 }

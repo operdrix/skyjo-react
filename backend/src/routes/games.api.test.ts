@@ -34,7 +34,7 @@ describe("parties", () => {
     const response = await app.inject({ method: "GET", url: `/api/game/${gameId}` });
 
     expect(response.statusCode).toBe(200);
-    expect(response.json<GameType>().players.map(player => player.id)).toEqual([alice.id]);
+    expect(response.json<GameType>().players.map((player) => player.id)).toEqual([alice.id]);
   });
 
   it("refuse la création sans être connecté", async () => {
@@ -55,7 +55,7 @@ describe("parties", () => {
 
     expect(response.statusCode).toBe(200);
     const game = (await app.inject({ method: "GET", url: `/api/game/${gameId}` })).json<GameType>();
-    expect(game.players.map(player => player.id).sort()).toEqual([alice.id, bob.id].sort());
+    expect(game.players.map((player) => player.id).sort()).toEqual([alice.id, bob.id].sort());
   });
 });
 
@@ -75,18 +75,24 @@ describe("aucune donnée sensible dans les réponses de partie", () => {
   it.each([
     ["GET /api/game/:id", (): InjectOptions => ({ method: "GET", url: `/api/game/${gameId}` })],
     ["GET /api/games", (): InjectOptions => ({ method: "GET", url: "/api/games" })],
-    ["PATCH /api/game/start/:id", (): InjectOptions => ({
-      method: "PATCH",
-      url: `/api/game/start/${gameId}`,
-      cookies: alice.cookies,
-      payload: {},
-    })],
-    ["PATCH /api/game/join/:id (déjà membre, partie en cours)", (): InjectOptions => ({
-      method: "PATCH",
-      url: `/api/game/join/${gameId}`,
-      cookies: bob.cookies,
-      payload: { userId: bob.id },
-    })],
+    [
+      "PATCH /api/game/start/:id",
+      (): InjectOptions => ({
+        method: "PATCH",
+        url: `/api/game/start/${gameId}`,
+        cookies: alice.cookies,
+        payload: {},
+      }),
+    ],
+    [
+      "PATCH /api/game/join/:id (déjà membre, partie en cours)",
+      (): InjectOptions => ({
+        method: "PATCH",
+        url: `/api/game/join/${gameId}`,
+        cookies: bob.cookies,
+        payload: { userId: bob.id },
+      }),
+    ],
   ])("%s", async (_name, request) => {
     const response = await app.inject(request());
 
@@ -132,7 +138,7 @@ describe("démarrage de partie", () => {
       ]);
 
       const game = (await app.inject({ method: "GET", url: `/api/game/${gameId}` })).json<GameType>();
-      const players = game.players.map(player => player.id).sort();
+      const players = game.players.map((player) => player.id).sort();
       const dealtTo = Object.keys(game.gameData.playersCards ?? {}).sort();
       expect(dealtTo, `tentative ${attempt}`).toEqual(players);
     }

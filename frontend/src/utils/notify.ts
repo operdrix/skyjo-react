@@ -1,4 +1,4 @@
-type NotifyType = 'join' | 'error' | 'warning' | 'play' | 'turnCard' | 'end';
+type NotifyType = "join" | "error" | "warning" | "play" | "turnCard" | "end";
 
 function isMobileDevice() {
   return /Mobi|Android/i.test(navigator.userAgent);
@@ -12,30 +12,29 @@ function vibrate() {
 
 function playSound(notificationType: NotifyType) {
   let beepAudio;
-  if (notificationType === 'play') {
-    beepAudio = new Audio('/sounds/play.wav');
-  } else if (notificationType === 'join') {
-    beepAudio = new Audio('/sounds/join.wav');
-  } else if (notificationType === 'turnCard') {
-    beepAudio = new Audio('/sounds/turnCard.wav');
-  } else if (notificationType === 'warning') {
-    beepAudio = new Audio('/sounds/warning.wav');
-  } else if (notificationType === 'end') {
-    beepAudio = new Audio('/sounds/end.wav');
+  if (notificationType === "play") {
+    beepAudio = new Audio("/sounds/play.wav");
+  } else if (notificationType === "join") {
+    beepAudio = new Audio("/sounds/join.wav");
+  } else if (notificationType === "turnCard") {
+    beepAudio = new Audio("/sounds/turnCard.wav");
+  } else if (notificationType === "warning") {
+    beepAudio = new Audio("/sounds/warning.wav");
+  } else if (notificationType === "end") {
+    beepAudio = new Audio("/sounds/end.wav");
   } else {
-    beepAudio = new Audio('/sounds/error.wav');
+    beepAudio = new Audio("/sounds/error.wav");
   }
 
-  beepAudio.play().catch(err => {
-    console.error('Impossible de jouer le son :', err);
+  beepAudio.play().catch(() => {
+    // Lecture bloquée par le navigateur (pas encore d'interaction) : on ignore
   });
 }
 
 function notify(notificationType: NotifyType, silence = false) {
-  console.log('Beep beep !', notificationType);
   if (!silence) playSound(notificationType);
 
-  if (isMobileDevice() && notificationType === 'play' && !silence) vibrate();
+  if (isMobileDevice() && notificationType === "play" && !silence) vibrate();
 }
 
 export default notify;

@@ -68,7 +68,10 @@ export async function getGames(query: GamesQuery) {
 
 // Liste des parties d'un joueur, sans les données de jeu
 export async function getUserGames(userId: string) {
-  const user = await db.query.users.findFirst({ where: (users, { eq }) => eq(users.id, userId), columns: { id: true } });
+  const user = await db.query.users.findFirst({
+    where: (users, { eq }) => eq(users.id, userId),
+    columns: { id: true },
+  });
   if (!user) {
     return { error: "L'utilisateur n'existe pas.", code: 404 };
   }
@@ -104,7 +107,10 @@ export async function createGame(userId: string | undefined, privateRoom = false
   if (!userId) {
     return { error: "L'identifiant du créateur est manquant", code: 400 };
   }
-  const [{ id: gameId }] = await executor.insert(games).values({ creator: userId, private: privateRoom }).$returningId();
+  const [{ id: gameId }] = await executor
+    .insert(games)
+    .values({ creator: userId, private: privateRoom })
+    .$returningId();
   await executor.insert(gamePlayers).values({ gameId, userId });
   logger.debug("[game controller] ID de la partie créée :", gameId);
 
@@ -151,7 +157,7 @@ async function applyGameAction(tx: Tx, game: GameType, action: string, body: Non
   if ((action === "start" || action === "finish") && userId && userId !== game.creator) {
     return CREATOR_ONLY;
   }
-  const isPlayer = game.players.some(player => player.id === userId);
+  const isPlayer = game.players.some((player) => player.id === userId);
   const player = and(eq(gamePlayers.gameId, game.id), eq(gamePlayers.userId, userId));
 
   switch (action) {
@@ -180,18 +186,23 @@ async function applyGameAction(tx: Tx, game: GameType, action: string, body: Non
       return;
 
     case "start":
-      await tx.update(games).set({
-        state: "playing",
-        roundNumber: game.roundNumber + 1,
-        gameData: rules.dealCards(game.players.map(player => player.id)),
-      }).where(eq(games.id, game.id));
+      await tx
+        .update(games)
+        .set({
+          state: "playing",
+          roundNumber: game.roundNumber + 1,
+          gameData: rules.dealCards(game.players.map((player) => player.id)),
+        })
+        .where(eq(games.id, game.id));
       return;
 
     case "finish":
       if (!body.winnerScore || !body.winner) {
         return { error: "Le score et le gagnant doivent être fournis.", code: 400 };
       }
-      await tx.update(games).set({ state: "finished", winner: body.winner, winnerScore: body.winnerScore })
+      await tx
+        .update(games)
+        .set({ state: "finished", winner: body.winner, winnerScore: body.winnerScore })
         .where(eq(games.id, game.id));
       return;
 
@@ -202,7 +213,11 @@ async function applyGameAction(tx: Tx, game: GameType, action: string, body: Non
 }
 
 // Mettre à jour les paramètres d'une partie
-export async function updateGameSettings(gameId: string, settings: { maxPlayers?: number; private?: boolean }, userId: string) {
+export async function updateGameSettings(
+  gameId: string,
+  settings: { maxPlayers?: number; private?: boolean },
+  userId: string,
+) {
   const game = await db.query.games.findFirst({ where: eq(games.id, gameId), columns: { state: true, creator: true } });
 
   if (!game) {
@@ -226,7 +241,7 @@ export async function updateGameSettings(gameId: string, settings: { maxPlayers?
 // enregistre les scores et termine la partie si un joueur atteint le score maximum
 export async function playMove(gameId: string, gameData: GameData, userId: string) {
   return applyMove(gameId, (current, game) => {
-    const isPlayer = game.players.some(player => player.id === userId);
+    const isPlayer = game.players.some((player) => player.id === userId);
     return isPlayer && current.currentPlayer === userId ? gameData : null;
   });
 }
@@ -265,7 +280,8 @@ async function saveScores(tx: Tx, game: GameType, gameData: GameData) {
   for (const { id, game_players: current } of game.players) {
     const score = roundScores[id] ?? 0;
     totals[id] = current.score + score;
-    await tx.update(gamePlayers)
+    await tx
+      .update(gamePlayers)
       .set({ score: totals[id], scoreByRound: [...current.scoreByRound, score] })
       .where(and(eq(gamePlayers.gameId, game.id), eq(gamePlayers.userId, id)));
   }
@@ -275,7 +291,7 @@ async function saveScores(tx: Tx, game: GameType, gameData: GameData) {
 // Révèle une carte pendant la phase de révélation initiale
 export async function revealInitialCard(gameId: string, playerId: string, cardId: string) {
   return applyMove(gameId, (gameData) => {
-    const card = gameData.playersCards?.[playerId]?.find(candidate => candidate.id === cardId);
+    const card = gameData.playersCards?.[playerId]?.find((candidate) => candidate.id === cardId);
     if (!card) {
       return null;
     }
@@ -288,11 +304,14 @@ export async function revealInitialCard(gameId: string, playerId: string, cardId
 export async function addPlayerPlayAgain(gameId: string, userId: string) {
   return db.transaction(async (tx) => {
     const game = await lockGame(tx, gameId);
-    if (!game?.players.some(player => player.id === userId)) {
+    if (!game?.players.some((player) => player.id === userId)) {
       return null;
     }
     if (!game.playersPlayAgain.includes(userId)) {
-      await tx.update(games).set({ playersPlayAgain: [...game.playersPlayAgain, userId] }).where(eq(games.id, gameId));
+      await tx
+        .update(games)
+        .set({ playersPlayAgain: [...game.playersPlayAgain, userId] })
+        .where(eq(games.id, gameId));
     }
     return (await loadGame(gameId, tx))!;
   });
@@ -310,9 +329,9 @@ export async function restartGame(gameId: string) {
     if (isError(created)) {
       throw new Error(created.error);
     }
-    const others = game.playersPlayAgain.filter(playerId => playerId !== game.creator);
+    const others = game.playersPlayAgain.filter((playerId) => playerId !== game.creator);
     if (others.length) {
-      await tx.insert(gamePlayers).values(others.map(userId => ({ gameId: created.gameId, userId })));
+      await tx.insert(gamePlayers).values(others.map((userId) => ({ gameId: created.gameId, userId })));
     }
     return created.gameId;
   });

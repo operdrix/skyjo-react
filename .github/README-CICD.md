@@ -46,7 +46,7 @@ Déploiement automatique
 feat/* ou fix/*  →  PR vers dev (branche par défaut)  →  PR de release dev → main  →  Dokploy
 ```
 
-- `dev` : intégration de toutes les nouveautés, PR validées par `validate-pr.yml`.
+- `dev` : intégration de toutes les nouveautés, PR validées par `validate.yml` (lint, tests, build bloquants).
 - `main` : version stable, c'est elle que Dokploy déploie (la recette peut suivre `dev` en changeant la branche source du service dans Dokploy).
 
 ## 🚀 Pour déployer
@@ -75,12 +75,13 @@ Ce fichier contient :
 - Build Args pour le frontend
 - Dépannage et bonnes pratiques
 
-## 🔧 Pas de GitHub Actions
+## 🔧 GitHub Actions : validation seulement
 
-Ce projet n'utilise **pas** de workflow GitHub Actions car :
+`.github/workflows/validate.yml` tourne sur chaque push (hors `main`) et chaque PR vers `dev` ou `main` : lint, tests (back avec MySQL et Mailpit en services) et build, tous bloquants.
+
+Le déploiement, lui, ne passe pas par GitHub Actions :
 - Dokploy gère le build directement depuis GitHub
 - Pas besoin de pousser les images sur Docker Hub
-- Simplification du pipeline CI/CD
 
 ## 📋 Fichiers de référence
 

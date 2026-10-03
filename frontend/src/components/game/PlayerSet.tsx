@@ -1,17 +1,21 @@
 import GameCard from "@/components/game/GameCard";
+import { flipCard, replaceWithDiscard, replaceWithDrawn, revealInitialCard } from "@/game/moves";
 import { useGame } from "@/hooks/Game";
 import { useUser } from "@/hooks/User";
 import { useWebSocket } from "@/hooks/WebSocket";
 import notify from "@/utils/notify";
 import { useState } from "react";
 
-const PlayerSet = ({ playerId, isCurrentPlayerSet = false, smallSet = false }: {
+const PlayerSet = ({
+  playerId,
+  isCurrentPlayerSet = false,
+  smallSet = false,
+}: {
   playerId: string;
   isCurrentPlayerSet?: boolean;
   smallSet?: boolean;
 }) => {
-
-  const { game, sound } = useGame();
+  const { game, setGame, sound } = useGame();
   const { userId } = useUser();
   const { sendMessage } = useWebSocket();
   const [loading, setLoading] = useState(false);
@@ -20,121 +24,74 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false, smallSet = false }: {
   if (!game.gameData) return null;
 
   const playerCards = game.gameData?.playersCards?.[playerId] || [];
-  const player = game.players.find(player => player.id === playerId);
-  const revealedCards = () => playerCards.filter(card => card.revealed).length;
-  const playerTurn = (
-    game.gameData.currentPlayer === playerId && game.gameData.currentStep !== 'endGame'
-  ) || (
-      game.gameData.currentStep === 'initialReveal' && revealedCards() < 2
-    );
+  const player = game.players.find((player) => player.id === playerId);
+  const revealedCards = () => playerCards.filter((card) => card.revealed).length;
+  const playerTurn =
+    (game.gameData.currentPlayer === playerId && game.gameData.currentStep !== "endGame") ||
+    (game.gameData.currentStep === "initialReveal" && revealedCards() < 2);
 
   const handleClickOnCard = async (cardId: string) => {
-
     if (!isCurrentPlayerSet) return; // si ce ne sont pas les cartes du joueur actuel, on ne fait rien
     const cardIndex = playerCards.findIndex((c) => c.id === cardId);
+    const step = game.gameData.currentStep;
 
-    if (game.gameData.currentStep === 'initialReveal') {
+    if (step === "initialReveal") {
       setLoading(true);
-      // Révéler la carte cliquée par le joueur actuel dans la limite de deux cartes
       if (revealedCards() <= 1) {
-        notify('turnCard', !sound);
-        game.gameData.playersCards[userId][cardIndex].revealed = true;
+        notify("turnCard", !sound);
+        // Affichage immédiat, le serveur renvoie ensuite la partie à jour
+        setGame({ ...game, gameData: revealInitialCard(game.gameData, userId, cardIndex) });
       }
-
-      console.log('Cartes révélées:', game.gameData.playersCards[userId]);
-
-      // Envoyer un message pour révéler la carte
       sendMessage("initial-turn-card", { room: game.id, playerId, cardId });
-      //sendMessage("play-move", { room: game.id, gameData: game.gameData });
       // petite tempo pour pas cliquer trop vite et bloquer le jeu
       setTimeout(() => {
         setLoading(false);
       }, 300);
-
+      return;
     }
 
-    if (game.gameData.currentStep === 'replace-discard') {
-      // On récupère la carte de la défausse (la dernière carte qui est normalement onHand = true)
-      // On la remplace par la carte cliquée par le joueur actuel
-      // On la remet dans le jeu du joueur actuel au même endroit que la carte cliquée
-      notify('turnCard', !sound);
-      const discardCard = game.gameData.discardPile[game.gameData.discardPile.length - 1];
-      const playerCard = playerCards[cardIndex];
-      discardCard.onHand = false;
-      playerCard.onHand = false;
-      playerCard.revealed = true;
-      game.gameData.playersCards[userId][cardIndex] = discardCard;
-      game.gameData.discardPile[game.gameData.discardPile.length - 1] = playerCard;
-
-      game.gameData.currentStep = 'endTurn';
-      // Envoyer un message pour remplacer la carte
-      sendMessage("play-move", { room: game.id, gameData: game.gameData });
+    // Échange avec la défausse, échange avec la carte piochée, ou carte retournée
+    const move = { "replace-discard": replaceWithDiscard, "decide-deck": replaceWithDrawn, "flip-deck": flipCard }[
+      step as string
+    ];
+    if (move) {
+      notify("turnCard", !sound);
+      sendMessage("play-move", { room: game.id, gameData: move(game.gameData, userId, cardIndex) });
     }
-
-    if (game.gameData.currentStep === 'decide-deck') {
-      // Etapes :
-      // 1. On défausse la carte cliquée
-      // 2. On remplace la carte cliquée par la carte du dessus de la pioche
-      // 3. On retire la carte du dessus de la pioche
-      // 4. On passe à l'étape suivante endTurn
-      notify('turnCard', !sound);
-      game.gameData.deckCards[0].onHand = false;
-      game.gameData.playersCards[userId][cardIndex].revealed = true;
-      game.gameData.discardPile.push(game.gameData.playersCards[userId][cardIndex]);
-      game.gameData.playersCards[userId][cardIndex] = game.gameData.deckCards[0];
-      game.gameData.deckCards.shift();
-      game.gameData.currentStep = 'endTurn';
-      sendMessage("play-move", { room: game.id, gameData: game.gameData });
-    }
-
-    if (game.gameData.currentStep === 'flip-deck') {
-      // Retourner la carte cliquée par le joueur actuel
-      notify('turnCard', !sound);
-      game.gameData.playersCards[userId][cardIndex].revealed = true;
-      game.gameData.currentStep = 'endTurn';
-      sendMessage("play-move", { room: game.id, gameData: game.gameData });
-    }
-  }
+  };
 
   const getGridColsClass = (length: number) => {
-    if (length === 12) return 'grid-cols-4';
-    if (length === 9) return 'grid-cols-3';
-    if (length === 6) return 'grid-cols-2';
-    return 'grid-cols-1';
+    if (length === 12) return "grid-cols-4";
+    if (length === 9) return "grid-cols-3";
+    if (length === 6) return "grid-cols-2";
+    return "grid-cols-1";
   };
 
   return (
     <>
       {/* <GameTurnNotifier isCurrentTurn={playerTurn && isCurrentPlayerSet} /> */}
 
-      <div className={`flex flex-col justify-center items-center ${smallSet ? 'small-set' : ''}`}>
+      <div className={`flex flex-col justify-center items-center ${smallSet ? "small-set" : ""}`}>
         <h2 className="indicator items-center gap-3 text-xl font-bold mb-2 min-h-8">
           {playerTurn && <span className="loading loading-dots loading-md"></span>}
           {player?.username} <OnlineStatus status={player?.game_players?.status} />
         </h2>
         <div className={`grid gap-1 md:gap-2 ${getGridColsClass(playerCards?.length || 0)}`}>
           {playerCards.map((card) => {
-
             let disabled = false;
             if (!isCurrentPlayerSet || !playerTurn) {
               disabled = true;
-            } else if (game.gameData.currentStep === 'initialReveal') {
+            } else if (game.gameData.currentStep === "initialReveal") {
               disabled = revealedCards() >= 2;
-            } else if (game.gameData.currentStep === 'draw') {
+            } else if (game.gameData.currentStep === "draw") {
               disabled = true;
-            } else if (game.gameData.currentStep === 'replace-discard') {
+            } else if (game.gameData.currentStep === "replace-discard") {
               disabled = false;
-            } else if (game.gameData.currentStep === 'flip-deck') {
+            } else if (game.gameData.currentStep === "flip-deck") {
               disabled = card.revealed;
             }
 
-            return (
-              <GameCard
-                key={card.id}
-                card={card}
-                disabled={disabled || loading}
-                onClick={handleClickOnCard}
-              />)
+            return <GameCard key={card.id} card={card} disabled={disabled || loading} onClick={handleClickOnCard} />;
           })}
         </div>
         {/* <p className="h-6">
@@ -142,16 +99,18 @@ const PlayerSet = ({ playerId, isCurrentPlayerSet = false, smallSet = false }: {
       </p> */}
       </div>
     </>
-  )
-}
+  );
+};
 
-const OnlineStatus = ({ status }: { status: 'connected' | 'disconnected' | undefined }) => {
+const OnlineStatus = ({ status }: { status: "connected" | "disconnected" | undefined }) => {
   if (!status) return null;
   return (
     // <span className={`indicator-item loading loading-ring loading-xs ${status === 'connected' ? 'text-success' : 'text-error'}`}></span>
     // <span className={`indicator-item text-xl ${status === 'connected' ? 'text-success' : 'text-error'}`}>•</span>
-    <sup className={`text-base font-mono -left-2 ${status === 'connected' ? 'text-success' : 'text-error'}`}>&bull;</sup>
-  )
-}
+    <sup className={`text-base font-mono -left-2 ${status === "connected" ? "text-success" : "text-error"}`}>
+      &bull;
+    </sup>
+  );
+};
 
 export default PlayerSet;

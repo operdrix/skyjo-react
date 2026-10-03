@@ -27,7 +27,7 @@ export async function closeApp(app: FastifyInstance) {
 
 // Cookies de session renvoyés par une réponse de l'API
 export function sessionCookies(response: { cookies: { name: string; value: string }[] }) {
-  return Object.fromEntries(response.cookies.map(cookie => [cookie.name, cookie.value]));
+  return Object.fromEntries(response.cookies.map((cookie) => [cookie.name, cookie.value]));
 }
 
 // Inscrit un joueur (email, pseudo, mot de passe) et retourne ses cookies de session
@@ -45,7 +45,9 @@ export async function createPlayer(app: FastifyInstance, name: string): Promise<
 
 // En-tête Cookie équivalent, pour les sockets
 export function cookieHeader(player: TestPlayer) {
-  return Object.entries(player.cookies).map(([name, value]) => `${name}=${value}`).join("; ");
+  return Object.entries(player.cookies)
+    .map(([name, value]) => `${name}=${value}`)
+    .join("; ");
 }
 
 export const SENSITIVE_FIELDS = ["password", "email", "verifiedToken", "resetPasswordToken"];
@@ -74,5 +76,5 @@ export function connectPlayer(url: string, player: TestPlayer): Socket {
 }
 
 export function nextEvent<T>(socket: Socket, event: string): Promise<T> {
-  return new Promise(resolve => socket.once(event, resolve));
+  return new Promise((resolve) => socket.once(event, resolve));
 }

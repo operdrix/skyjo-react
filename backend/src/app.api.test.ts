@@ -12,7 +12,10 @@ describe("secrets obligatoires", () => {
     delete process.env[name];
 
     const outcome = await buildApp().then(
-      async (app) => { await app.close(); return "démarrée"; },
+      async (app) => {
+        await app.close();
+        return "démarrée";
+      },
       (error: Error) => error.message,
     );
 

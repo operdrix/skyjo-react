@@ -1,7 +1,7 @@
-import { and, asc, eq, inArray, type SQL } from "drizzle-orm";
+import { and, asc, eq, getTableColumns, inArray, type SQL } from "drizzle-orm";
 import type { ErrorType, GameData, GameType } from "../../../shared/types.ts";
 import { db, type Db, type Tx } from "../db/index.ts";
-import { gamePlayers, games } from "../db/schema.ts";
+import { gamePlayers, games, users } from "../db/schema.ts";
 import * as rules from "../game/rules.ts";
 import { logger } from "../utils/logger.ts";
 
@@ -15,34 +15,47 @@ const CREATOR_ONLY = { error: "Seul le créateur de la partie peut faire cela.",
 const isError = <T extends object>(value: T | ErrorType): value is ErrorType => "error" in value;
 
 // Seuls attributs de joueur exposés dans les réponses de partie
-const PUBLIC_USER = { columns: { id: true, username: true } } as const;
+const PUBLIC_USER = { id: users.id, username: users.username };
 
-// Partie avec ses joueurs et son créateur, au format attendu par le front
-function findGames(executor: Executor, where?: SQL, withGameData = true) {
-  return executor.query.games.findMany({
-    where,
-    columns: withGameData ? undefined : { gameData: false },
-    with: {
-      creatorPlayer: PUBLIC_USER,
-      players: { with: { user: PUBLIC_USER }, orderBy: [asc(gamePlayers.createdAt)] },
-    },
-  });
-}
+// Partie avec ses joueurs et son créateur, au format attendu par le front.
+// Requêtes simples plutôt que l'API relationnelle de Drizzle : ses LEFT JOIN LATERAL ne passent pas sur MariaDB.
+async function findGames(executor: Executor, where?: SQL, withGameData = true): Promise<GameType[]> {
+  const { gameData, ...summaryColumns } = getTableColumns(games);
+  const rows = await executor
+    .select(withGameData ? { ...summaryColumns, gameData } : summaryColumns)
+    .from(games)
+    .where(where);
+  if (!rows.length) {
+    return [];
+  }
 
-type GameRow = Awaited<ReturnType<typeof findGames>>[number];
+  const gameIds = rows.map((row) => row.id);
+  const creatorIds = [...new Set(rows.map((row) => row.creator))];
+  const [players, creators] = await Promise.all([
+    executor
+      .select({ gamePlayer: gamePlayers, user: PUBLIC_USER })
+      .from(gamePlayers)
+      .innerJoin(users, eq(users.id, gamePlayers.userId))
+      .where(inArray(gamePlayers.gameId, gameIds))
+      .orderBy(asc(gamePlayers.createdAt)),
+    executor.select(PUBLIC_USER).from(users).where(inArray(users.id, creatorIds)),
+  ]);
 
-function toGameType(row: GameRow): GameType {
-  const { players, creatorPlayer, ...game } = row;
-  return {
-    ...game,
-    creatorPlayer,
-    players: players.map(({ user, ...gamePlayer }) => ({ ...user, game_players: gamePlayer })),
-  } as unknown as GameType;
+  return rows.map(
+    (game) =>
+      ({
+        ...game,
+        creatorPlayer: creators.find((creator) => creator.id === game.creator) ?? null,
+        players: players
+          .filter(({ gamePlayer }) => gamePlayer.gameId === game.id)
+          .map(({ user, gamePlayer }) => ({ ...user, game_players: gamePlayer })),
+      }) as unknown as GameType,
+  );
 }
 
 async function loadGame(gameId: string, executor: Executor = db): Promise<GameType | null> {
-  const [row] = await findGames(executor, eq(games.id, gameId));
-  return row ? toGameType(row) : null;
+  const [game] = await findGames(executor, eq(games.id, gameId));
+  return game ?? null;
 }
 
 // Liste des parties avec filtres
@@ -62,8 +75,7 @@ export async function getGames(query: GamesQuery) {
     conditions.push(inArray(games.id, memberGames));
   }
 
-  const rows = await findGames(db, conditions.length ? and(...conditions) : undefined);
-  return rows.map(toGameType);
+  return findGames(db, conditions.length ? and(...conditions) : undefined);
 }
 
 // Liste des parties d'un joueur, sans les données de jeu
@@ -76,8 +88,7 @@ export async function getUserGames(userId: string) {
     return { error: "L'utilisateur n'existe pas.", code: 404 };
   }
   const memberGames = db.select({ id: gamePlayers.gameId }).from(gamePlayers).where(eq(gamePlayers.userId, userId));
-  const rows = await findGames(db, inArray(games.id, memberGames), false);
-  return rows.map(toGameType);
+  return findGames(db, inArray(games.id, memberGames), false);
 }
 
 // Supprimer une partie

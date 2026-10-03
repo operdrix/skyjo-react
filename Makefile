@@ -16,15 +16,15 @@ env: ## Crée les .env depuis les .env.example s'ils manquent
 	@test -f backend/.env || { cp backend/.env.example backend/.env; echo "backend/.env créé"; }
 	@test -f frontend/.env || { cp frontend/.env.example frontend/.env; echo "frontend/.env créé"; }
 
-db-up: env ## Démarre MySQL (:3306), phpMyAdmin (:8080) et Mailpit (:8025)
-	$(COMPOSE) up -d --wait mysql
+db-up: env ## Démarre MariaDB (:3306), phpMyAdmin (:8080) et Mailpit (:8025)
+	$(COMPOSE) up -d --wait db
 	$(COMPOSE) up -d phpmyadmin mailpit
 
 db-down: ## Arrête toute la stack Docker (profil full inclus)
 	$(COMPOSE) --profile full down
 
 db-reset: db-up ## Vide la base de dev (jetable) et applique les migrations Drizzle
-	$(COMPOSE) exec -T mysql sh -c 'mysql -uroot -p"$$MYSQL_ROOT_PASSWORD" -e "DROP DATABASE IF EXISTS $$MYSQL_DATABASE; CREATE DATABASE $$MYSQL_DATABASE; GRANT ALL PRIVILEGES ON $$MYSQL_DATABASE.* TO \`$$MYSQL_USER\`@\`%\`;"'
+	$(COMPOSE) exec -T db sh -c 'mariadb -uroot -p"$$MARIADB_ROOT_PASSWORD" -e "DROP DATABASE IF EXISTS $$MARIADB_DATABASE; CREATE DATABASE $$MARIADB_DATABASE; GRANT ALL PRIVILEGES ON $$MARIADB_DATABASE.* TO \`$$MARIADB_USER\`@\`%\`;"'
 	cd backend && npm run db:migrate
 
 db-generate: ## Génère une migration Drizzle depuis backend/src/db/schema.ts

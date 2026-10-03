@@ -22,7 +22,7 @@ Branche `feat/socle-projet`. Aucun changement de code applicatif.
   - `skills/verifie/SKILL.md` : porte de sortie avant commit/PR, lance `make check` (lint + tests + build back et front) et rapporte les échecs.
   - `skills/demarre/SKILL.md` : lance/relance la pile locale (`make dev`), vérifie MySQL puis back (:3000) et front (:5173).
   - Les skills existants `/branche` et `/livre` restent le circuit de livraison.
-- `Makefile` à la racine : `install`, `db-up` / `db-down` (`docker-compose.yml` racine, projet `skyjo` : MySQL, Redis, phpMyAdmin, Mailpit ; profil `full` avec back et front en images, `make full`), `env` (copie les `.env.example` s'ils manquent), `dev` (db + back + front), `back`, `front`, `test`, `lint`, `build`, `check` (lint + test + build), `clean`.
+- `Makefile` à la racine : `install`, `db-up` / `db-down` (`docker-compose.yml` racine, projet `skyjo` : MySQL, phpMyAdmin, Mailpit (Redis retiré en phase 5) ; profil `full` avec back et front en images, `make full`), `env` (copie les `.env.example` s'ils manquent), `dev` (db + back + front), `back`, `front`, `test`, `lint`, `build`, `check` (lint + test + build), `clean`.
 
 ## Phases
 TDD obligatoire à partir de la phase 1 : chaque comportement est d'abord couvert par un test rouge.
@@ -51,7 +51,15 @@ TDD obligatoire à partir de la phase 1 : chaque comportement est d'abord couver
    - Websockets : `play-move` accepté seulement d'un membre dont c'est le tour (`currentPlayer` lu en base, sous verrou) ; `initial-turn-card` ne révèle que les cartes de l'émetteur ; `player-play-again` ajoute l'émetteur s'il est membre (la liste du client est ignorée) ; `start-game`, `update-game-params`, `restart-game` réservés au créateur. Refus : événement `error` à l'émetteur.
    - Correctif : le front émettait `play-again` au lieu de `player-play-again` (rejouer ne marchait pas).
    - `buildApp()` refuse de démarrer sans `JWT_SECRET`/`COOKIE_SECRET`. Une seule blacklist (`redis.ts` : Redis, repli en mémoire avec expiration, y compris si Redis échoue).
-5. **Ménage** : corriger les avertissements React Compiler (`react-hooks/immutability` : mutations directes de `game.gameData` dans `Deck`, `Discard`, `PlayerSet` ; `react-hooks/set-state-in-effect`) puis les repasser en erreur, découper le bundle (> 500 kB), retirer les `console.log`, unifier le style (indentation, Prettier), découper `Game.tsx`, `WaitingRoom.tsx`, `Dashboard.tsx`, README racine + `CLAUDE.md`, CI stricte (lint, build, tests bloquants), CORS sans `localhost:4173` en dur.
+5. **Inscription rapide** (branche `feat/inscription-rapide`) : **fait**
+   - But : jouer le plus vite possible, données personnelles minimales (pseudo + email, plus de nom/prénom ni de vérification d'email).
+   - Better Auth remplace le système maison (JWT, refresh, blacklist, bcrypt, Redis) : sessions en base (`sessions`, `accounts`, `verifications`), cookie httpOnly, `BETTER_AUTH_SECRET` obligatoire.
+   - Connexion Google en premier (« Continuer avec Google »), email + mot de passe en option. Nouveau joueur Google : écran de pseudo pré-rempli avec son prénom. Compte email existant avec la même adresse : relié automatiquement. Photo Google non conservée.
+   - Pseudo obligatoire (3 à 30 caractères, accents autorisés, unique sans tenir compte de la casse). Tant qu'il manque : 403 sur l'API de jeu, socket refusé, redirection front vers `/auth/pseudo`.
+   - Mot de passe oublié conservé (mail via Mailpit / Gmail). Emails plus jamais exposés par `/api/users`.
+   - Migration initiale régénérée (base jetable) : `make db-reset` après pull.
+   - Google à configurer : `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` (voir `backend/.env.example`) ; sans eux le bouton affiche un message et l'email reste disponible.
+6. **Ménage** : corriger les avertissements React Compiler (`react-hooks/immutability` : mutations directes de `game.gameData` dans `Deck`, `Discard`, `PlayerSet` ; `react-hooks/set-state-in-effect`) puis les repasser en erreur, découper le bundle (> 500 kB), retirer les `console.log`, unifier le style (indentation, Prettier), découper `Game.tsx`, `WaitingRoom.tsx`, `Dashboard.tsx`, README racine + `CLAUDE.md`, CI stricte (lint, build, tests bloquants), CORS sans `localhost:4173` en dur.
 
 ## Vérification
 - Chaque phase : `npm run lint`, `npm test`, `npm run build` (front et back) verts.

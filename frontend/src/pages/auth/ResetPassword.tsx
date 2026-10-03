@@ -1,21 +1,25 @@
 import CustomField from '@/components/forms/CustomField';
 import { MessageType } from '@/components/Modal';
-import { api } from '@/services/apiService';
+import { authClient } from '@/lib/authClient';
+import { authErrorMessage } from '@/lib/authErrors';
 import { Field, Form, Formik } from 'formik';
 import { useState } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import * as yup from 'yup';
 
 
 function ResetPassword() {
-  const { token } = useParams<string>();
+  // Better Auth redirige ici avec ?token=… (ou ?error=INVALID_TOKEN si le lien a expiré)
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token') ?? '';
   const [message, setMessage] = useState<MessageType | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const linkError = searchParams.get('error');
+  const [errorMessage, setErrorMessage] = useState<string | null>(linkError ? authErrorMessage({ code: linkError }) : null);
   const [initialValues] = useState({ newPassword: "" });
   const [loading, setLoading] = useState<boolean>(false);
 
   const validationSchema = yup.object().shape({
-    newPassword: yup.string().required("Le mot de passe est requis"),
+    newPassword: yup.string().min(8, "8 caractères minimum").required("Le mot de passe est requis"),
     passwordConfirm: yup.string()
       .oneOf([yup.ref("newPassword")], "Les mots de passe ne correspondent pas")
       .required("La confirmation du mot de passe est requise"),
@@ -24,10 +28,10 @@ function ResetPassword() {
   const handleSubmit = async (values: typeof initialValues) => {
     setLoading(true);
 
-    const response = await api.post(`password-reset/${token}`, values);
+    const { error } = await authClient.resetPassword({ newPassword: values.newPassword, token });
 
-    if (response.error) {
-      setErrorMessage(response.error);
+    if (error) {
+      setErrorMessage(authErrorMessage(error));
     } else {
       setMessage({
         title: 'Mot de passe réinitialisé',

@@ -1,8 +1,6 @@
 import { buildApp } from "./app.ts";
 //bdd
 import { pool, runMigrations } from "./db/index.ts";
-//redis
-import { initRedis } from "./redis.ts";
 //logger
 import { logger } from "./utils/logger.ts";
 
@@ -12,7 +10,7 @@ dotenv.config({ quiet: true });
 
 // Vérification des secrets obligatoires en production
 if (process.env.NODE_ENV === "production") {
-	const requiredSecrets = ["JWT_SECRET", "COOKIE_SECRET"];
+	const requiredSecrets = ["BETTER_AUTH_SECRET"];
 	const missingSecrets = requiredSecrets.filter(secret => !process.env[secret]);
 
 	if (missingSecrets.length > 0) {
@@ -67,9 +65,6 @@ try {
 	logger.error("Erreur critique :", (error as Error).message);
 	process.exit(1); // Arrêter le processus en cas d'échec total
 }
-
-// Initialiser Redis
-await initRedis();
 
 const app = await buildApp();
 

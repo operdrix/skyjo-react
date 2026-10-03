@@ -1,6 +1,7 @@
 import CustomField from '@/components/forms/CustomField';
 import { MessageType } from '@/components/Modal';
-import { api } from '@/services/apiService';
+import { authClient } from '@/lib/authClient';
+import { authErrorMessage } from '@/lib/authErrors';
 import { Field, Form, Formik } from 'formik';
 import { useState } from "react";
 import { Link } from "react-router";
@@ -21,10 +22,13 @@ function RequestResetPassword() {
   const handleSubmit = async (values: typeof initialValues) => {
     setLoading(true);
 
-    const response = await api.post('password-reset-request', values);
+    const { error } = await authClient.requestPasswordReset({
+      email: values.email,
+      redirectTo: `${window.location.origin}/auth/password-reset`,
+    });
 
-    if (response.error) {
-      setErrorMessage(response.error);
+    if (error) {
+      setErrorMessage(authErrorMessage(error));
     } else {
       setMessage({
         title: 'Mail envoyé',

@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 
 const Create = () => {
-  const { userId, loading: userLoading } = useUser();
+  const { loading: userLoading } = useUser();
   const { socket, isConnected, loading: wbLoading } = useWebSocket()
   const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ const Create = () => {
   const handleCreateGame = useCallback(async (privateRoom: boolean) => {
     setLoading(true);
     if (socket && isConnected) {
-      const response = await api.post('game', { userId, privateRoom });
+      const response = await api.post('game', { privateRoom });
 
       if (response.error) {
         setLoading(false);
@@ -23,7 +23,7 @@ const Create = () => {
       }
     }
     setLoading(false);
-  }, [socket, isConnected, userId, navigate]);
+  }, [socket, isConnected, navigate]);
 
   // Créer une partie dès que le composant est monté
   useEffect(() => {

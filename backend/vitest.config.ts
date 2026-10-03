@@ -20,9 +20,9 @@ export default defineConfig({
           env: {
             NODE_ENV: "test",
             DB_NAME: "skyjo_test",
-            REDIS_URL: "",
-            JWT_SECRET: "secret-jwt-de-test",
-            COOKIE_SECRET: "secret-cookie-de-test",
+            BETTER_AUTH_SECRET: "secret-better-auth-de-test-32-caracteres",
+            GOOGLE_CLIENT_ID: "",
+            GOOGLE_CLIENT_SECRET: "",
             SMTP_HOST: "localhost",
             SMTP_PORT: "1025",
           },

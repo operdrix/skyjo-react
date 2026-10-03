@@ -5,14 +5,12 @@
   "author": "Olivier Perdrix",
   "type": "module",
   "dependencies": {
-    "@fastify/cookie": "^11.1.2",
     "@fastify/cors": "^11.3.0",
     "@fastify/helmet": "^13.1.1",
-    "@fastify/jwt": "^10.2.2",
     "@fastify/rate-limit": "^11.2.0",
     "@fastify/swagger": "^9.9.1",
     "@fastify/swagger-ui": "^6.1.1",
-    "bcryptjs": "^3.0.3",
+    "better-auth": "^1.7.7",
     "chalk": "^6.0.1",
     "dotenv": "^18.0.5",
     "drizzle-orm": "^0.45.3",
@@ -21,7 +19,6 @@
     "mysql2": "^3.24.5",
     "nanoid": "^6.0.1",
     "nodemailer": "^10.0.13",
-    "redis": "^6.3.0",
     "socket.io": "^4.8.4"
   },
   "scripts": {

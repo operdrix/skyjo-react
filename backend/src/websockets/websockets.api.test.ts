@@ -1,7 +1,7 @@
 import { io as connectClient, type Socket } from "socket.io-client";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { FastifyInstance } from "fastify";
-import { closeApp, type TestPlayer, createPlayer, setupApp } from "../../test/helpers.ts";
+import { closeApp, cookieHeader, type TestPlayer, createPlayer, setupApp } from "../../test/helpers.ts";
 
 let app: FastifyInstance;
 let alice: TestPlayer;
@@ -31,8 +31,8 @@ function connect(cookie?: string): Promise<{ socket: Socket; error: Error | null
 }
 
 describe("websockets", () => {
-  it("accepte un joueur connecté via son cookie accessToken", async () => {
-    const { socket, error } = await connect(`accessToken=${alice.cookies.accessToken}`);
+  it("accepte un joueur connecté via son cookie de session", async () => {
+    const { socket, error } = await connect(cookieHeader(alice));
     socket.close();
     expect(error).toBeNull();
   });
@@ -40,6 +40,6 @@ describe("websockets", () => {
   it("refuse une connexion sans cookie", async () => {
     const { socket, error } = await connect();
     socket.close();
-    expect(error?.message).toBe("Authentication token missing");
+    expect(error?.message).toBe("Session absente");
   });
 });

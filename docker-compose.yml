@@ -1,5 +1,5 @@
 # Docker Compose pour le développement local et la recette.
-# Par défaut : infrastructure seule (MySQL, phpMyAdmin, Mailpit, Redis), le back et le front tournent via `make`.
+# Par défaut : infrastructure seule (MySQL, phpMyAdmin, Mailpit), le back et le front tournent via `make`.
 # Profil `full` : ajoute le back et le front en images (`make full`).
 # Les identifiants MySQL viennent de backend/.env (source unique, via --env-file dans le Makefile).
 
@@ -49,18 +49,6 @@ services:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
 
-  # Blacklist des tokens JWT (sinon repli en mémoire, comportement différent de la production)
-  redis:
-    image: redis:7-alpine
-    container_name: skyjo-redis-dev
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      timeout: 5s
-      retries: 10
-
   backend:
     profiles: [full]
     build:
@@ -72,7 +60,6 @@ services:
     environment:
       DB_HOST: mysql
       DB_PORT: 3306
-      REDIS_URL: redis://redis:6379
       SMTP_HOST: mailpit
       SMTP_PORT: 1025
       FRONTEND_HOST: http://localhost:8081
@@ -80,8 +67,6 @@ services:
       - "3000:3000"
     depends_on:
       mysql:
-        condition: service_healthy
-      redis:
         condition: service_healthy
       mailpit:
         condition: service_started

@@ -8,6 +8,7 @@ import fastify, { type FastifyReply, type FastifyRequest } from "fastify";
 import { fromNodeHeaders } from "better-auth/node";
 import { Server as SocketServer } from "socket.io";
 import { AUTH_BASE_URL, createAuth, USERNAME_REQUIRED } from "./auth.ts";
+import { frontendOrigins } from "./utils/origins.ts";
 //routes
 import { gamesRoutes } from "./routes/games.ts";
 import { usersRoutes } from "./routes/users.ts";
@@ -37,7 +38,7 @@ export async function buildApp() {
 	// Socket.io branché sur le serveur HTTP de Fastify (remplace fastify-socket.io, abandonné)
 	app.decorate("io", new SocketServer(app.server, {
 		cors: {
-			origin: [process.env.FRONTEND_HOST || "http://localhost:5173", "http://localhost:4173"],
+			origin: frontendOrigins(process.env.FRONTEND_HOST),
 			credentials: true,
 		},
 	}));
@@ -77,8 +78,7 @@ export async function buildApp() {
 			skipOnError: true,
 		})
 		.register(cors, {
-			// Autoriser la valeur définie via FRONTEND_HOST ET localhost:4173 pour le dev (Vite)
-			origin: [process.env.FRONTEND_HOST || "http://localhost:5173", "http://localhost:4173"],
+			origin: frontendOrigins(process.env.FRONTEND_HOST),
 			credentials: true,
 		})
 		.register(fastifySwagger, {

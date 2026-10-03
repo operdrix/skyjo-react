@@ -5,6 +5,7 @@ import { username } from "better-auth/plugins";
 import { db } from "./db/index.ts";
 import * as schema from "./db/schema.ts";
 import { logger } from "./utils/logger.ts";
+import { frontendOrigins } from "./utils/origins.ts";
 import { renderTemplate, sendMail } from "./utils/mailer.ts";
 
 // Pseudo : lettres (accents compris), chiffres, espace, point, tiret, souligné
@@ -40,7 +41,7 @@ export function createAuth(secret: string) {
 		secret,
 		baseURL: AUTH_BASE_URL,
 		basePath: "/api/auth",
-		trustedOrigins: [process.env.FRONTEND_HOST || "http://localhost:5173", "http://localhost:4173"],
+		trustedOrigins: frontendOrigins(process.env.FRONTEND_HOST),
 		database: drizzleAdapter(db, { provider: "mysql", schema }),
 		user: { modelName: "users" },
 		session: { modelName: "sessions" },

@@ -2,108 +2,46 @@ import App from '@/App.tsx'
 import AppLayout from '@/AppLayout.tsx'
 import { UserProvider } from '@/context/UserProvider.tsx'
 import '@/index.css'
-import AuthLayout from '@/pages/auth/AuthLayout.tsx'
-import Login from '@/pages/auth/Login.tsx'
-import Register from '@/pages/auth/Register.tsx'
-import ChoosePseudo from '@/pages/auth/ChoosePseudo.tsx'
-import Create from '@/pages/game/Create.tsx'
-import Game from '@/pages/game/Game.tsx'
-import GameLayout from '@/pages/game/GameLayout.tsx'
-import JoinPublic from '@/pages/game/JoinPublic.tsx'
-import WaitingRoom from '@/pages/game/WaitingRoom.tsx'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter } from 'react-router'
 import { RouterProvider } from 'react-router/dom'
-import RequestResetPassword from './pages/auth/RequestResetPassword'
-import ResetPassword from './pages/auth/ResetPassword'
-import Dashboard from './pages/dashboard/Dashboard'
-import RulesPage from './pages/game/Rules'
-import PrivacyPage from './pages/privacy/PrivacyPage'
+
+// Page chargée à la demande : chaque route a son propre fichier JS (l'accueil reste dans le bundle principal)
+const page = (load: () => Promise<{ default: React.ComponentType }>) => async () => ({ Component: (await load()).default })
 
 const router = createBrowserRouter([
   {
     path: '/',
     element: <AppLayout />,
     children: [
-      {
-        path: '/',
-        element: <App />
-      },
-      {
-        path: '/privacy',
-        element: <PrivacyPage />
-      },
-      {
-        path: '/rules',
-        element: <RulesPage />
-      }
+      { path: '/', element: <App /> },
+      { path: '/privacy', lazy: page(() => import('@/pages/privacy/PrivacyPage')) },
+      { path: '/rules', lazy: page(() => import('@/pages/game/Rules')) },
+      { path: '/dashboard', lazy: page(() => import('@/pages/dashboard/Dashboard')) },
     ]
   },
   {
+    // Pages de jeu : connexion websocket
     path: '/',
-    element: <GameLayout />,
+    lazy: page(() => import('@/pages/game/GameLayout')),
     children: [
-      {
-        // Lien pour créer une partie
-        path: '/create',
-        element: <Create />
-      },
-      {
-        // Lien pour consulter les parties publiques
-        path: '/public-rooms',
-        element: <JoinPublic />
-      },
-      {
-        // Salle de jeu
-        path: '/game/:gameId',
-        element: <Game />
-      },
-      {
-        // Lien de la salle d'attente
-        path: '/join/:gameId',
-        element: <WaitingRoom />
-      },
-
-
+      { path: '/create', lazy: page(() => import('@/pages/game/Create')) },
+      { path: '/public-rooms', lazy: page(() => import('@/pages/game/JoinPublic')) },
+      { path: '/game/:gameId', lazy: page(() => import('@/pages/game/Game')) },
+      { path: '/join/:gameId', lazy: page(() => import('@/pages/game/WaitingRoom')) },
     ]
   },
   {
     path: '/auth',
-    element: <AuthLayout />,
+    lazy: page(() => import('@/pages/auth/AuthLayout')),
     children: [
-      {
-        path: '/auth/login',
-        element: <Login />
-      },
-      {
-        path: '/auth/register',
-        element: <Register />
-      },
-      {
-        path: '/auth/pseudo',
-        element: <ChoosePseudo />
-      },
-      {
-        path: '/auth/request-reset-password',
-        element: <RequestResetPassword />
-      },
-      {
-        path: '/auth/password-reset',
-        element: <ResetPassword />
-      }
+      { path: '/auth/login', lazy: page(() => import('@/pages/auth/Login')) },
+      { path: '/auth/register', lazy: page(() => import('@/pages/auth/Register')) },
+      { path: '/auth/pseudo', lazy: page(() => import('@/pages/auth/ChoosePseudo')) },
+      { path: '/auth/request-reset-password', lazy: page(() => import('@/pages/auth/RequestResetPassword')) },
+      { path: '/auth/password-reset', lazy: page(() => import('@/pages/auth/ResetPassword')) },
     ]
   },
-  {
-    path: '/dashboard',
-    element: <AppLayout />,
-    children: [
-      {
-        path: '/dashboard',
-        element: <Dashboard />
-      }
-    ]
-  }
-
 ])
 
 createRoot(document.getElementById('root')!).render(
@@ -111,4 +49,3 @@ createRoot(document.getElementById('root')!).render(
     <RouterProvider router={router} />
   </UserProvider>
 )
-// Test PR workflow

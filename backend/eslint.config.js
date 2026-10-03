@@ -23,7 +23,11 @@ export default tseslint.config(
       "semi": ["warn", "always"],
       "indent": ["off", 2],
       "quotes": ["warn", "double", { avoidEscape: true }],
-      "no-console": "off" // Permettre console.log pour le développement
+      "no-console": "error" // Passer par src/utils/logger
     }
+  },
+  {
+    files: ["src/utils/logger.ts"],
+    rules: { "no-console": "off" }
   }
 );

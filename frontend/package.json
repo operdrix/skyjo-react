@@ -14,7 +14,6 @@
   "dependencies": {
     "better-auth": "^1.7.7",
     "formik": "^2.4.9",
-    "jwt-decode": "^4.0.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-router": "^8.4.0",

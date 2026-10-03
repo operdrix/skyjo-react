@@ -48,11 +48,9 @@ const WaitingRoom = () => {
           }
         } else if (response.error) {
           // la partie n'existe pas
-          console.error('Error fetching game:', response.error);
           setError("La partie n'existe pas.");
         }
-      } catch (error) {
-        console.error('Network error:', error);
+      } catch {
         setError("Une erreur réseau s'est produite.");
       } finally {
         setLoading(false);

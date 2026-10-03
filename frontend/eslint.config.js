@@ -19,6 +19,7 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      'no-console': 'error',
       'react-hooks/immutability': 'error',
       'react-hooks/set-state-in-effect': 'error',
       'react-refresh/only-export-components': [

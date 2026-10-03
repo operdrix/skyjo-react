@@ -38,7 +38,6 @@ const Game = () => {
   //On récupère les informations de la partie
   useEffect(() => {
     if (!gameId || !userId) return;
-    console.log('récupération de la partie', gameId);
 
     const getGame = async () => {
       setLoading(true);
@@ -51,11 +50,9 @@ const Game = () => {
           }
         } else if (response.error) {
           // la partie n'existe pas
-          console.error('Error fetching game:', response.error);
           setError("La partie n'existe pas.");
         }
-      } catch (error) {
-        console.error('Network error:', error);
+      } catch {
         setError("Une erreur réseau s'est produite.");
       } finally {
         setWaitingDeal(false);
@@ -86,28 +83,23 @@ const Game = () => {
     if (!socket || !isConnected || error) return;
 
     const handleWaitingDeal = () => {
-      console.log("Waiting deal");
       setWaitingDeal(true);
     }
 
     const handleStartGame = (updatedGame: GameType) => {
-      console.log("Game started:", updatedGame);
       setGame(updatedGame);
       setWaitingDeal(false);
     };
 
     const handlePlayerJoined = (updatedGame: GameType) => {
-      console.log("Player joined game:", updatedGame);
       setGame(updatedGame);
     };
 
     const handlePlayerLeft = (updatedGame: GameType) => {
-      console.log("Player left game:", updatedGame);
       setGame(updatedGame);
     }
 
     const handlePlayMove = (updatedGame: GameType) => {
-      console.log("Play move:", updatedGame.gameData);
       setGame(updatedGame);
     }
 
@@ -117,9 +109,7 @@ const Game = () => {
     }) => {
       if (!gameId || !players) return;
       if (!userId) return;
-      console.log("Go to new game:", gameId, players);
       if (players.includes(userId)) {
-        console.log(`Redirect to new game /game/${gameId}`);
         navigate(`/game/${gameId}`);
       } else {
         navigate(`/`);

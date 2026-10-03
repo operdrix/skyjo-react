@@ -19,7 +19,6 @@ export const GameProvider = ({ children }: {
   });
 
   useEffect(() => {
-    console.log('Sound:', sound);
 
     localStorage.setItem('sound', sound.toString());
   }, [sound]);

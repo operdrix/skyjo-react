@@ -26,13 +26,12 @@ function playSound(notificationType: NotifyType) {
     beepAudio = new Audio('/sounds/error.wav');
   }
 
-  beepAudio.play().catch(err => {
-    console.error('Impossible de jouer le son :', err);
+  beepAudio.play().catch(() => {
+    // Lecture bloquée par le navigateur (pas encore d'interaction) : on ignore
   });
 }
 
 function notify(notificationType: NotifyType, silence = false) {
-  console.log('Beep beep !', notificationType);
   if (!silence) playSound(notificationType);
 
   if (isMobileDevice() && notificationType === 'play' && !silence) vibrate();

@@ -1,6 +1,6 @@
-import { useGame } from "@/hooks/Game";
+import { GameContext } from "@/context/GameContext";
 import notify from "@/utils/notify";
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 
 type ErrorMessageProps = {
   error: string;
@@ -11,7 +11,8 @@ type ErrorMessageProps = {
 };
 
 export default function ErrorMessage({ error, button }: ErrorMessageProps) {
-  const { sound } = useGame();
+  // Utilisable hors d'une partie (historique) : son actif par défaut
+  const sound = useContext(GameContext)?.sound ?? true;
 
   useEffect(() => {
     notify("error", !sound);

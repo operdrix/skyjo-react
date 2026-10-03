@@ -19,12 +19,13 @@ export const setLogoutCallback = (callback: () => void) => {
 export const apiCall = async <T = any>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> => {
   try {
     const response = await fetch(buildApiUrl(endpoint), {
+      ...options,
       credentials: "include", // Important pour envoyer les cookies httpOnly
+      // JSON annoncé seulement s'il y a un body : Fastify refuse un body JSON vide (DELETE)
       headers: {
-        "Content-Type": "application/json",
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
         ...options.headers,
       },
-      ...options,
     });
 
     if (response.status === 401) {

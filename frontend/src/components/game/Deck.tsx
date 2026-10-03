@@ -1,4 +1,5 @@
 import GameCard from "@/components/game/GameCard";
+import { drawFromDeck } from "@/game/moves";
 import { useGame } from "@/hooks/Game";
 import { useUser } from "@/hooks/User";
 import { useWebSocket } from "@/hooks/WebSocket";
@@ -25,10 +26,7 @@ const Deck = () => {
     if (!game || !userId) return;
     if (!isDeckSelectable()) return;
     notify('turnCard', !sound);
-    game.gameData.deckCards[0].revealed = true;
-    game.gameData.deckCards[0].onHand = true;
-    game.gameData.currentStep = 'decide-deck';
-    sendMessage("play-move", { room: game.id, gameData: game.gameData });
+    sendMessage("play-move", { room: game.id, gameData: drawFromDeck(game.gameData) });
   }
 
   if (!game || !userId) return null;

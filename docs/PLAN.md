@@ -65,9 +65,15 @@ TDD obligatoire à partir de la phase 1 : chaque comportement est d'abord couver
    - Routes chargées à la demande : plus de fichier JS > 500 kB (principal ≈ 280 kB).
    - Prettier (back, front, shared) vérifié par `make lint`, `make format` ; `.editorconfig`.
    - CORS : `FRONTEND_HOST` accepte une liste, plus de `localhost:4173` en dur.
-   - CI : un seul workflow `validate.yml`, lint + tests (MySQL et Mailpit en services) + build bloquants.
+   - CI : un seul workflow `validate.yml`, lint + tests (base et Mailpit en services) + build bloquants.
    - README racine, `CLAUDE.md` à jour.
    - Correctifs : son de fin de manche joué à chaque rendu, redirection vers `/game/create` inexistante.
+7. **Déploiement** (branche `feat/deploiement`)
+   - Base de prod MariaDB (service Dokploy) : dev (`docker-compose.yml`) et CI passent sur la même image `mariadb:13`.
+   - Écart trouvé : l'API relationnelle de Drizzle (`with`) génère des `LEFT JOIN LATERAL` refusés par MariaDB ; `findGames` réécrit en `select` + `innerJoin`. Les colonnes JSON reviennent bien en objets (mysql2 lit le type JSON de MariaDB).
+   - Release GitHub manuelle `vX.Y.Z` sur `main` (`make release`) → `release.yml` : validation, images privées Docker Hub (`X.Y.Z`, `X.Y`, `latest`), webhooks Dokploy (pas de docker compose en prod).
+   - Version dans le footer (`VITE_APP_VERSION` au build) et dans les logs du back (`APP_VERSION`).
+   - Guide des secrets GitHub et Dokploy : `.github/README-CICD.md`.
 
 ## Vérification
 - Chaque phase : `npm run lint`, `npm test`, `npm run build` (front et back) verts.

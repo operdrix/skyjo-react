@@ -3,7 +3,7 @@ COMPOSE = docker compose --env-file backend/.env
 
 .DEFAULT_GOAL := help
 # backend/.env est la source unique des identifiants (lus aussi par docker-compose.yml)
-.PHONY: help install env db-up db-down db-reset db-generate full dev back front test lint format build check clean
+.PHONY: help install env db-up db-down db-reset db-generate full dev back front test lint format build check clean release
 
 help: ## Liste les commandes
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk -F':.*?## ' '{printf "  %-10s %s\n", $$1, $$2}'
@@ -62,3 +62,7 @@ check: lint test build ## Porte de sortie avant commit/PR
 
 clean: ## Supprime node_modules et dist
 	rm -rf backend/node_modules frontend/node_modules frontend/dist backend/dist
+
+release: ## Publie la release vX.Y.Z sur main et déclenche la mise en prod (make release VERSION=3.0.0)
+	@echo "$(VERSION)" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$$' || { echo "Usage : make release VERSION=X.Y.Z"; exit 1; }
+	gh release create v$(VERSION) --target main --title v$(VERSION) --generate-notes

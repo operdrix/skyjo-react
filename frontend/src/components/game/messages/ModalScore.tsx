@@ -16,7 +16,7 @@ const ModalScore = () => {
           {game.players
             .slice()
             .sort((a, b) => a.game_players.score - b.game_players.score)
-            .map(player => (
+            .map((player) => (
               <div key={player.id} className="flex justify-between">
                 <p className="font-bold text-xl">{player.username}</p>
                 <ul className="flex gap-3">
@@ -29,13 +29,11 @@ const ModalScore = () => {
             ))}
         </div>
         <form method="dialog" className="modal-backdrop">
-          <button>
-            Fermer
-          </button>
+          <button>Fermer</button>
         </form>
       </dialog>
     </>
-  )
-}
+  );
+};
 
 export default ModalScore;

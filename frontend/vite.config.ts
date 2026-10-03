@@ -1,25 +1,22 @@
-import react from '@vitejs/plugin-react-swc';
-import { defineConfig, loadEnv } from 'vite';
+import tailwindcss from "@tailwindcss/vite";
+import react from "@vitejs/plugin-react-swc";
+import { defineConfig } from "vite";
 
-// https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '');
-  return {
-    define: {
-      'process.env': env
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+  base: "/",
+  resolve: {
+    alias: {
+      "@": "/src",
     },
-    plugins: [react()],
-    base: '/',
-    resolve: {
-      alias: {
-        '@': '/src'
-      }
+  },
+  build: {
+    rolldownOptions: {
+      output: {
+        // Retire console.* et debugger du bundle de production
+        minify: { compress: { dropConsole: true, dropDebugger: true } },
+      },
     },
-    build: {
-      minify: 'esbuild',
-    },
-    esbuild: {
-      drop: ['console', 'debugger']
-    }
-  }
-})
+  },
+});

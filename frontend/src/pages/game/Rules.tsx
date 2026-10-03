@@ -1,7 +1,6 @@
 import Rules from "@/components/game/Rules";
 
 const RulesPage = () => {
-
   return (
     <div className="flex-1 container mx-auto flex items-center">
       <div className="flex flex-col justify-center w-full">
@@ -12,8 +11,7 @@ const RulesPage = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default RulesPage
-
+export default RulesPage;

@@ -4,13 +4,13 @@
  * @returns URL complète pour l'API
  */
 export function buildApiUrl(endpoint: string): string {
-  const backendHost = import.meta.env.VITE_BACKEND_HOST || '';
+  const backendHost = import.meta.env.VITE_BACKEND_HOST || "";
 
   // Si l'URL se termine déjà par /api, on ajoute directement l'endpoint
-  if (backendHost.endsWith('/api')) {
+  if (backendHost.endsWith("/api")) {
     return `${backendHost}/${endpoint}`;
   }
 
   // Sinon on ajoute le préfixe /api
   return `${backendHost}/api/${endpoint}`;
-} 
+}

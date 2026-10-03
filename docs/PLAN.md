@@ -22,23 +22,58 @@ Branche `feat/socle-projet`. Aucun changement de code applicatif.
   - `skills/verifie/SKILL.md` : porte de sortie avant commit/PR, lance `make check` (lint + tests + build back et front) et rapporte les échecs.
   - `skills/demarre/SKILL.md` : lance/relance la pile locale (`make dev`), vérifie MySQL puis back (:3000) et front (:5173).
   - Les skills existants `/branche` et `/livre` restent le circuit de livraison.
-- `Makefile` à la racine : `install`, `db-up` / `db-down` (`docker-compose.yml` racine, projet `skyjo` : MySQL, Redis, phpMyAdmin, Mailpit ; profil `full` avec back et front en images, `make full`), `env` (copie les `.env.example` s'ils manquent), `dev` (db + back + front), `back`, `front`, `test`, `lint`, `build`, `check` (lint + test + build), `clean`.
+- `Makefile` à la racine : `install`, `db-up` / `db-down` (`docker-compose.yml` racine, projet `skyjo` : MySQL, phpMyAdmin, Mailpit (Redis retiré en phase 5) ; profil `full` avec back et front en images, `make full`), `env` (copie les `.env.example` s'ils manquent), `dev` (db + back + front), `back`, `front`, `test`, `lint`, `build`, `check` (lint + test + build), `clean`.
 
 ## Phases
 TDD obligatoire à partir de la phase 1 : chaque comportement est d'abord couvert par un test rouge.
 
-1. **Filet de sécurité** (branche `fix/tests-base`)
+1. **Filet de sécurité** (branche `feat/tests-base`) : **fait**
    - Lancer l'infra via `make db-up` (`docker-compose.yml`), démarrer back et front, jouer une partie à la main pour valider l'état initial.
    - Extraire de `backend/src/controllers/games.js` (`checkGame`, `saveScore`, `checkMaximumScore`, `dealCards`) un module de règles pur, sans accès base.
    - Tests Vitest sur ces règles et 2-3 tests d'API (register/login, création et join de partie).
+   - Test rouge prioritaire : aucune réponse de route de partie ne doit contenir `password`, `email` ni tokens (fuite constatée sur `PATCH /api/game/join/:id`).
+   - Test rouge : une déconnexion pendant l'attente ne doit pas corrompre une partie qui démarre (voir `.claude/memoire/reprise.md`).
    - En TDD : transport mail piloté par `SMTP_HOST` (test rouge d'abord), puis vérifier l'inscription bout en bout via l'API Mailpit (`GET :8025/api/v1/messages`).
-2. **Dépendances** : tout monter à la dernière majeure, backend puis frontend. Remplacer l'import `Op` de `sequelize` v6 (`controllers/users.js:5`) le temps de la transition. Le front doit repasser `tsc -b`, le build et le lint. Tailwind 4/DaisyUI 5 : vérifier visuellement les pages.
-3. **Drizzle + TypeScript** : schéma `users`, `games`, `game_players` (colonnes JSON typées avec `GameData`), migration initiale, réécriture des contrôleurs, `bdd.ts`, conversion des fichiers `.js`. Corriger le typo `bestScrore`. Retirer `sequelize`, `@sequelize/*`. Dockerfile : étape de build TS. Types `GameData`/`GameType` à partager avec le front.
-4. **Garde-fous d'autorisation**
-   - `userId` pris dans le JWT (`request.user`) et non dans le body de `POST/PATCH /api/game`.
-   - Sur `play-move` (`websockets.js:273`) : l'émetteur est membre de la partie et `currentPlayer` est bien lui ; idem pour `player-play-again`, `start-game`, `update-game-params` (créateur seulement).
-   - Secrets sans valeur par défaut codée en dur ; une seule blacklist de tokens (Redis, sinon Map avec expiration) à la place du tableau qui grossit.
-5. **Ménage** : retirer les `console.log`, unifier le style (indentation, Prettier), découper `Game.tsx`, `WaitingRoom.tsx`, `Dashboard.tsx`, README racine + `CLAUDE.md`, CI stricte (lint, build, tests bloquants), CORS sans `localhost:4173` en dur.
+2. **Dépendances** (branche `feat/dependances`) : **fait**
+   - Back : fastify 5.12 et plugins à jour, `fastify-bcrypt` → `bcryptjs`, `fastify-socket.io` → socket.io branché sur `app.server`, mjml 5 (rendu asynchrone), `Op` depuis `@sequelize/core`, 0 vulnérabilité.
+   - Front : React 19, react-router 8 (`react-router` + `react-router/dom`), Vite 8, Tailwind 4 (`@tailwindcss/vite`, config en CSS), DaisyUI 5 (thèmes ajustés pour garder le rendu v4), ESLint 10, vitest 5, 0 vulnérabilité.
+   - TypeScript reste en 6.0 : `typescript-eslint` ne supporte pas encore TS 7.
+   - Node 24 dans les Dockerfiles et la CI (react-router 8 exige Node ≥ 22.22).
+   - Vérification visuelle ancien/nouveau front côte à côte : accueil, inscription, salle d'attente, partie, dashboard, thèmes clair et sombre.
+3. **Drizzle + TypeScript** (branche `feat/drizzle-ts`) : **fait**
+   - Tests de caractérisation écrits sur Sequelize avant la réécriture (forme des réponses, cycle de vie, déroulé websocket), restés verts après.
+   - Schéma Drizzle `users`, `games`, `game_players` (colonnes JSON typées), migration initiale `backend/drizzle/0000_init.sql` appliquée au démarrage ; `sync({alter:true})` supprimé. `make db-reset` (base jetable) et `make db-generate`.
+   - Backend entièrement en TypeScript. Pas d'émission JS : Node 24 exécute le `.ts` (type stripping), `tsx watch` en dev, `tsc` en typecheck (`npm run build`, build Docker).
+   - Types partagés dans `shared/types.ts` (back et front) ; contextes Docker passés à la racine du dépôt (compose et Dokploy).
+   - Correctifs : `bestScore`, id texte sur `/api/users/:id`, `/api/verify/:token` sans hash ni jeton, deux révélations initiales simultanées ne s'écrasent plus (lecture sous verrou).
+4. **Garde-fous d'autorisation** (branche `feat/garde-fous`) : **fait**
+   - `userId` pris dans le JWT (`request.user`) : un `userId` envoyé dans le body de `POST/PATCH /api/game` est ignoré. `start`/`finish` et `PATCH /api/game/:id` (paramètres) réservés au créateur (403).
+   - Websockets : `play-move` accepté seulement d'un membre dont c'est le tour (`currentPlayer` lu en base, sous verrou) ; `initial-turn-card` ne révèle que les cartes de l'émetteur ; `player-play-again` ajoute l'émetteur s'il est membre (la liste du client est ignorée) ; `start-game`, `update-game-params`, `restart-game` réservés au créateur. Refus : événement `error` à l'émetteur.
+   - Correctif : le front émettait `play-again` au lieu de `player-play-again` (rejouer ne marchait pas).
+   - `buildApp()` refuse de démarrer sans `JWT_SECRET`/`COOKIE_SECRET`. Une seule blacklist (`redis.ts` : Redis, repli en mémoire avec expiration, y compris si Redis échoue).
+5. **Inscription rapide** (branche `feat/inscription-rapide`) : **fait**
+   - But : jouer le plus vite possible, données personnelles minimales (pseudo + email, plus de nom/prénom ni de vérification d'email).
+   - Better Auth remplace le système maison (JWT, refresh, blacklist, bcrypt, Redis) : sessions en base (`sessions`, `accounts`, `verifications`), cookie httpOnly, `BETTER_AUTH_SECRET` obligatoire.
+   - Connexion Google en premier (« Continuer avec Google »), email + mot de passe en option. Nouveau joueur Google : écran de pseudo pré-rempli avec son prénom. Compte email existant avec la même adresse : relié automatiquement. Photo Google non conservée.
+   - Pseudo obligatoire (3 à 30 caractères, accents autorisés, unique sans tenir compte de la casse). Tant qu'il manque : 403 sur l'API de jeu, socket refusé, redirection front vers `/auth/pseudo`.
+   - Mot de passe oublié conservé (mail via Mailpit / Gmail). Emails plus jamais exposés par `/api/users`.
+   - Migration initiale régénérée (base jetable) : `make db-reset` après pull.
+   - Google à configurer : `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` (voir `backend/.env.example`) ; sans eux le bouton affiche un message et l'email reste disponible.
+6. **Ménage** (branche `feat/menage`) : **fait**
+   - Front sans mutation de l'état React : coups calculés par `src/game/moves.ts` (copie) ; plus de setState synchrone dans les effets ; contextes (`*Context.ts`) séparés des providers. Règles React Compiler, `only-export-components` et `no-console` en erreur.
+   - `Game.tsx` (369 → 190 lignes), `WaitingRoom.tsx`, `Dashboard.tsx` découpés ; placement des joueurs (`game/seats.ts`) et statistiques (`game/stats.ts`) en fonctions pures testées ; squelette de chargement commun.
+   - Routes chargées à la demande : plus de fichier JS > 500 kB (principal ≈ 280 kB).
+   - Prettier (back, front, shared) vérifié par `make lint`, `make format` ; `.editorconfig`.
+   - CORS : `FRONTEND_HOST` accepte une liste, plus de `localhost:4173` en dur.
+   - CI : un seul workflow `validate.yml`, lint + tests (base et Mailpit en services) + build bloquants.
+   - README racine, `CLAUDE.md` à jour.
+   - Correctifs : son de fin de manche joué à chaque rendu, redirection vers `/game/create` inexistante.
+7. **Déploiement** (branche `feat/deploiement`)
+   - Base de prod MariaDB (service Dokploy) : dev (`docker-compose.yml`) et CI passent sur la même image `mariadb:13`.
+   - Écart trouvé : l'API relationnelle de Drizzle (`with`) génère des `LEFT JOIN LATERAL` refusés par MariaDB ; `findGames` réécrit en `select` + `innerJoin`. Les colonnes JSON reviennent bien en objets (mysql2 lit le type JSON de MariaDB).
+   - Release GitHub manuelle `vX.Y.Z` sur `main` (`make release`) → `release.yml` : validation, images privées Docker Hub (`X.Y.Z`, `X.Y`, `latest`), webhooks Dokploy (pas de docker compose en prod).
+   - Version dans le footer (`VITE_APP_VERSION` au build) et dans les logs du back (`APP_VERSION`).
+   - Guide des secrets GitHub et Dokploy : `.github/README-CICD.md`.
 
 ## Vérification
 - Chaque phase : `npm run lint`, `npm test`, `npm run build` (front et back) verts.

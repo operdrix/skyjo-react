@@ -3,7 +3,7 @@ COMPOSE = docker compose --env-file backend/.env
 
 .DEFAULT_GOAL := help
 # backend/.env est la source unique des identifiants (lus aussi par docker-compose.yml)
-.PHONY: help install env db-up db-down full dev back front test lint build check clean
+.PHONY: help install env db-up db-down db-reset db-generate full dev back front test lint format build check clean release
 
 help: ## Liste les commandes
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk -F':.*?## ' '{printf "  %-10s %s\n", $$1, $$2}'
@@ -16,12 +16,19 @@ env: ## Crée les .env depuis les .env.example s'ils manquent
 	@test -f backend/.env || { cp backend/.env.example backend/.env; echo "backend/.env créé"; }
 	@test -f frontend/.env || { cp frontend/.env.example frontend/.env; echo "frontend/.env créé"; }
 
-db-up: env ## Démarre MySQL (:3306), Redis, phpMyAdmin (:8080) et Mailpit (:8025)
-	$(COMPOSE) up -d --wait mysql redis
+db-up: env ## Démarre MariaDB (:3306), phpMyAdmin (:8080) et Mailpit (:8025)
+	$(COMPOSE) up -d --wait db
 	$(COMPOSE) up -d phpmyadmin mailpit
 
 db-down: ## Arrête toute la stack Docker (profil full inclus)
 	$(COMPOSE) --profile full down
+
+db-reset: db-up ## Vide la base de dev (jetable) et applique les migrations Drizzle
+	$(COMPOSE) exec -T db sh -c 'mariadb -uroot -p"$$MARIADB_ROOT_PASSWORD" -e "DROP DATABASE IF EXISTS $$MARIADB_DATABASE; CREATE DATABASE $$MARIADB_DATABASE; GRANT ALL PRIVILEGES ON $$MARIADB_DATABASE.* TO \`$$MARIADB_USER\`@\`%\`;"'
+	cd backend && npm run db:migrate
+
+db-generate: ## Génère une migration Drizzle depuis backend/src/db/schema.ts
+	cd backend && npm run db:generate
 
 full: env ## Lance toute la stack en images Docker (front :8081, back :3000)
 	$(COMPOSE) --profile full up -d --build --wait
@@ -39,9 +46,13 @@ test: ## Lance les tests (là où le script existe)
 	cd backend && npm run test --if-present
 	cd frontend && npm run test --if-present
 
-lint: ## Lint back + front
+lint: ## Lint + vérification Prettier, back + front
 	cd backend && npm run lint
 	cd frontend && npm run lint
+
+format: ## Met en forme le code avec Prettier (back, front, shared)
+	cd backend && npm run format
+	cd frontend && npm run format
 
 build: ## Build back (si script) + front
 	cd backend && npm run build --if-present
@@ -51,3 +62,7 @@ check: lint test build ## Porte de sortie avant commit/PR
 
 clean: ## Supprime node_modules et dist
 	rm -rf backend/node_modules frontend/node_modules frontend/dist backend/dist
+
+release: ## Publie la release vX.Y.Z sur main et déclenche la mise en prod (make release VERSION=3.0.0)
+	@echo "$(VERSION)" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$$' || { echo "Usage : make release VERSION=X.Y.Z"; exit 1; }
+	gh release create v$(VERSION) --target main --title v$(VERSION) --generate-notes

@@ -68,7 +68,7 @@ const start = async () => {
     const port = process.env.PORT || 3000;
     const apiUrl = process.env.APP_URL || `http://localhost:${port}`;
     await app.listen({ port: Number(port), host: "0.0.0.0" });
-    logger.success(`🚀 Serveur démarré sur ${apiUrl}`);
+    logger.success(`🚀 Serveur démarré sur ${apiUrl} (version ${process.env.APP_VERSION || "dev"})`);
     logger.info(`📚 Documentation disponible sur ${apiUrl}/api/documentation`);
   } catch (err) {
     logger.error(err);

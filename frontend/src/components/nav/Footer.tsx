@@ -1,5 +1,7 @@
 const Footer = () => {
-  const appVersion = import.meta.env.VITE_APP_VERSION;
+  // Version figée au build par la CI de release (tag vX.Y.Z), « dev » sinon
+  const release = import.meta.env.VITE_APP_VERSION;
+  const appVersion = release ? `v${release}` : "dev";
   return (
     <footer className="footer sm:footer-horizontal bg-neutral text-neutral-content p-10">
       <aside>

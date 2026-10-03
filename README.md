@@ -10,7 +10,7 @@ Prérequis : Docker et Node.js 24 (au minimum 22.22).
 
 ```sh
 make install   # dépendances back et front
-make dev       # crée les .env manquants, lance MySQL, Mailpit, le back (:3000) et le front (:5173)
+make dev       # crée les .env manquants, lance MariaDB, Mailpit, le back (:3000) et le front (:5173)
 ```
 
 | Service | Adresse |
@@ -31,11 +31,11 @@ Tout passe par `make` (`make help` pour la liste) :
 - `make db-reset` : vide la base de dev et applique les migrations ; `make db-generate` : crée une migration après une modification de `backend/src/db/schema.ts`
 - `make full` : tout en images Docker (front sur :8081)
 
-Les tests d'API du back ont besoin de MySQL et Mailpit (`make db-up`).
+Les tests d'API du back ont besoin de MariaDB et Mailpit (`make db-up`).
 
 ## Organisation
 
-- `backend/` : Fastify 5 et Socket.io en TypeScript (exécuté directement par Node), Drizzle + MySQL, Better Auth pour la connexion. Les règles du jeu sont dans `src/game/rules.ts`, sans accès à la base.
+- `backend/` : Fastify 5 et Socket.io en TypeScript (exécuté directement par Node), Drizzle + MariaDB, Better Auth pour la connexion. Les règles du jeu sont dans `src/game/rules.ts`, sans accès à la base.
 - `frontend/` : React, Vite, Tailwind + DaisyUI. Les coups des joueurs sont calculés par `src/game/moves.ts`, sans modifier l'état React.
 - `shared/types.ts` : types de partie communs au back et au front.
 - `docs/PLAN.md` : historique des phases de remise en route et décisions.
@@ -51,4 +51,4 @@ Les tests d'API du back ont besoin de MySQL et Mailpit (`make db-up`).
 
 ## Déploiement
 
-Images Docker construites par Dokploy depuis la branche `main` : voir [.github/README-CICD.md](.github/README-CICD.md). Chaque push et chaque PR passent par la validation GitHub Actions (lint, tests, build).
+Mise en production par release GitHub (`make release VERSION=X.Y.Z`) : GitHub Actions construit les images, les pousse sur Docker Hub et déclenche Dokploy. Guide complet et secrets : [.github/README-CICD.md](.github/README-CICD.md). Chaque push et chaque PR passent par la validation GitHub Actions (lint, tests, build).

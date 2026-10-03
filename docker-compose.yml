@@ -1,26 +1,28 @@
 # Docker Compose pour le développement local et la recette.
-# Par défaut : infrastructure seule (MySQL, phpMyAdmin, Mailpit), le back et le front tournent via `make`.
+# Par défaut : infrastructure seule (MariaDB, phpMyAdmin, Mailpit), le back et le front tournent via `make`.
 # Profil `full` : ajoute le back et le front en images (`make full`).
-# Les identifiants MySQL viennent de backend/.env (source unique, via --env-file dans le Makefile).
+# Les identifiants de la base viennent de backend/.env (source unique, via --env-file dans le Makefile).
 
 name: skyjo
 
 services:
-  mysql:
-    image: mysql:8.4
-    container_name: skyjo-mysql-dev
+  # Même image que la base de production (service MariaDB de Dokploy)
+  db:
+    image: mariadb:13
+    container_name: skyjo-db-dev
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
-      MYSQL_DATABASE: ${DB_NAME:-skyjo}
-      MYSQL_USER: ${DB_USER:-olivier}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-olivier}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+      MARIADB_DATABASE: ${DB_NAME:-skyjo}
+      MARIADB_USER: ${DB_USER:-olivier}
+      MARIADB_PASSWORD: ${DB_PASSWORD:-olivier}
     ports:
       - "${DB_PORT:-3306}:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
       timeout: 20s
       retries: 10
 
@@ -29,13 +31,13 @@ services:
     container_name: skyjo-phpmyadmin-dev
     restart: unless-stopped
     environment:
-      PMA_HOST: mysql
+      PMA_HOST: db
       PMA_PORT: 3306
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
     ports:
       - "8080:80"
     depends_on:
-      - mysql
+      - db
 
   # Serveur SMTP de dev/recette : capture tous les mails, aucun n'est réellement envoyé
   mailpit:
@@ -58,7 +60,7 @@ services:
     restart: unless-stopped
     env_file: backend/.env
     environment:
-      DB_HOST: mysql
+      DB_HOST: db
       DB_PORT: 3306
       SMTP_HOST: mailpit
       SMTP_PORT: 1025
@@ -66,7 +68,7 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      mysql:
+      db:
         condition: service_healthy
       mailpit:
         condition: service_started
@@ -87,4 +89,4 @@ services:
       - backend
 
 volumes:
-  mysql_data:
+  db_data:

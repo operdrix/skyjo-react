@@ -3,7 +3,7 @@ COMPOSE = docker compose --env-file backend/.env
 
 .DEFAULT_GOAL := help
 # backend/.env est la source unique des identifiants (lus aussi par docker-compose.yml)
-.PHONY: help install env db-up db-down db-reset db-generate full dev back front test lint format build check clean
+.PHONY: help install env db-up db-down db-reset db-generate full dev back front test lint format build check clean release
 
 help: ## Liste les commandes
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk -F':.*?## ' '{printf "  %-10s %s\n", $$1, $$2}'
@@ -16,15 +16,15 @@ env: ## Crée les .env depuis les .env.example s'ils manquent
 	@test -f backend/.env || { cp backend/.env.example backend/.env; echo "backend/.env créé"; }
 	@test -f frontend/.env || { cp frontend/.env.example frontend/.env; echo "frontend/.env créé"; }
 
-db-up: env ## Démarre MySQL (:3306), phpMyAdmin (:8080) et Mailpit (:8025)
-	$(COMPOSE) up -d --wait mysql
+db-up: env ## Démarre MariaDB (:3306), phpMyAdmin (:8080) et Mailpit (:8025)
+	$(COMPOSE) up -d --wait db
 	$(COMPOSE) up -d phpmyadmin mailpit
 
 db-down: ## Arrête toute la stack Docker (profil full inclus)
 	$(COMPOSE) --profile full down
 
 db-reset: db-up ## Vide la base de dev (jetable) et applique les migrations Drizzle
-	$(COMPOSE) exec -T mysql sh -c 'mysql -uroot -p"$$MYSQL_ROOT_PASSWORD" -e "DROP DATABASE IF EXISTS $$MYSQL_DATABASE; CREATE DATABASE $$MYSQL_DATABASE; GRANT ALL PRIVILEGES ON $$MYSQL_DATABASE.* TO \`$$MYSQL_USER\`@\`%\`;"'
+	$(COMPOSE) exec -T db sh -c 'mariadb -uroot -p"$$MARIADB_ROOT_PASSWORD" -e "DROP DATABASE IF EXISTS $$MARIADB_DATABASE; CREATE DATABASE $$MARIADB_DATABASE; GRANT ALL PRIVILEGES ON $$MARIADB_DATABASE.* TO \`$$MARIADB_USER\`@\`%\`;"'
 	cd backend && npm run db:migrate
 
 db-generate: ## Génère une migration Drizzle depuis backend/src/db/schema.ts
@@ -62,3 +62,7 @@ check: lint test build ## Porte de sortie avant commit/PR
 
 clean: ## Supprime node_modules et dist
 	rm -rf backend/node_modules frontend/node_modules frontend/dist backend/dist
+
+release: ## Publie la release vX.Y.Z sur main et déclenche la mise en prod (make release VERSION=3.0.0)
+	@echo "$(VERSION)" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$$' || { echo "Usage : make release VERSION=X.Y.Z"; exit 1; }
+	gh release create v$(VERSION) --target main --title v$(VERSION) --generate-notes

@@ -11,11 +11,13 @@ RUN npm ci
 COPY shared ../shared
 COPY frontend ./
 
-# Variables d'environnement pour Vite (à définir dans Dokploy Build Args)
+# Variables Vite figées dans le bundle (build args fournis par la CI de release)
 ARG VITE_BACKEND_HOST
 ARG VITE_BACKEND_WS
+ARG VITE_APP_VERSION
 ENV VITE_BACKEND_HOST=${VITE_BACKEND_HOST}
 ENV VITE_BACKEND_WS=${VITE_BACKEND_WS}
+ENV VITE_APP_VERSION=${VITE_APP_VERSION}
 
 # Build de l'application
 RUN npm run build

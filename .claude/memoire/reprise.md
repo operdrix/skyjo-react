@@ -1,10 +1,13 @@
-# Mémoire projet : état et reprise (maj 2026-10-03, fin phase 6)
+# Mémoire projet : état et reprise (maj 2026-10-03, phase 7 déploiement)
 
 Fichier versionné pour reprendre le travail sur n'importe quel PC. Chargé par `CLAUDE.md`. À tenir à jour en fin de session.
 
 ## Où on en est
 - Socle posé et mergé (PR #22 `CLAUDE.md`/Makefile/skills/Mailpit, PR #23 flux de branches). `dev` est la branche par défaut, `main` la version stable.
 - Décisions validées : voir `docs/PLAN.md` (jeu entre amis, base jetable, garde-fous légers, Drizzle + backend TS, dernières majeures, Vitest, TDD obligatoire, ordre : tests → dépendances → Drizzle+TS → garde-fous → ménage).
+- **Phase 7 (déploiement)** sur `feat/deploiement` : MariaDB partout (dev, CI, prod), `release.yml` (release GitHub → Docker Hub privé → webhooks Dokploy), version dans le footer, guide `.github/README-CICD.md`. Reste à faire côté utilisateur : secrets GitHub (environment `production`), dépôts Docker Hub privés, registry + apps Dokploy, puis `make release VERSION=3.0.0` après merge `dev → main`.
+  - Passage MySQL → MariaDB en local : `docker compose --env-file backend/.env --profile full down --remove-orphans`, `docker volume rm skyjo_mysql_data`, puis `make db-up` (service et volume renommés `db` / `skyjo_db_data`).
+  - MariaDB refuse `LEFT JOIN LATERAL` : jamais d'API relationnelle Drizzle avec `with`.
 - Phases 1 à 5 mergées (PR #24 à #28). **Phase 6 (ménage) terminée** sur `feat/menage` : le plan de remise en route est terminé.
   - Front : coups dans `src/game/moves.ts` (jamais de mutation de `game.gameData`), logique pure dans `src/game/`, routes paresseuses dans `main.tsx`.
   - Style : Prettier, `make format` ; `make lint` échoue si un fichier n'est pas formaté.

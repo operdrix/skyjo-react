@@ -1,7 +1,9 @@
 name: Validate
 
-# Lint, tests et build bloquants sur chaque push (hors main) et chaque PR vers dev ou main
+# Lint, tests et build bloquants sur chaque push (hors main) et chaque PR vers dev ou main.
+# Aussi appelé par release.yml avant de construire les images.
 on:
+  workflow_call:
   push:
     branches-ignore:
       - main
@@ -17,19 +19,19 @@ jobs:
   validate:
     runs-on: ubuntu-latest
 
-    # Tests d'API du back : MySQL (base skyjo_test créée par test/global-setup.ts) et Mailpit
+    # Tests d'API du back : MariaDB comme en prod (base skyjo_test créée par test/global-setup.ts) et Mailpit
     services:
-      mysql:
-        image: mysql:8.4
+      db:
+        image: mariadb:13
         env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: skyjo
-          MYSQL_USER: skyjo
-          MYSQL_PASSWORD: skyjo
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: skyjo
+          MARIADB_USER: skyjo
+          MARIADB_PASSWORD: skyjo
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h localhost -proot"
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
           --health-interval=5s
           --health-timeout=5s
           --health-retries=20

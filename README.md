@@ -51,4 +51,6 @@ Les tests d'API du back ont besoin de MariaDB et Mailpit (`make db-up`).
 
 ## Déploiement
 
+En ligne : https://skyjo.olivgames.fr
+
 Mise en production par release GitHub (`make release VERSION=X.Y.Z`) : GitHub Actions construit les images, les pousse sur Docker Hub et déclenche Dokploy. Guide complet et secrets : [.github/README-CICD.md](.github/README-CICD.md). Chaque push et chaque PR passent par la validation GitHub Actions (lint, tests, build).

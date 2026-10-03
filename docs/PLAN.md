@@ -71,9 +71,10 @@ TDD obligatoire à partir de la phase 1 : chaque comportement est d'abord couver
 7. **Déploiement** (branche `feat/deploiement`)
    - Base de prod MariaDB (service Dokploy) : dev (`docker-compose.yml`) et CI passent sur la même image `mariadb:13`.
    - Écart trouvé : l'API relationnelle de Drizzle (`with`) génère des `LEFT JOIN LATERAL` refusés par MariaDB ; `findGames` réécrit en `select` + `innerJoin`. Les colonnes JSON reviennent bien en objets (mysql2 lit le type JSON de MariaDB).
-   - Release GitHub manuelle `vX.Y.Z` sur `main` (`make release`) → `release.yml` : validation, images privées Docker Hub (`X.Y.Z`, `X.Y`, `latest`), webhooks Dokploy (pas de docker compose en prod).
+   - Release GitHub manuelle `vX.Y.Z` sur `main` (`make release`) → `release.yml` : validation, images Docker Hub publiques (`X.Y.Z`, `X.Y`, `latest`), webhooks Dokploy (pas de docker compose en prod).
    - Version dans le footer (`VITE_APP_VERSION` au build) et dans les logs du back (`APP_VERSION`).
    - Guide des secrets GitHub et Dokploy : `.github/README-CICD.md`.
+   - En production depuis la v3.0.0 (2026-10-03) : https://skyjo.olivgames.fr, API https://api-skyjo.olivgames.fr.
 
 ## Vérification
 - Chaque phase : `npm run lint`, `npm test`, `npm run build` (front et back) verts.

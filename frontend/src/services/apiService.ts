@@ -1,5 +1,5 @@
 // Service API centralisé : cookies de session envoyés, rechargement de la session sur 401
-import { buildApiUrl } from '../utils/apiUtils';
+import { buildApiUrl } from "../utils/apiUtils";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface ApiResponse<T = any> {
@@ -16,15 +16,12 @@ export const setLogoutCallback = (callback: () => void) => {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const apiCall = async <T = any>(
-  endpoint: string,
-  options: RequestInit = {},
-): Promise<ApiResponse<T>> => {
+export const apiCall = async <T = any>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> => {
   try {
     const response = await fetch(buildApiUrl(endpoint), {
-      credentials: 'include', // Important pour envoyer les cookies httpOnly
+      credentials: "include", // Important pour envoyer les cookies httpOnly
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...options.headers,
       },
       ...options,
@@ -38,7 +35,7 @@ export const apiCall = async <T = any>(
 
     if (!response.ok) {
       return {
-        error: data.error || 'Une erreur est survenue',
+        error: data.error || "Une erreur est survenue",
         code: response.status,
       };
     }
@@ -46,7 +43,7 @@ export const apiCall = async <T = any>(
     return { data, code: response.status };
   } catch {
     return {
-      error: 'Erreur de connexion au serveur',
+      error: "Erreur de connexion au serveur",
       code: 500,
     };
   }
@@ -55,14 +52,13 @@ export const apiCall = async <T = any>(
 // Méthodes raccourcies
 export const api = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  get: <T = any>(endpoint: string, options?: RequestInit) =>
-    apiCall<T>(endpoint, { ...options, method: 'GET' }),
+  get: <T = any>(endpoint: string, options?: RequestInit) => apiCall<T>(endpoint, { ...options, method: "GET" }),
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   post: <T = any>(endpoint: string, body?: unknown, options?: RequestInit) =>
     apiCall<T>(endpoint, {
       ...options,
-      method: 'POST',
+      method: "POST",
       body: body ? JSON.stringify(body) : undefined,
     }),
 
@@ -70,11 +66,10 @@ export const api = {
   patch: <T = any>(endpoint: string, body?: unknown, options?: RequestInit) =>
     apiCall<T>(endpoint, {
       ...options,
-      method: 'PATCH',
+      method: "PATCH",
       body: body ? JSON.stringify(body) : undefined,
     }),
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  delete: <T = any>(endpoint: string, options?: RequestInit) =>
-    apiCall<T>(endpoint, { ...options, method: 'DELETE' }),
+  delete: <T = any>(endpoint: string, options?: RequestInit) => apiCall<T>(endpoint, { ...options, method: "DELETE" }),
 };

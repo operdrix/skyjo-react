@@ -25,20 +25,20 @@ export function useGameEvents(onWaitingDeal: (waiting: boolean) => void, enabled
     // Les joueurs qui ont demandé à rejouer suivent la nouvelle partie, les autres retournent à l'accueil
     const handleGoToNewGame = ({ gameId, players }: { gameId: string; players: string[] }) => {
       if (!gameId || !players || !userId) return;
-      navigate(players.includes(userId) ? `/game/${gameId}` : '/');
+      navigate(players.includes(userId) ? `/game/${gameId}` : "/");
     };
 
     const updates = ["player-joined-game", "player-left-game", "update-game-params", "play-move"];
 
     subscribeToEvent("waiting-deal", handleWaitingDeal);
     subscribeToEvent("start-game", handleStartGame);
-    updates.forEach(event => subscribeToEvent(event, setGame));
+    updates.forEach((event) => subscribeToEvent(event, setGame));
     subscribeToEvent("go-to-new-game", handleGoToNewGame);
 
     return () => {
       unsubscribeFromEvent("waiting-deal", handleWaitingDeal);
       unsubscribeFromEvent("start-game", handleStartGame);
-      updates.forEach(event => unsubscribeFromEvent(event, setGame));
+      updates.forEach((event) => unsubscribeFromEvent(event, setGame));
       unsubscribeFromEvent("go-to-new-game", handleGoToNewGame);
     };
   }, [socket, isConnected, enabled, subscribeToEvent, unsubscribeFromEvent, setGame, onWaitingDeal, userId, navigate]);

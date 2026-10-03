@@ -17,7 +17,14 @@ import { useNavigate, useParams } from "react-router";
 
 const WaitingRoom = () => {
   const { userId, loading: userLoading } = useUser();
-  const { socket, isConnected, sendMessage, subscribeToEvent, unsubscribeFromEvent, loading: wsLoading } = useWebSocket()
+  const {
+    socket,
+    isConnected,
+    sendMessage,
+    subscribeToEvent,
+    unsubscribeFromEvent,
+    loading: wsLoading,
+  } = useWebSocket();
   const { gameId } = useParams<string>();
   const [game, setGame] = useState<GameType | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -43,7 +50,7 @@ const WaitingRoom = () => {
         const response = await api.get(`game/${gameId}`);
         if (response.data) {
           setGame(response.data);
-          if (game?.state === 'playing' || game?.state === 'finished') {
+          if (game?.state === "playing" || game?.state === "finished") {
             // Rediriger vers la page de jeu si la partie a déjà commencé
             navigate(`/game/${gameId}`);
           }
@@ -67,15 +74,15 @@ const WaitingRoom = () => {
     const player = game.players.find((player) => player.id === userId);
     if (!player) {
       if (game.players.length >= game.maxPlayers) {
-        navigate('/', {
-          state: { message: "La partie est pleine" }
+        navigate("/", {
+          state: { message: "La partie est pleine" },
         });
         return;
       }
 
       const addPlayer = async () => {
         await api.patch(`game/join/${gameId}`, {});
-      }
+      };
       addPlayer();
       sendMessage("player-joined-game", { room: gameId });
     }
@@ -94,25 +101,25 @@ const WaitingRoom = () => {
     if (!socket || !isConnected || error) return;
 
     const handlePlayerJoined = async (updatedGame: GameType) => {
-      notify('join');
+      notify("join");
       setGame(updatedGame);
       await new Promise((resolve) => setTimeout(resolve, 1000));
     };
 
     const handlePlayerLeft = (updatedGame: GameType | ErrorType) => {
-      if (typeof updatedGame === 'object' && 'code' in updatedGame) {
-        navigate('/', {
-          state: { message: "La partie n'existe plus." }
+      if (typeof updatedGame === "object" && "code" in updatedGame) {
+        navigate("/", {
+          state: { message: "La partie n'existe plus." },
         });
         return;
       }
       setGame(updatedGame);
-    }
+    };
 
     const handleStartGame = (updatedGame: GameType) => {
       setGame(updatedGame);
       navigate(`/game/${gameId}`);
-    }
+    };
 
     subscribeToEvent("player-joined-game", handlePlayerJoined);
     subscribeToEvent("player-left-game", handlePlayerLeft);
@@ -125,7 +132,6 @@ const WaitingRoom = () => {
       unsubscribeFromEvent("update-game-params", setGame);
       unsubscribeFromEvent("start-game", handleStartGame);
     };
-
   }, [socket, isConnected, subscribeToEvent, unsubscribeFromEvent, navigate, error, gameId, setGame]);
 
   const handleSwitchPrivate = async () => {
@@ -136,7 +142,7 @@ const WaitingRoom = () => {
 
     // avertir les autres joueurs du changement
     sendMessage("update-game-params", { room: gameId });
-  }
+  };
 
   // Mettre à jour le nombre de joueurs max
   const handleChangeMaxPlayers = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,7 +152,7 @@ const WaitingRoom = () => {
     await api.patch(`game/${gameId}`, { maxPlayers: value });
     // avertir les autres joueurs du changement
     sendMessage("update-game-params", { room: gameId });
-  }
+  };
 
   const handleStartGame = () => {
     setCreationLoading(true);
@@ -157,7 +163,7 @@ const WaitingRoom = () => {
     setTimeout(() => {
       setCreationLoading(false);
     }, 5000);
-  }
+  };
 
   if (error) {
     return (
@@ -165,18 +171,18 @@ const WaitingRoom = () => {
         error={error}
         button={{
           label: "Retour à l'accueil",
-          action: () => navigate('/')
+          action: () => navigate("/"),
         }}
       />
-    )
+    );
   }
 
   if (wsLoading || !isConnected) {
-    return <ReconnectMessage />
+    return <ReconnectMessage />;
   }
 
   if (loading || userLoading || !game) {
-    return <PageSkeleton />
+    return <PageSkeleton />;
   }
 
   return (
@@ -187,25 +193,32 @@ const WaitingRoom = () => {
             <h1 className="text-2xl text-title">Salle d'attente</h1>
             <PrivacyBadge isPrivate={game.private} onToggle={handleSwitchPrivate} />
           </div>
-          {!isCreator &&
-            <p>Salon créé par {game.creatorPlayer.username}</p>
-          }
+          {!isCreator && <p>Salon créé par {game.creatorPlayer.username}</p>}
           <div className="divider"></div>
           <h3 className="text-xl">Partage cet URL à tes amis</h3>
           <ShareLink gameId={game.id} />
-          {isCreator &&
-            <RoomSettings game={game} starting={creationLoading} onChangeMaxPlayers={handleChangeMaxPlayers} onStart={handleStartGame} />
-          }
+          {isCreator && (
+            <RoomSettings
+              game={game}
+              starting={creationLoading}
+              onChangeMaxPlayers={handleChangeMaxPlayers}
+              onStart={handleStartGame}
+            />
+          )}
         </div>
         <div className="bg-base-300 col-span-3 lg:col-span-1 flex flex-col space-y-4 rounded-box p-5">
           <div className="flex justify-between items-start">
-            <h2 className="text-2xl">Joueurs {game?.players.length}/{game?.maxPlayers}</h2>
+            <h2 className="text-2xl">
+              Joueurs {game?.players.length}/{game?.maxPlayers}
+            </h2>
             <OnlineStatus isConnected={isConnected} />
           </div>
           <div className="divider"></div>
           <div>
             <p className="mt-4">
-              {game.players.length === game.maxPlayers ? "La partie va bientôt commencer..." : "En attente de joueurs..."}
+              {game.players.length === game.maxPlayers
+                ? "La partie va bientôt commencer..."
+                : "En attente de joueurs..."}
             </p>
           </div>
           <PlayerList game={game} />
@@ -214,9 +227,8 @@ const WaitingRoom = () => {
           <Rules />
         </div>
       </div>
-
     </div>
-  )
-}
+  );
+};
 
-export default WaitingRoom
+export default WaitingRoom;

@@ -4,10 +4,7 @@ import { setLogoutCallback } from "@/services/apiService";
 import { useCallback, useEffect } from "react";
 import { UserContext } from "@/context/UserContext";
 
-
-export const UserProvider = ({ children }: {
-  children: React.ReactNode;
-}) => {
+export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { data, isPending, refetch } = authClient.useSession();
   const user = data?.user;
   const userName = user?.username ?? null;
@@ -30,17 +27,19 @@ export const UserProvider = ({ children }: {
   }, [refresh]);
 
   return (
-    <UserContext.Provider value={{
-      userId: userName ? user!.id : null,
-      userName,
-      userEmail: user?.email ?? null,
-      isAuthentified: Boolean(user && userName),
-      needsPseudo: Boolean(user && !userName),
-      suggestedPseudo: suggestPseudo(user?.name),
-      loading: isPending,
-      logout,
-      refresh,
-    }}>
+    <UserContext.Provider
+      value={{
+        userId: userName ? user!.id : null,
+        userName,
+        userEmail: user?.email ?? null,
+        isAuthentified: Boolean(user && userName),
+        needsPseudo: Boolean(user && !userName),
+        suggestedPseudo: suggestPseudo(user?.name),
+        loading: isPending,
+        logout,
+        refresh,
+      }}
+    >
       {children}
     </UserContext.Provider>
   );

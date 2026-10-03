@@ -1,4 +1,4 @@
-import type { GameData } from '@/types/types';
+import type { GameData } from "@/types/types";
 
 // Coups d'un joueur : chaque fonction renvoie de nouvelles données de partie
 // (copie profonde), sans jamais modifier celles reçues de l'état React.
@@ -12,7 +12,7 @@ export function drawFromDeck(gameData: GameData): GameData {
   const next = copy(gameData);
   next.deckCards[0].revealed = true;
   next.deckCards[0].onHand = true;
-  next.currentStep = 'decide-deck';
+  next.currentStep = "decide-deck";
   return next;
 }
 
@@ -20,7 +20,7 @@ export function drawFromDeck(gameData: GameData): GameData {
 export function takeDiscard(gameData: GameData): GameData {
   const next = copy(gameData);
   next.discardPile[next.discardPile.length - 1].onHand = true;
-  next.currentStep = 'replace-discard';
+  next.currentStep = "replace-discard";
   return next;
 }
 
@@ -30,7 +30,7 @@ export function discardDrawnCard(gameData: GameData): GameData {
   const drawn = next.deckCards.shift()!;
   drawn.onHand = false;
   next.discardPile.push(drawn);
-  next.currentStep = 'flip-deck';
+  next.currentStep = "flip-deck";
   return next;
 }
 
@@ -44,7 +44,7 @@ export function replaceWithDiscard(gameData: GameData, playerId: string, cardInd
   playerCard.revealed = true;
   next.playersCards[playerId][cardIndex] = discardCard;
   next.discardPile[next.discardPile.length - 1] = playerCard;
-  next.currentStep = 'endTurn';
+  next.currentStep = "endTurn";
   return next;
 }
 
@@ -57,7 +57,7 @@ export function replaceWithDrawn(gameData: GameData, playerId: string, cardIndex
   playerCard.revealed = true;
   next.discardPile.push(playerCard);
   next.playersCards[playerId][cardIndex] = drawn;
-  next.currentStep = 'endTurn';
+  next.currentStep = "endTurn";
   return next;
 }
 
@@ -65,7 +65,7 @@ export function replaceWithDrawn(gameData: GameData, playerId: string, cardIndex
 export function flipCard(gameData: GameData, playerId: string, cardIndex: number): GameData {
   const next = copy(gameData);
   next.playersCards[playerId][cardIndex].revealed = true;
-  next.currentStep = 'endTurn';
+  next.currentStep = "endTurn";
   return next;
 }
 
@@ -73,7 +73,7 @@ export function flipCard(gameData: GameData, playerId: string, cardIndex: number
 export function revealInitialCard(gameData: GameData, playerId: string, cardIndex: number): GameData {
   const next = copy(gameData);
   const cards = next.playersCards[playerId];
-  if (cards.filter(card => card.revealed).length < 2) {
+  if (cards.filter((card) => card.revealed).length < 2) {
     cards[cardIndex].revealed = true;
   }
   return next;

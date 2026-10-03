@@ -57,7 +57,7 @@ describe("forme d'une partie renvoyée par l'API", () => {
     });
     expect(typeof game.createdAt).toBe("string");
     expect(typeof game.updatedAt).toBe("string");
-    const bobPlayer = game.players.find(player => player.id === bob.id);
+    const bobPlayer = game.players.find((player) => player.id === bob.id);
     expect(bobPlayer).toEqual({
       id: bob.id,
       username: "bob",
@@ -83,12 +83,14 @@ describe("liste des parties", () => {
     const publicId = await createGame(alice, false);
     const privateId = await createGame(alice, true);
 
-    const games = (await app.inject({ method: "GET", url: "/api/games?state=pending&privateRoom=false" })).json<GameType[]>();
-    const ids = games.map(game => game.id);
+    const games = (await app.inject({ method: "GET", url: "/api/games?state=pending&privateRoom=false" })).json<
+      GameType[]
+    >();
+    const ids = games.map((game) => game.id);
 
     expect(ids).toContain(publicId);
     expect(ids).not.toContain(privateId);
-    expect(games.every(game => game.state === "pending" && game.private === false)).toBe(true);
+    expect(games.every((game) => game.state === "pending" && game.private === false)).toBe(true);
   });
 
   it("filtre les parties d'un joueur", async () => {
@@ -97,7 +99,7 @@ describe("liste des parties", () => {
     const withoutBob = await createGame(alice);
 
     const games = (await app.inject({ method: "GET", url: `/api/games?userId=${bob.id}` })).json<GameType[]>();
-    const ids = games.map(game => game.id);
+    const ids = games.map((game) => game.id);
 
     expect(ids).toContain(withBob);
     expect(ids).not.toContain(withoutBob);
@@ -107,11 +109,11 @@ describe("liste des parties", () => {
     const gameId = await createGame(bob);
 
     const response = await app.inject({ method: "GET", url: `/api/users/${bob.id}/games` });
-    const game = response.json<GameType[]>().find(game => game.id === gameId)!;
+    const game = response.json<GameType[]>().find((game) => game.id === gameId)!;
 
     expect(response.statusCode).toBe(200);
     expect(game.creatorPlayer).toEqual({ id: bob.id, username: "bob" });
-    expect(game.players.map(player => player.id)).toEqual([bob.id]);
+    expect(game.players.map((player) => player.id)).toEqual([bob.id]);
     expect(game).not.toHaveProperty("gameData");
   });
 });
@@ -121,7 +123,10 @@ describe("paramètres et suppression", () => {
     const gameId = await createGame(alice);
 
     const response = await app.inject({
-      method: "PATCH", url: `/api/game/${gameId}`, cookies: alice.cookies, payload: { maxPlayers: 2, private: true },
+      method: "PATCH",
+      url: `/api/game/${gameId}`,
+      cookies: alice.cookies,
+      payload: { maxPlayers: 2, private: true },
     });
 
     expect(response.statusCode).toBe(200);
@@ -134,7 +139,10 @@ describe("paramètres et suppression", () => {
     await act("start", gameId, alice, {});
 
     const response = await app.inject({
-      method: "PATCH", url: `/api/game/${gameId}`, cookies: alice.cookies, payload: { maxPlayers: 2 },
+      method: "PATCH",
+      url: `/api/game/${gameId}`,
+      cookies: alice.cookies,
+      payload: { maxPlayers: 2 },
     });
 
     expect(response.statusCode).toBe(403);
@@ -156,7 +164,12 @@ describe("paramètres et suppression", () => {
 describe("cycle de vie", () => {
   it("refuse un joueur de plus que le maximum", async () => {
     const gameId = await createGame(alice);
-    await app.inject({ method: "PATCH", url: `/api/game/${gameId}`, cookies: alice.cookies, payload: { maxPlayers: 2 } });
+    await app.inject({
+      method: "PATCH",
+      url: `/api/game/${gameId}`,
+      cookies: alice.cookies,
+      payload: { maxPlayers: 2 },
+    });
     await act("join", gameId, bob);
     const carol = await createPlayer(app, "carol");
 
@@ -171,7 +184,7 @@ describe("cycle de vie", () => {
 
     await act("leave", gameId, bob);
 
-    expect((await getGame(gameId)).players.map(player => player.id)).toEqual([alice.id]);
+    expect((await getGame(gameId)).players.map((player) => player.id)).toEqual([alice.id]);
   });
 
   it("démarre la partie : distribution, manche 1", async () => {
@@ -197,7 +210,7 @@ describe("cycle de vie", () => {
     await act("join", gameId, bob);
     const back = await getGame(gameId);
 
-    const status = (game: GameType) => game.players.find(player => player.id === bob.id)!.game_players.status;
+    const status = (game: GameType) => game.players.find((player) => player.id === bob.id)!.game_players.status;
     expect(left.players).toHaveLength(2);
     expect(status(left)).toBe("disconnected");
     expect(status(back)).toBe("connected");

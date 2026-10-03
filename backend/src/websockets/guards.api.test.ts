@@ -23,7 +23,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  sockets.forEach(socket => socket.close());
+  sockets.forEach((socket) => socket.close());
   await closeApp(app);
 });
 

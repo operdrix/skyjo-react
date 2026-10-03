@@ -1,4 +1,4 @@
-type NotifyType = 'join' | 'error' | 'warning' | 'play' | 'turnCard' | 'end';
+type NotifyType = "join" | "error" | "warning" | "play" | "turnCard" | "end";
 
 function isMobileDevice() {
   return /Mobi|Android/i.test(navigator.userAgent);
@@ -12,18 +12,18 @@ function vibrate() {
 
 function playSound(notificationType: NotifyType) {
   let beepAudio;
-  if (notificationType === 'play') {
-    beepAudio = new Audio('/sounds/play.wav');
-  } else if (notificationType === 'join') {
-    beepAudio = new Audio('/sounds/join.wav');
-  } else if (notificationType === 'turnCard') {
-    beepAudio = new Audio('/sounds/turnCard.wav');
-  } else if (notificationType === 'warning') {
-    beepAudio = new Audio('/sounds/warning.wav');
-  } else if (notificationType === 'end') {
-    beepAudio = new Audio('/sounds/end.wav');
+  if (notificationType === "play") {
+    beepAudio = new Audio("/sounds/play.wav");
+  } else if (notificationType === "join") {
+    beepAudio = new Audio("/sounds/join.wav");
+  } else if (notificationType === "turnCard") {
+    beepAudio = new Audio("/sounds/turnCard.wav");
+  } else if (notificationType === "warning") {
+    beepAudio = new Audio("/sounds/warning.wav");
+  } else if (notificationType === "end") {
+    beepAudio = new Audio("/sounds/end.wav");
   } else {
-    beepAudio = new Audio('/sounds/error.wav');
+    beepAudio = new Audio("/sounds/error.wav");
   }
 
   beepAudio.play().catch(() => {
@@ -34,7 +34,7 @@ function playSound(notificationType: NotifyType) {
 function notify(notificationType: NotifyType, silence = false) {
   if (!silence) playSound(notificationType);
 
-  if (isMobileDevice() && notificationType === 'play' && !silence) vibrate();
+  if (isMobileDevice() && notificationType === "play" && !silence) vibrate();
 }
 
 export default notify;

@@ -3,7 +3,10 @@ import { frontendOrigins } from "./origins.ts";
 
 describe("origines du front autorisées", () => {
   it("lit une liste séparée par des virgules", () => {
-    expect(frontendOrigins("https://skyjo.fr, http://localhost:4173")).toEqual(["https://skyjo.fr", "http://localhost:4173"]);
+    expect(frontendOrigins("https://skyjo.fr, http://localhost:4173")).toEqual([
+      "https://skyjo.fr",
+      "http://localhost:4173",
+    ]);
   });
 
   it("vaut le front Vite de dev par défaut", () => {

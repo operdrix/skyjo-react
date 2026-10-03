@@ -5,7 +5,14 @@ import type { Card, GameType } from "../../../shared/types.ts";
 import { eq } from "drizzle-orm";
 import { db } from "../db/index.ts";
 import { games } from "../db/schema.ts";
-import { closeApp, connectPlayer, type TestPlayer, createPlayer, nextEvent as nextSocketEvent, setupApp } from "../../test/helpers.ts";
+import {
+  closeApp,
+  connectPlayer,
+  type TestPlayer,
+  createPlayer,
+  nextEvent as nextSocketEvent,
+  setupApp,
+} from "../../test/helpers.ts";
 
 let app: FastifyInstance;
 let url: string;
@@ -21,7 +28,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  sockets.forEach(socket => socket.close());
+  sockets.forEach((socket) => socket.close());
   await closeApp(app);
 });
 
@@ -44,7 +51,10 @@ function act(action: string, gameId: string, player: TestPlayer, payload: object
 // Partie démarrée à 2 joueurs, Alice dans la room
 async function startedGame() {
   const created = await app.inject({
-    method: "POST", url: "/api/game", cookies: alice.cookies, payload: { userId: alice.id },
+    method: "POST",
+    url: "/api/game",
+    cookies: alice.cookies,
+    payload: { userId: alice.id },
   });
   const gameId = created.json<{ gameId: string }>().gameId;
   await act("join", gameId, bob);
@@ -57,13 +67,19 @@ async function startedGame() {
 function revealedHand(prefix: string, top: number, middle: number): Card[] {
   const values = [top, top, top, top, middle, middle, middle, middle, top, top, top, top];
   return values.map((value, index) => ({
-    id: `${prefix}${index}`, value, color: "green" as const, revealed: true, onHand: false,
+    id: `${prefix}${index}`,
+    value,
+    color: "green" as const,
+    revealed: true,
+    onHand: false,
   }));
 }
 
 // Passe la partie au tour d'Alice
 async function aliceTurn(gameId: string, game: GameType) {
-  await db.update(games).set({ gameData: { ...game.gameData, currentStep: "draw", currentPlayer: alice.id } })
+  await db
+    .update(games)
+    .set({ gameData: { ...game.gameData, currentStep: "draw", currentPlayer: alice.id } })
     .where(eq(games.id, gameId));
 }
 
@@ -80,7 +96,7 @@ function lastMove(game: GameType, aliceHand: Card[], bobHand: Card[]) {
   };
 }
 
-const playerOf = (game: GameType, player: TestPlayer) => game.players.find(candidate => candidate.id === player.id)!;
+const playerOf = (game: GameType, player: TestPlayer) => game.players.find((candidate) => candidate.id === player.id)!;
 
 describe("déroulé d'une partie par websocket", () => {
   it("révèle une carte initiale et diffuse la partie", async () => {
@@ -101,13 +117,13 @@ describe("déroulé d'une partie par websocket", () => {
     const [first, second] = game.gameData.playersCards[alice.id];
 
     let moves = 0;
-    const bothMoved = new Promise<void>(resolve => socket.on("play-move", () => ++moves === 2 && resolve()));
+    const bothMoved = new Promise<void>((resolve) => socket.on("play-move", () => ++moves === 2 && resolve()));
     socket.emit("initial-turn-card", { room: gameId, playerId: alice.id, cardId: first.id });
     socket.emit("initial-turn-card", { room: gameId, playerId: alice.id, cardId: second.id });
     await bothMoved;
 
     const stored = (await app.inject({ method: "GET", url: `/api/game/${gameId}` })).json<GameType>();
-    const revealed = stored.gameData.playersCards[alice.id].filter(card => card.revealed).map(card => card.id);
+    const revealed = stored.gameData.playersCards[alice.id].filter((card) => card.revealed).map((card) => card.id);
     expect(revealed.sort()).toEqual([first.id, second.id].sort());
   });
 
@@ -116,7 +132,10 @@ describe("déroulé d'une partie par websocket", () => {
     await aliceTurn(gameId, game);
 
     const moved = nextEvent(socket, "play-move");
-    socket.emit("play-move", { room: gameId, gameData: lastMove(game, revealedHand("a", 0, 1), revealedHand("b", 5, 6)) });
+    socket.emit("play-move", {
+      room: gameId,
+      gameData: lastMove(game, revealedHand("a", 0, 1), revealedHand("b", 5, 6)),
+    });
     const updated = await moved;
 
     expect(updated.gameData.currentStep).toBe("endGame");
@@ -132,7 +151,10 @@ describe("déroulé d'une partie par websocket", () => {
     await aliceTurn(gameId, game);
 
     const moved = nextEvent(socket, "play-move");
-    socket.emit("play-move", { room: gameId, gameData: lastMove(game, revealedHand("a", 0, 1), revealedHand("b", 12, 11)) });
+    socket.emit("play-move", {
+      room: gameId,
+      gameData: lastMove(game, revealedHand("a", 0, 1), revealedHand("b", 12, 11)),
+    });
     const updated = await moved;
 
     expect(updated).toMatchObject({ state: "finished", winner: alice.id, winnerScore: 4 });
@@ -156,6 +178,6 @@ describe("déroulé d'une partie par websocket", () => {
     expect(players).toEqual([alice.id, bob.id]);
     const newGame = (await app.inject({ method: "GET", url: `/api/game/${newGameId}` })).json<GameType>();
     expect(newGame).toMatchObject({ state: "playing", private: true, creator: alice.id, roundNumber: 1 });
-    expect(newGame.players.map(player => player.id).sort()).toEqual([alice.id, bob.id].sort());
+    expect(newGame.players.map((player) => player.id).sort()).toEqual([alice.id, bob.id].sort());
   });
 });

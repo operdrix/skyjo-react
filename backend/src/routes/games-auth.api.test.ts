@@ -31,7 +31,7 @@ async function getGame(gameId: string) {
   return (await app.inject({ method: "GET", url: `/api/game/${gameId}` })).json<GameType>();
 }
 
-const playerIds = (game: GameType) => game.players.map(player => player.id).sort();
+const playerIds = (game: GameType) => game.players.map((player) => player.id).sort();
 
 describe("identité prise dans le jeton, pas dans le body", () => {
   it("crée la partie au nom de l'utilisateur connecté, sans userId dans le body", async () => {
@@ -95,7 +95,10 @@ describe("actions réservées au créateur", () => {
     await act("join", gameId, bob);
 
     const response = await app.inject({
-      method: "PATCH", url: `/api/game/${gameId}`, cookies: bob.cookies, payload: { maxPlayers: 2 },
+      method: "PATCH",
+      url: `/api/game/${gameId}`,
+      cookies: bob.cookies,
+      payload: { maxPlayers: 2 },
     });
 
     expect(response.statusCode).toBe(403);

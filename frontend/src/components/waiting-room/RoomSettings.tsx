@@ -1,7 +1,12 @@
 import type { GameType } from "@/types/types";
 
 // Réglages du créateur : nombre de joueurs maximum et lancement de la partie
-export default function RoomSettings({ game, starting, onChangeMaxPlayers, onStart }: {
+export default function RoomSettings({
+  game,
+  starting,
+  onChangeMaxPlayers,
+  onStart,
+}: {
   game: GameType;
   starting: boolean;
   onChangeMaxPlayers: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -39,9 +44,7 @@ export default function RoomSettings({ game, starting, onChangeMaxPlayers, onSta
           disabled={game.players.length < 2 || starting}
         >
           👾 Commencer la partie 👾
-          {starting &&
-            <span className="loading loading-spinner loading-sm"></span>
-          }
+          {starting && <span className="loading loading-spinner loading-sm"></span>}
         </button>
       </div>
     </>

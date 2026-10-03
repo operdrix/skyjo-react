@@ -3,7 +3,7 @@ COMPOSE = docker compose --env-file backend/.env
 
 .DEFAULT_GOAL := help
 # backend/.env est la source unique des identifiants (lus aussi par docker-compose.yml)
-.PHONY: help install env db-up db-down db-reset db-generate full dev back front test lint build check clean
+.PHONY: help install env db-up db-down db-reset db-generate full dev back front test lint format build check clean
 
 help: ## Liste les commandes
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk -F':.*?## ' '{printf "  %-10s %s\n", $$1, $$2}'
@@ -46,9 +46,13 @@ test: ## Lance les tests (là où le script existe)
 	cd backend && npm run test --if-present
 	cd frontend && npm run test --if-present
 
-lint: ## Lint back + front
+lint: ## Lint + vérification Prettier, back + front
 	cd backend && npm run lint
 	cd frontend && npm run lint
+
+format: ## Met en forme le code avec Prettier (back, front, shared)
+	cd backend && npm run format
+	cd frontend && npm run format
 
 build: ## Build back (si script) + front
 	cd backend && npm run build --if-present

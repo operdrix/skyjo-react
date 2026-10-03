@@ -1,7 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect } from "react";
 
 function GameTurnNotifier_old({ isCurrentTurn }: { isCurrentTurn: boolean }) {
-
   function isMobileDevice() {
     return /Mobi|Android/i.test(navigator.userAgent);
   }
@@ -13,11 +12,11 @@ function GameTurnNotifier_old({ isCurrentTurn }: { isCurrentTurn: boolean }) {
     }
   }
   function playSound() {
-    const beepAudio = new Audio('/sounds/notif.wav');
+    const beepAudio = new Audio("/sounds/notif.wav");
     // Chemin vers ton petit son
     beepAudio.play().catch(() => {
-    // Lecture bloquée par le navigateur (pas encore d'interaction) : on ignore
-  });
+      // Lecture bloquée par le navigateur (pas encore d'interaction) : on ignore
+    });
   }
   const notifyUserTurn = React.useCallback(() => {
     playSound();

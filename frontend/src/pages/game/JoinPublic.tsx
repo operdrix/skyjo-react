@@ -19,7 +19,7 @@ const JoinPublic = () => {
   useEffect(() => {
     if (!userId) return;
     let active = true;
-    api.get('games?state=pending&privateRoom=false').then((response) => {
+    api.get("games?state=pending&privateRoom=false").then((response) => {
       if (!active) return;
       if (response.data) {
         setGames(response.data);
@@ -57,7 +57,7 @@ const JoinPublic = () => {
           onClick={() => {
             setLoading(true);
             setError(null);
-            setReload(count => count + 1);
+            setReload((count) => count + 1);
           }}
         >
           <svg
@@ -95,12 +95,11 @@ const JoinPublic = () => {
                     <tr key={game.id}>
                       <td>{game.id}</td>
                       <td>{game.creatorPlayer.username}</td>
-                      <td>{game.players.length}/{game.maxPlayers}</td>
                       <td>
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => navigate(`/join/${game.id}`)}
-                        >
+                        {game.players.length}/{game.maxPlayers}
+                      </td>
+                      <td>
+                        <button className="btn btn-primary btn-sm" onClick={() => navigate(`/join/${game.id}`)}>
                           Rejoindre
                         </button>
                       </td>

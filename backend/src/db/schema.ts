@@ -16,7 +16,10 @@ import type { GameData } from "../../../shared/types.ts";
 // createdAt / updatedAt, mis à jour côté application
 const timestamps = {
   createdAt: timestamp({ fsp: 3 }).notNull().defaultNow(),
-  updatedAt: timestamp({ fsp: 3 }).notNull().defaultNow().$onUpdate(() => new Date()),
+  updatedAt: timestamp({ fsp: 3 })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
 };
 
 // Tables d'authentification gérées par Better Auth (src/auth.ts) : users, sessions, accounts, verifications.
@@ -39,7 +42,9 @@ export const sessions = mysqlTable("sessions", {
   expiresAt: timestamp({ fsp: 3 }).notNull(),
   ipAddress: varchar({ length: 255 }),
   userAgent: varchar({ length: 1024 }),
-  userId: varchar({ length: 36 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar({ length: 36 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   ...timestamps,
 });
 
@@ -48,7 +53,9 @@ export const accounts = mysqlTable("accounts", {
   id: varchar({ length: 36 }).primaryKey(),
   accountId: varchar({ length: 255 }).notNull(),
   providerId: varchar({ length: 255 }).notNull(),
-  userId: varchar({ length: 36 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar({ length: 36 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   accessToken: text(),
   refreshToken: text(),
   idToken: text(),
@@ -69,28 +76,49 @@ export const verifications = mysqlTable("verifications", {
 });
 
 export const games = mysqlTable("games", {
-  id: varchar({ length: 16 }).primaryKey().$defaultFn(() => nanoid(5)),
-  creator: varchar({ length: 36 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  id: varchar({ length: 16 })
+    .primaryKey()
+    .$defaultFn(() => nanoid(5)),
+  creator: varchar({ length: 36 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   winner: varchar({ length: 36 }).references(() => users.id, { onDelete: "set null" }),
   winnerScore: int(),
   state: mysqlEnum(["pending", "playing", "finished"]).notNull().default("pending"),
   roundNumber: int().notNull().default(0),
   private: boolean().notNull().default(false),
   maxPlayers: int().notNull().default(4),
-  playersPlayAgain: json().$type<string[]>().notNull().$defaultFn(() => []),
+  playersPlayAgain: json()
+    .$type<string[]>()
+    .notNull()
+    .$defaultFn(() => []),
   // Objet vide tant que la partie n'a pas démarré
-  gameData: json().$type<GameData>().notNull().$defaultFn(() => ({}) as GameData),
+  gameData: json()
+    .$type<GameData>()
+    .notNull()
+    .$defaultFn(() => ({}) as GameData),
   ...timestamps,
 });
 
-export const gamePlayers = mysqlTable("game_players", {
-  gameId: varchar({ length: 16 }).notNull().references(() => games.id, { onDelete: "cascade" }),
-  userId: varchar({ length: 36 }).notNull().references(() => users.id, { onDelete: "cascade" }),
-  score: int().notNull().default(0),
-  scoreByRound: json().$type<number[]>().notNull().$defaultFn(() => []),
-  status: mysqlEnum(["connected", "disconnected"]).notNull().default("connected"),
-  ...timestamps,
-}, (table) => [primaryKey({ columns: [table.gameId, table.userId] })]);
+export const gamePlayers = mysqlTable(
+  "game_players",
+  {
+    gameId: varchar({ length: 16 })
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    userId: varchar({ length: 36 })
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    score: int().notNull().default(0),
+    scoreByRound: json()
+      .$type<number[]>()
+      .notNull()
+      .$defaultFn(() => []),
+    status: mysqlEnum(["connected", "disconnected"]).notNull().default("connected"),
+    ...timestamps,
+  },
+  (table) => [primaryKey({ columns: [table.gameId, table.userId] })],
+);
 
 export const usersRelations = relations(users, ({ many }) => ({
   games: many(gamePlayers),

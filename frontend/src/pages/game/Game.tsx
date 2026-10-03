@@ -22,7 +22,7 @@ import { useNavigate, useParams } from "react-router";
 
 const Game = () => {
   const { userId, loading: userLoading } = useUser();
-  const { isConnected, sendMessage, loading: wsLoading } = useWebSocket()
+  const { isConnected, sendMessage, loading: wsLoading } = useWebSocket();
   const { game, setGame, sound } = useGame();
   const { gameId } = useParams<string>();
   const [loading, setLoading] = useState<boolean>(true);
@@ -47,7 +47,7 @@ const Game = () => {
         const response = await api.get(`game/${gameId}`);
         if (response.data) {
           setGame(response.data);
-          if (response.data.state === 'pending') {
+          if (response.data.state === "pending") {
             navigate(`/join/${gameId}`);
           }
         } else if (response.error) {
@@ -68,10 +68,9 @@ const Game = () => {
   useEffect(() => {
     if (!game) return;
 
-    if (game.state === 'pending') {
+    if (game.state === "pending") {
       navigate(`/join/${gameId}`);
     }
-
   }, [game, navigate, gameId]);
 
   // Avertir les autres joueurs de la connexion du joueur
@@ -85,9 +84,9 @@ const Game = () => {
   // Notification de l'utilisateur si c'est son tour
   const notifyPlayerTurn = useCallback(() => {
     if (!game || !userId) return;
-    const playerTurn = (game.gameData.currentPlayer === userId && game.gameData.currentStep === 'draw');
+    const playerTurn = game.gameData.currentPlayer === userId && game.gameData.currentStep === "draw";
     if (playerTurn) {
-      notify('play', !sound);
+      notify("play", !sound);
     }
   }, [game, sound, userId]);
 
@@ -96,9 +95,9 @@ const Game = () => {
   }, [notifyPlayerTurn]);
 
   // Son de fin de manche, une fois à l'arrivée sur l'écran des scores
-  const roundOver = game?.gameData.currentStep === 'endGame';
+  const roundOver = game?.gameData.currentStep === "endGame";
   useEffect(() => {
-    if (roundOver) notify('end', !sound);
+    if (roundOver) notify("end", !sound);
   }, [roundOver, sound]);
 
   if (error) {
@@ -107,29 +106,29 @@ const Game = () => {
         error={error}
         button={{
           label: "Retour à l'accueil",
-          action: () => navigate('/')
+          action: () => navigate("/"),
         }}
       />
-    )
+    );
   }
 
   if (wsLoading || !isConnected) {
-    return <ReconnectMessage />
+    return <ReconnectMessage />;
   }
 
   if (loading || userLoading || !game || !userId) {
-    return <PageSkeleton />
+    return <PageSkeleton />;
   }
 
   if (waitingDeal) {
-    return <WaitingDeal />
+    return <WaitingDeal />;
   }
 
   const seats = tableSeats(game.gameData.turnOrder, userId);
 
   return (
     <>
-      {(game.gameData.currentStep === 'endGame') && <ModalScoreEndGame />}
+      {game.gameData.currentStep === "endGame" && <ModalScoreEndGame />}
       <ModalScore />
 
       <GameMenu />
@@ -162,10 +161,8 @@ const Game = () => {
             {/* Défausse */}
             <Discard />
           </div>
-          <p
-            className="text-sm md:text-xl lg:text-2xl text-center text-warning animate-bounce"
-          >
-            {game.gameData.lastTurn && 'Dernier tour !'}
+          <p className="text-sm md:text-xl lg:text-2xl text-center text-warning animate-bounce">
+            {game.gameData.lastTurn && "Dernier tour !"}
           </p>
         </div>
 
@@ -178,14 +175,12 @@ const Game = () => {
         {/* <div className={game.players.length === 2 ? 'hidden' : ''}></div> */}
         {/* <div className={game.players.length === 3 ? 'col-span-2' : ''}> */}
         <div className="game-area-bottom-center">
-
           <PlayerSet playerId={userId} isCurrentPlayerSet />
         </div>
         {/* <div className={game.players.length <= 3 ? 'hidden' : ''}></div> */}
-
       </section>
     </>
-  )
-}
+  );
+};
 
-export default Game
+export default Game;

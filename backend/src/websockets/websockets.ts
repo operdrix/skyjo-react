@@ -58,7 +58,13 @@ async function verifySession(socket: Socket, app: FastifyInstance) {
 }
 
 // Enregistre un handler d'événement : validation des champs et de la session avant traitement
-function on(socket: GameSocket, app: FastifyInstance, event: string, requiredFields: string[], handler: (data: Payload) => Promise<void>) {
+function on(
+  socket: GameSocket,
+  app: FastifyInstance,
+  event: string,
+  requiredFields: string[],
+  handler: (data: Payload) => Promise<void>,
+) {
   (socket as Socket).on(event, async (data: unknown) => {
     if (!validateEventData(socket as Socket, data, requiredFields)) return;
     if (!(await verifySession(socket as Socket, app))) return;
@@ -84,7 +90,7 @@ async function creatorGame(socket: GameSocket, room: string): Promise<GameType |
   return game;
 }
 
-const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function websockets(app: FastifyInstance) {
   await app.ready();

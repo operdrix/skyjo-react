@@ -1,12 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  advanceGame,
-  checkMaximumScore,
-  computeRoundScores,
-  createDeck,
-  dealCards,
-  shuffle,
-} from "./rules.ts";
+import { advanceGame, checkMaximumScore, computeRoundScores, createDeck, dealCards, shuffle } from "./rules.ts";
 import type { Card, GameData } from "../../../shared/types.ts";
 
 // Main de 12 cartes à partir des valeurs ; `revealed` : indices révélés ou true pour toutes
@@ -40,7 +33,7 @@ function game(partial: Partial<GameData>): GameData {
 describe("createDeck", () => {
   it("contient les 150 cartes du Skyjo", () => {
     const deck = createDeck();
-    const count = (value: number) => deck.filter(card => card.value === value).length;
+    const count = (value: number) => deck.filter((card) => card.value === value).length;
 
     expect(deck).toHaveLength(150);
     expect(count(-2)).toBe(5);
@@ -49,8 +42,8 @@ describe("createDeck", () => {
     for (let value = 1; value <= 12; value++) {
       expect(count(value)).toBe(10);
     }
-    expect(new Set(deck.map(card => card.id)).size).toBe(150);
-    expect(deck.every(card => !card.revealed)).toBe(true);
+    expect(new Set(deck.map((card) => card.id)).size).toBe(150);
+    expect(deck.every((card) => !card.revealed)).toBe(true);
   });
 });
 
@@ -71,7 +64,7 @@ describe("dealCards", () => {
     expect(Object.keys(gameData.playersCards)).toEqual(["a", "b", "c"]);
     for (const cards of Object.values(gameData.playersCards)) {
       expect(cards).toHaveLength(12);
-      expect(cards.every(card => !card.revealed)).toBe(true);
+      expect(cards.every((card) => !card.revealed)).toBe(true);
     }
     expect(gameData.discardPile).toHaveLength(1);
     expect(gameData.discardPile[0].revealed).toBe(true);
@@ -83,11 +76,9 @@ describe("dealCards", () => {
 
   it("ne distribue jamais deux fois la même carte", () => {
     const gameData = dealCards(["a", "b"]);
-    const ids = [
-      ...Object.values(gameData.playersCards).flat(),
-      ...gameData.deckCards,
-      ...gameData.discardPile,
-    ].map(card => card.id);
+    const ids = [...Object.values(gameData.playersCards).flat(), ...gameData.deckCards, ...gameData.discardPile].map(
+      (card) => card.id,
+    );
 
     expect(new Set(ids).size).toBe(150);
   });
@@ -170,8 +161,8 @@ describe("advanceGame : fin de tour", () => {
 
     advanceGame(gameData);
 
-    expect(gameData.playersCards.a.map(card => card.value)).toEqual([1, 2, 3, 4, 5, 6, 8, 9, 10]);
-    expect(gameData.discardPile.map(card => card.value)).toEqual([7, 7, 7]);
+    expect(gameData.playersCards.a.map((card) => card.value)).toEqual([1, 2, 3, 4, 5, 6, 8, 9, 10]);
+    expect(gameData.discardPile.map((card) => card.value)).toEqual([7, 7, 7]);
   });
 
   it("ne défausse pas une colonne si une carte est cachée", () => {
@@ -203,7 +194,7 @@ describe("advanceGame : fin de tour", () => {
 
     advanceGame(gameData);
 
-    expect(gameData.playersCards.b.every(card => card.revealed)).toBe(true);
+    expect(gameData.playersCards.b.every((card) => card.revealed)).toBe(true);
     expect(gameData.currentStep).toBe("endGame");
     expect(gameData.firstPlayerToEnd).toBe("a");
   });
@@ -211,28 +202,34 @@ describe("advanceGame : fin de tour", () => {
 
 describe("computeRoundScores", () => {
   it("additionne les cartes de chaque joueur", () => {
-    const scores = computeRoundScores(game({
-      firstPlayerToEnd: "a",
-      playersCards: { a: hand([1, 2, -2]), b: hand([5, 5, 5]) },
-    }));
+    const scores = computeRoundScores(
+      game({
+        firstPlayerToEnd: "a",
+        playersCards: { a: hand([1, 2, -2]), b: hand([5, 5, 5]) },
+      }),
+    );
 
     expect(scores).toEqual({ a: 1, b: 15 });
   });
 
   it("double le score de celui qui termine sans avoir le plus petit score", () => {
-    const scores = computeRoundScores(game({
-      firstPlayerToEnd: "a",
-      playersCards: { a: hand([5, 5]), b: hand([1, 1]) },
-    }));
+    const scores = computeRoundScores(
+      game({
+        firstPlayerToEnd: "a",
+        playersCards: { a: hand([5, 5]), b: hand([1, 1]) },
+      }),
+    );
 
     expect(scores).toEqual({ a: 20, b: 2 });
   });
 
   it("double aussi en cas d'égalité avec le plus petit score", () => {
-    const scores = computeRoundScores(game({
-      firstPlayerToEnd: "a",
-      playersCards: { a: hand([3]), b: hand([3]) },
-    }));
+    const scores = computeRoundScores(
+      game({
+        firstPlayerToEnd: "a",
+        playersCards: { a: hand([3]), b: hand([3]) },
+      }),
+    );
 
     expect(scores).toEqual({ a: 6, b: 3 });
   });

@@ -212,16 +212,16 @@ function determineFirstPlayer(gameData: GameData) {
   let highestPlayer: string | null = null;
 
   for (const playerId of gameData.turnOrder) {
-    const cards = gameData.playersCards[playerId].filter(card => card.revealed);
+    const cards = gameData.playersCards[playerId].filter((card) => card.revealed);
     const totalValue = countPoints(cards);
 
     if (totalValue > highestValue) {
       highestValue = totalValue;
       highestPlayer = playerId;
     } else if (totalValue === highestValue) {
-      const highestCard = Math.max(...cards.map(card => card.value));
-      const playerCards = gameData.playersCards[highestPlayer!].filter(card => card.revealed);
-      const highestPlayerCard = Math.max(...playerCards.map(card => card.value));
+      const highestCard = Math.max(...cards.map((card) => card.value));
+      const playerCards = gameData.playersCards[highestPlayer!].filter((card) => card.revealed);
+      const highestPlayerCard = Math.max(...playerCards.map((card) => card.value));
 
       if (highestCard > highestPlayerCard) {
         highestPlayer = playerId;

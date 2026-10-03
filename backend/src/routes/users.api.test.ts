@@ -20,10 +20,10 @@ afterAll(async () => {
 // Dernier mail reçu par Mailpit pour cette adresse
 async function lastMailTo(email: string) {
   const search = await fetch(`${MAILPIT_URL}/api/v1/search?query=${encodeURIComponent(`to:${email}`)}`);
-  const { messages } = await search.json() as { messages: { ID: string }[] };
+  const { messages } = (await search.json()) as { messages: { ID: string }[] };
   expect(messages.length).toBeGreaterThan(0);
   const message = await fetch(`${MAILPIT_URL}/api/v1/message/${messages[0].ID}`);
-  return await message.json() as { Subject: string; HTML: string };
+  return (await message.json()) as { Subject: string; HTML: string };
 }
 
 function signUp(payload: object) {
@@ -40,7 +40,12 @@ function createGame(cookies: Record<string, string>) {
 
 describe("inscription par email", () => {
   it("connecte le joueur dès l'inscription, sans vérification d'adresse", async () => {
-    const response = await signUp({ email: "dora@test.local", password: "secret-de-test", name: "dora", username: "dora" });
+    const response = await signUp({
+      email: "dora@test.local",
+      password: "secret-de-test",
+      name: "dora",
+      username: "dora",
+    });
 
     expect(response.statusCode).toBe(200);
     expect(response.json().user).toMatchObject({ username: "dora" });
@@ -56,7 +61,12 @@ describe("inscription par email", () => {
   it("refuse un pseudo déjà pris, quelle que soit la casse", async () => {
     await createPlayer(app, "fanny");
 
-    const response = await signUp({ email: "autre@test.local", password: "secret-de-test", name: "Fanny", username: "Fanny" });
+    const response = await signUp({
+      email: "autre@test.local",
+      password: "secret-de-test",
+      name: "Fanny",
+      username: "Fanny",
+    });
 
     expect(response.statusCode).toBe(400);
   });
@@ -87,7 +97,10 @@ describe("pseudo à choisir après une première connexion Google", () => {
     expect((await createGame(ines.cookies)).statusCode).toBe(403);
 
     const update = await app.inject({
-      method: "POST", url: "/api/auth/update-user", cookies: ines.cookies, payload: { username: "Inès" },
+      method: "POST",
+      url: "/api/auth/update-user",
+      cookies: ines.cookies,
+      payload: { username: "Inès" },
     });
     expect(update.statusCode).toBe(200);
     expect((await createGame(ines.cookies)).statusCode).toBe(200);
@@ -111,7 +124,9 @@ describe("mot de passe oublié", () => {
     expect(token).toBeTruthy();
 
     const reset = await app.inject({
-      method: "POST", url: "/api/auth/reset-password", payload: { token, newPassword: "nouveau-secret" },
+      method: "POST",
+      url: "/api/auth/reset-password",
+      payload: { token, newPassword: "nouveau-secret" },
     });
     expect(reset.statusCode).toBe(200);
     expect((await signIn("jade@test.local", "nouveau-secret")).statusCode).toBe(200);

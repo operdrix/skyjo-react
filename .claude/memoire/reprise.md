@@ -1,11 +1,13 @@
-# Mémoire projet : état et reprise (maj 2026-10-03, phase 7 déploiement)
+# Mémoire projet : état et reprise (maj 2026-10-04, en production)
 
 Fichier versionné pour reprendre le travail sur n'importe quel PC. Chargé par `CLAUDE.md`. À tenir à jour en fin de session.
 
 ## Où on en est
 - Socle posé et mergé (PR #22 `CLAUDE.md`/Makefile/skills/Mailpit, PR #23 flux de branches). `dev` est la branche par défaut, `main` la version stable.
 - Décisions validées : voir `docs/PLAN.md` (jeu entre amis, base jetable, garde-fous légers, Drizzle + backend TS, dernières majeures, Vitest, TDD obligatoire, ordre : tests → dépendances → Drizzle+TS → garde-fous → ménage).
-- **Phase 7 (déploiement)** sur `feat/deploiement` : MariaDB partout (dev, CI, prod), `release.yml` (release GitHub → Docker Hub privé → webhooks Dokploy), version dans le footer, guide `.github/README-CICD.md`. Reste à faire côté utilisateur : secrets GitHub (environment `production`), dépôts Docker Hub privés, registry + apps Dokploy, puis `make release VERSION=3.0.0` après merge `dev → main`.
+- **En production** depuis la v3.0.0 (2026-10-03) : https://skyjo.olivgames.fr (API https://api-skyjo.olivgames.fr). Phase 7 mergée (PR #31, release PR #32).
+  - Livrer en prod : PR `dev → main` en **merge commit** (pas de squash), puis `make release VERSION=X.Y.Z` → `release.yml` (validation, images publiques `operdrix/skyjo-*`, webhooks Dokploy). Guide et secrets : `.github/README-CICD.md`.
+  - Pièges vus au 1er déploiement : valeurs lues en `vars.*` créées par erreur en secrets (vides) ; webhook Dokploy à coller en URL complète (`curl: (6) Could not resolve host: ***` sinon).
   - Passage MySQL → MariaDB en local : `docker compose --env-file backend/.env --profile full down --remove-orphans`, `docker volume rm skyjo_mysql_data`, puis `make db-up` (service et volume renommés `db` / `skyjo_db_data`).
   - MariaDB refuse `LEFT JOIN LATERAL` : jamais d'API relationnelle Drizzle avec `with`.
 - Phases 1 à 5 mergées (PR #24 à #28). **Phase 6 (ménage) terminée** sur `feat/menage` : le plan de remise en route est terminé.

@@ -7,16 +7,17 @@ import { GameProvider } from "@/context/GameContext"
 import { WebSocketProvider } from "@/context/WebSocketContext"
 import { useUser } from "@/hooks/User"
 import { useEffect } from "react"
-import { Outlet, useLocation, useNavigate } from "react-router"
+import RequirePseudo from "@/components/auth/RequirePseudo"
+import { useLocation, useNavigate } from "react-router"
 
 const GameLayout = () => {
-  const { isAuthentified, loading: userLoading } = useUser();
+  const { isAuthentified, needsPseudo, loading: userLoading } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
 
   // Vérifier si l'utilisateur est connecté au site
   useEffect(() => {
-    if (!userLoading && !isAuthentified) {
+    if (!userLoading && !isAuthentified && !needsPseudo) {
       navigate('/auth/login', {
         state: {
           message: {
@@ -28,7 +29,7 @@ const GameLayout = () => {
         }
       });
     }
-  }, [isAuthentified, userLoading]);
+  }, [isAuthentified, needsPseudo, userLoading]);
 
   const isGamePage = location.pathname.startsWith('/game/');
 
@@ -42,7 +43,7 @@ const GameLayout = () => {
         <Drawer>
           <div className="flex flex-col min-h-screen font-kalam">
             {!isGamePage && <Header />}
-            <Outlet />
+            <RequirePseudo />
             {!isGamePage && <Footer />}
           </div>
         </Drawer>

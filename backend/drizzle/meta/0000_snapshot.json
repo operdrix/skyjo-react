@@ -1,9 +1,133 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "32fefcae-f4ec-45c3-bf27-b45966e92087",
+  "id": "50a61f8b-c734-4f96-8b08-9ea93acc8a7d",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
+    "accounts": {
+      "name": "accounts",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "provider_id": {
+          "name": "provider_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "access_token": {
+          "name": "access_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "refresh_token": {
+          "name": "refresh_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "id_token": {
+          "name": "id_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "access_token_expires_at": {
+          "name": "access_token_expires_at",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "refresh_token_expires_at": {
+          "name": "refresh_token_expires_at",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "scope": {
+          "name": "scope",
+          "type": "varchar(1024)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "password": {
+          "name": "password",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "accounts_user_id_users_id_fk": {
+          "name": "accounts_user_id_users_id_fk",
+          "tableFrom": "accounts",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "accounts_id": {
+          "name": "accounts_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
     "game_players": {
       "name": "game_players",
       "columns": {
@@ -16,7 +140,7 @@
         },
         "user_id": {
           "name": "user_id",
-          "type": "varchar(32)",
+          "type": "varchar(36)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -114,14 +238,14 @@
         },
         "creator": {
           "name": "creator",
-          "type": "varchar(32)",
+          "type": "varchar(36)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "winner": {
           "name": "winner",
-          "type": "varchar(32)",
+          "type": "varchar(36)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -236,35 +360,124 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
+    "sessions": {
+      "name": "sessions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "token": {
+          "name": "token",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "ip_address": {
+          "name": "ip_address",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "type": "varchar(1024)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "sessions_user_id_users_id_fk": {
+          "name": "sessions_user_id_users_id_fk",
+          "tableFrom": "sessions",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "sessions_id": {
+          "name": "sessions_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "sessions_token_unique": {
+          "name": "sessions_token_unique",
+          "columns": [
+            "token"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
     "users": {
       "name": "users",
       "columns": {
         "id": {
           "name": "id",
-          "type": "varchar(32)",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "username": {
           "name": "username",
-          "type": "varchar(255)",
+          "type": "varchar(30)",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "firstname": {
-          "name": "firstname",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "lastname": {
-          "name": "lastname",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "email": {
@@ -274,59 +487,24 @@
           "notNull": true,
           "autoincrement": false
         },
-        "password": {
-          "name": "password",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "best_score": {
-          "name": "best_score",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "verified": {
-          "name": "verified",
+        "email_verified": {
+          "name": "email_verified",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": false
         },
-        "verified_token": {
-          "name": "verified_token",
+        "image": {
+          "name": "image",
           "type": "varchar(255)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "verified_token_expires": {
-          "name": "verified_token_expires",
-          "type": "datetime(3)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "avatar": {
-          "name": "avatar",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "reset_password_token": {
-          "name": "reset_password_token",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "reset_password_expires": {
-          "name": "reset_password_expires",
-          "type": "datetime(3)",
+        "best_score": {
+          "name": "best_score",
+          "type": "int",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -372,6 +550,67 @@
           ]
         }
       },
+      "checkConstraint": {}
+    },
+    "verifications": {
+      "name": "verifications",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "identifier": {
+          "name": "identifier",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "verifications_id": {
+          "name": "verifications_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
       "checkConstraint": {}
     }
   },

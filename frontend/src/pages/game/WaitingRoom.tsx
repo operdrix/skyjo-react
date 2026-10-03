@@ -75,10 +75,10 @@ const WaitingRoom = () => {
       }
 
       const addPlayer = async () => {
-        await api.patch(`game/join/${gameId}`, { userId });
+        await api.patch(`game/join/${gameId}`, {});
       }
       addPlayer();
-      sendMessage("player-joined-game", { room: gameId, userId });
+      sendMessage("player-joined-game", { room: gameId });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game, gameId, userId, userLoading, wsLoading, loading, navigate, error, isConnected]); // sendMessage retiré pour éviter les boucles infinies
@@ -86,7 +86,7 @@ const WaitingRoom = () => {
   // Avertir les autres joueurs de la connexion du joueur
   useEffect(() => {
     if (!gameId || !userId || error || !isConnected) return;
-    sendMessage("player-joined-game", { room: gameId, userId });
+    sendMessage("player-joined-game", { room: gameId });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameId, userId, error, isConnected]); // sendMessage retiré pour éviter les boucles infinies
 

@@ -5,7 +5,7 @@ import '@/index.css'
 import AuthLayout from '@/pages/auth/AuthLayout.tsx'
 import Login from '@/pages/auth/Login.tsx'
 import Register from '@/pages/auth/Register.tsx'
-import VerifyEmail from '@/pages/auth/VerifyEmail.tsx'
+import ChoosePseudo from '@/pages/auth/ChoosePseudo.tsx'
 import Create from '@/pages/game/Create.tsx'
 import Game from '@/pages/game/Game.tsx'
 import GameLayout from '@/pages/game/GameLayout.tsx'
@@ -80,15 +80,15 @@ const router = createBrowserRouter([
         element: <Register />
       },
       {
-        path: '/auth/verify/:token',
-        element: <VerifyEmail />
+        path: '/auth/pseudo',
+        element: <ChoosePseudo />
       },
       {
         path: '/auth/request-reset-password',
         element: <RequestResetPassword />
       },
       {
-        path: '/auth/password-reset/:token',
+        path: '/auth/password-reset',
         element: <ResetPassword />
       }
     ]

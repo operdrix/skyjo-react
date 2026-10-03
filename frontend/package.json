@@ -12,6 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "better-auth": "^1.7.7",
     "formik": "^2.4.9",
     "jwt-decode": "^4.0.0",
     "react": "^19.3.0",

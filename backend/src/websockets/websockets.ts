@@ -1,3 +1,4 @@
+import { fromNodeHeaders } from "better-auth/node";
 import type { FastifyInstance } from "fastify";
 import type { Server, Socket } from "socket.io";
 import type { GameData, GameType } from "../../../shared/types.ts";
@@ -20,9 +21,11 @@ const SESSION_EXPIRED = { message: "Session expirée, veuillez vous reconnecter"
 const MOVE_REFUSED = { message: "Coup refusé" };
 const CREATOR_ONLY = { message: "Seul le créateur de la partie peut faire cela" };
 
-function readAccessToken(socket: Socket) {
-  const cookies = socket.handshake.headers.cookie;
-  return cookies?.match(/(?:^|;)\s*accessToken\s*=\s*([^;]+)/)?.[1] ?? null;
+// Joueur de la session portée par les cookies du handshake (null sans session ou sans pseudo)
+async function sessionPlayer(socket: Socket, app: FastifyInstance) {
+  const session = await app.auth.api.getSession({ headers: fromNodeHeaders(socket.handshake.headers) });
+  const username = session?.user.username;
+  return session && username ? { id: session.user.id, username } : null;
 }
 
 /**
@@ -44,30 +47,21 @@ function validateEventData(socket: Socket, data: unknown, requiredFields: string
   return true;
 }
 
-/**
- * Vérifie que le token JWT est toujours valide
- */
-function verifySocketToken(socket: Socket, app: FastifyInstance) {
-  const token = readAccessToken(socket);
-  try {
-    if (!token) {
-      throw new Error("Access token absent");
-    }
-    app.jwt.verify(token);
+// Vérifie que la session est toujours valide, sinon déconnecte le socket
+async function verifySession(socket: Socket, app: FastifyInstance) {
+  if (await sessionPlayer(socket, app)) {
     return true;
-  } catch (err) {
-    logger.error("Token verification failed:", (err as Error).message);
-    socket.emit("error", SESSION_EXPIRED);
-    socket.disconnect();
-    return false;
   }
+  socket.emit("error", SESSION_EXPIRED);
+  socket.disconnect();
+  return false;
 }
 
-// Enregistre un handler d'événement : validation des champs et du token avant traitement
+// Enregistre un handler d'événement : validation des champs et de la session avant traitement
 function on(socket: GameSocket, app: FastifyInstance, event: string, requiredFields: string[], handler: (data: Payload) => Promise<void>) {
   (socket as Socket).on(event, async (data: unknown) => {
     if (!validateEventData(socket as Socket, data, requiredFields)) return;
-    if (!verifySocketToken(socket as Socket, app)) return;
+    if (!(await verifySession(socket as Socket, app))) return;
     try {
       await handler(data);
     } catch (error) {
@@ -97,17 +91,16 @@ export async function websockets(app: FastifyInstance) {
   const io: Server = app.io;
 
   // Middleware d'authentification pour les WebSocket
-  io.use((socket, next) => {
-    const token = readAccessToken(socket);
-    if (!token) {
-      logger.error("WebSocket: accessToken not found in cookies");
-      return next(new Error("Authentication token missing"));
-    }
+  io.use(async (socket, next) => {
     try {
-      const decoded = app.jwt.verify<{ id: string; username: string }>(token);
-      socket.data.userId = decoded.id;
-      socket.data.username = decoded.username;
-      logger.info(`WebSocket: User authenticated - ${decoded.username} (${decoded.id})`);
+      const player = await sessionPlayer(socket, app);
+      if (!player) {
+        logger.error("WebSocket: session absente ou pseudo non choisi");
+        return next(new Error("Session absente"));
+      }
+      socket.data.userId = player.id;
+      socket.data.username = player.username;
+      logger.info(`WebSocket: User authenticated - ${player.username} (${player.id})`);
       next();
     } catch (err) {
       logger.error("WebSocket authentication error:", (err as Error).message);

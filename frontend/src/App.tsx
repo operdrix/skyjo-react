@@ -5,7 +5,7 @@ import { api } from "./services/apiService";
 
 function App() {
 
-  const { userId, loading: userLoading, isAuthentified } = useUser();
+  const { loading: userLoading, isAuthentified } = useUser();
   const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
 
@@ -26,7 +26,7 @@ function App() {
 
     setLoading(true);
 
-    const response = await api.post('game', { userId, privateRoom: true });
+    const response = await api.post('game', { privateRoom: true });
 
     if (response.error) {
       // L'erreur 401 est gérée automatiquement par l'intercepteur

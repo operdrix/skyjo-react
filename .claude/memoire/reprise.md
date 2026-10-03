@@ -1,13 +1,16 @@
-# Mémoire projet : état et reprise (maj 2026-10-02, fin phase 4)
+# Mémoire projet : état et reprise (maj 2026-10-03, inscription rapide)
 
 Fichier versionné pour reprendre le travail sur n'importe quel PC. Chargé par `CLAUDE.md`. À tenir à jour en fin de session.
 
 ## Où on en est
 - Socle posé et mergé (PR #22 `CLAUDE.md`/Makefile/skills/Mailpit, PR #23 flux de branches). `dev` est la branche par défaut, `main` la version stable.
 - Décisions validées : voir `docs/PLAN.md` (jeu entre amis, base jetable, garde-fous légers, Drizzle + backend TS, dernières majeures, Vitest, TDD obligatoire, ordre : tests → dépendances → Drizzle+TS → garde-fous → ménage).
-- Phases 1 (PR #24), 2 (PR #25) et 3 (PR #26) mergées. **Phase 4 terminée** sur `feat/garde-fous` (détail dans `docs/PLAN.md`). Prochaine : phase 5 (ménage).
+- Phases 1 à 4 mergées (PR #24 à #27). **Phase 5 (inscription rapide, Better Auth) terminée** sur `feat/inscription-rapide`. Prochaine : phase 6 (ménage).
+  - Auth : `backend/src/auth.ts` (Better Auth), routes `/api/auth/*` montées dans `app.ts`. Front : `frontend/src/lib/authClient.ts`, `UserContext` basé sur `authClient.useSession()`, garde `RequirePseudo`.
+  - Tests : `createPlayer` inscrit via `/api/auth/sign-up/email` ; sockets avec `cookieHeader(player)`. Simuler un compte Google sans pseudo : `update users set username=null`.
+  - Google non testé de bout en bout (identifiants à créer dans Google Cloud Console par Olivier).
   - Tests des garde-fous : `backend/src/routes/games-auth.api.test.ts`, `backend/src/websockets/guards.api.test.ts`. Pour jouer un coup en test, passer d'abord la partie au tour du joueur en base (`currentPlayer`), sinon `play-move` est refusé.
-  - Les tests d'API ont leurs propres `JWT_SECRET`/`COOKIE_SECRET` (`backend/vitest.config.ts`) ; le back refuse de démarrer sans eux.
+  - Les tests d'API ont leur propre `BETTER_AUTH_SECRET` (`backend/vitest.config.ts`) ; le back refuse de démarrer sans.
   - Après un pull qui touche au schéma : `make db-reset` (base jetable). Le back applique les migrations au démarrage.
   - Dokploy : contexte de build `.` + Docker File `backend/Dockerfile` / `frontend/Dockerfile` (à régler au prochain déploiement).
   - Contrôleur parties : `loadGame` renvoie le format API (`players[].game_players`, `creatorPlayer`) ; les coups passent par `applyMove` (transaction + `FOR UPDATE`).
@@ -32,10 +35,10 @@ Non testé : fin de partie (score ≥ 100), manche suivante, reconnexion, double
 ## Bugs et failles
 Corrigés en phase 1 (tests de non-régression) : fuite `password`/`email`/jetons dans les réponses de partie, mails via `SMTP_HOST` (Mailpit), partie corrompue par un départ pendant le démarrage (transaction + verrou dans `updateGame`), crash `PlayerSet` sans cartes, gagnant mal désigné quand un joueur a 0 point au total.
 Restent :
-1. `GET /api/users` et `GET /api/users/:id` renvoient l'email à tout utilisateur connecté.
+1. (corrigé) `GET /api/users` n'expose plus l'email.
 2. `PATCH /api/game/join/:id` renvoie la partie lue avant l'ajout du joueur (liste de joueurs périmée).
-3. Formulaire d'inscription : bouton grisé tant que la case confidentialité (état React) n'est pas cliquée ; remplissage DOM programmatique insuffisant pour tester.
-4. Le front envoie encore `userId` dans `POST /api/game` et `PATCH /api/game/join/:id` (ignoré par le serveur, à retirer en phase 5).
+3. (corrigé) Plus de case de confidentialité : mention sous le formulaire.
+4. (corrigé) Le front n'envoie plus `userId`.
 5. Non testé à la main : fin de partie (≥ 100), manche suivante, reconnexion.
 6. Salle d'attente : un joueur (même le créateur) qui quitte la page est retiré de la partie et n'est pas réintégré en revenant sur `/join/:id` (constaté avant et après phase 2).
 7. `restartGame` ajoute toujours le créateur à la nouvelle partie, même s'il n'a pas demandé à rejouer (comportement d'origine conservé).
@@ -43,9 +46,8 @@ Restent :
 
 ## Astuces de test manuel
 - Comparer avant/après un changement visuel : `git worktree add <scratch>/old dev`, `npm ci`, Vite ancien sur :4173 (autorisé par le CORS) et nouveau sur un autre port avec `FRONTEND_HOST=http://localhost:<port>` pour le back. Les cookies `localhost` sont partagés entre ports : une connexion sert aux deux.
-- Un navigateur partage ses cookies : pour un 2e joueur, utiliser un script Node avec `socket.io-client` (dans `frontend/node_modules`) et les cookies `accessToken`/`refreshToken` obtenus via `POST /api/login` (`curl -c`). Le protocole du client React est dans `frontend/src/components/game/PlayerSet.tsx`, `Deck.tsx`, `Discard.tsx`.
+- Un navigateur partage ses cookies : pour un 2e joueur, utiliser un script Node avec `socket.io-client` (dans `frontend/node_modules`) et le cookie de session `better-auth.session_token` obtenu via `POST /api/auth/sign-in/email` (`curl -c`, en-tête `Origin: http://localhost:5173`). Le protocole du client React est dans `frontend/src/components/game/PlayerSet.tsx`, `Deck.tsx`, `Discard.tsx`.
 - Événements socket : `player-joined-game`, `start-game`, `initial-turn-card {room, playerId, cardId}`, `play-move {room, gameData}`. Pendant `initialReveal`, `currentPlayer` vaut `null` : chaque joueur révèle 2 cartes sans attendre son tour.
-- Vérifier un compte sans passer par le mail : `docker exec skyjo-mysql-dev mysql -uolivier -polivier skyjo -e "update users set verified=1 where username='…'"`.
 - Tester l'image de prod en local : `make full` (front :8081, back :3000), puis `docker compose --env-file backend/.env --profile full rm -sf backend frontend` pour libérer :3000.
 - Routes front : `/auth/register`, `/auth/login`, `/create`, `/join/:id` (salle d'attente), `/game/:id`.
 - Dans un shell, ne pas faire `pkill -f nom` avec le nom visible dans la commande elle-même (le shell se tue). Utiliser `pkill -f "motif[x]"`.

@@ -1,7 +1,7 @@
 import Footer from "@/components/nav/Footer";
 import Header from "@/components/nav/Header";
-import { Outlet } from "react-router";
 import Drawer from "./components/nav/Drawer";
+import RequirePseudo from "@/components/auth/RequirePseudo";
 
 const AppLayout = () => {
 
@@ -10,7 +10,7 @@ const AppLayout = () => {
     <Drawer>
       <div className="flex flex-col min-h-screen font-kalam">
         <Header />
-        <Outlet />
+        <RequirePseudo />
         <Footer />
       </div>
     </Drawer>

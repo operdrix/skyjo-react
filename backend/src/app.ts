@@ -1,23 +1,21 @@
 //pour fastify
-import cookie from "@fastify/cookie";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
-import fastifyJWT from "@fastify/jwt";
 import rateLimit from "@fastify/rate-limit";
 import fastifySwagger from "@fastify/swagger";
 import fastifySwaggerUi from "@fastify/swagger-ui";
-import bcrypt from "bcryptjs";
 import fastify, { type FastifyReply, type FastifyRequest } from "fastify";
+import { fromNodeHeaders } from "better-auth/node";
 import { Server as SocketServer } from "socket.io";
+import { AUTH_BASE_URL, createAuth, USERNAME_REQUIRED } from "./auth.ts";
 //routes
 import { gamesRoutes } from "./routes/games.ts";
 import { usersRoutes } from "./routes/users.ts";
 //websockets
 import { websockets } from "./websockets/websockets.ts";
-import { isBlacklisted } from "./redis.ts";
 
 // Secret lu dans l'environnement, sans valeur par défaut
-function requireSecret(name: "JWT_SECRET" | "COOKIE_SECRET") {
+function requireSecret(name: "BETTER_AUTH_SECRET") {
 	const secret = process.env[name];
 	if (!secret) {
 		throw new Error(`Variable d'environnement ${name} manquante`);
@@ -31,16 +29,11 @@ export async function buildApp() {
 	 * API
 	 * avec fastify
 	 */
-	const jwtSecret = requireSecret("JWT_SECRET");
-	const cookieSecret = requireSecret("COOKIE_SECRET");
+	const auth = createAuth(requireSecret("BETTER_AUTH_SECRET"));
 	const app = fastify({
 		bodyLimit: 1048576, // Limite de 1MB pour éviter les attaques DoS
 	});
-	// Hash des mots de passe (remplace fastify-bcrypt, abandonné)
-	app.decorate("bcrypt", {
-		hash: (password: string) => bcrypt.hash(password, 12),
-		compare: (password: string, hash: string) => bcrypt.compare(password, hash),
-	});
+	app.decorate("auth", auth);
 	// Socket.io branché sur le serveur HTTP de Fastify (remplace fastify-socket.io, abandonné)
 	app.decorate("io", new SocketServer(app.server, {
 		cors: {
@@ -83,10 +76,6 @@ export async function buildApp() {
 			allowList: ["127.0.0.1"], // Pas de limite pour localhost en dev
 			skipOnError: true,
 		})
-		.register(cookie, {
-			secret: cookieSecret,
-			parseOptions: {},
-		})
 		.register(cors, {
 			// Autoriser la valeur définie via FRONTEND_HOST ET localhost:4173 pour le dev (Vite)
 			origin: [process.env.FRONTEND_HOST || "http://localhost:5173", "http://localhost:4173"],
@@ -112,16 +101,17 @@ export async function buildApp() {
 					},
 				],
 				tags: [
-					{ name: "Authentification", description: "Gestion de l'authentification et des utilisateurs" },
+					{ name: "Joueurs", description: "Profils publics des joueurs (connexion : Better Auth, /api/auth/*)" },
 					{ name: "Parties", description: "Gestion des parties de jeu" },
 					{ name: "Système", description: "Routes système et informations" },
 				],
 				components: {
 					securitySchemes: {
-						bearerAuth: {
-							type: "http",
-							scheme: "bearer",
-							bearerFormat: "JWT",
+						// Cookie posé par Better Auth à la connexion (/api/auth/sign-in/email)
+						sessionCookie: {
+							type: "apiKey",
+							in: "cookie",
+							name: "better-auth.session_token",
 						},
 					},
 				},
@@ -142,9 +132,6 @@ export async function buildApp() {
 				return swaggerObject;
 			},
 			transformSpecificationClone: true,
-		})
-		.register(fastifyJWT, {
-			secret: jwtSecret,
 		});
 	/**********
 	 * Routes
@@ -168,41 +155,38 @@ export async function buildApp() {
 		const apiUrl = process.env.APP_URL || "http://localhost:3000";
 		reply.send({ documentationURL: `${apiUrl}/api/documentation` });
 	});
-	// Fonction pour décoder et vérifier le token (access token)
+	// Better Auth : inscription, connexion (email ou Google), session, pseudo, mot de passe oublié
+	app.route({
+		method: ["GET", "POST"],
+		url: "/api/auth/*",
+		schema: { hide: true },
+		async handler(request, reply) {
+			const url = new URL(request.url, AUTH_BASE_URL);
+			const response = await auth.handler(new Request(url, {
+				method: request.method,
+				headers: fromNodeHeaders(request.headers),
+				...(request.body ? { body: JSON.stringify(request.body) } : {}),
+			}));
+			reply.status(response.status);
+			response.headers.forEach((value, key) => {
+				if (key !== "set-cookie") reply.header(key, value);
+			});
+			const cookies = response.headers.getSetCookie();
+			if (cookies.length) reply.header("set-cookie", cookies);
+			return reply.send(response.body ? await response.text() : null);
+		},
+	});
+
+	// Exige une session et un pseudo choisi
 	app.decorate("authenticate", async (request: FastifyRequest, reply: FastifyReply) => {
-		try {
-			// Essayer de récupérer l'access token depuis le cookie d'abord, sinon depuis l'header Authorization
-			let token = request.cookies.accessToken;
-
-			if (!token && request.headers["authorization"]) {
-				token = request.headers["authorization"].split(" ")[1];
-			}
-
-			if (!token) {
-				return reply.status(401).send({ error: "Access token manquant" });
-			}
-
-			// Vérifier si le token est dans la liste noire (Redis ou mémoire)
-			const isTokenBlacklisted = await isBlacklisted(token);
-			if (isTokenBlacklisted) {
-				return reply
-					.status(401)
-					.send({ error: "Access token invalide ou expiré" });
-			}
-
-			// Vérifier et décoder le token JWT
-			const decoded = app.jwt.verify<{ id: string; username: string; email?: string }>(token);
-
-			// Ajouter les infos utilisateur décodées à la requête
-			request.user = decoded;
-
-			// Si le token vient du cookie, on le met aussi dans l'header pour cohérence
-			if (!request.headers["authorization"]) {
-				request.headers["authorization"] = `Bearer ${token}`;
-			}
-		} catch (err) {
-			reply.status(401).send({ error: "Access token invalide ou expiré", errorDetails: err });
+		const session = await auth.api.getSession({ headers: fromNodeHeaders(request.headers) });
+		if (!session) {
+			return reply.status(401).send({ error: "Session absente ou expirée" });
 		}
+		if (!session.user.username) {
+			return reply.status(403).send({ error: USERNAME_REQUIRED });
+		}
+		request.user = { id: session.user.id, username: session.user.username };
 	});
 	//gestion utilisateur
 	usersRoutes(app);

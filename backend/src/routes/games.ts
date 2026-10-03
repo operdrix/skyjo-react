@@ -57,7 +57,7 @@ export function gamesRoutes(app: FastifyInstance) {
 			tags: ["Parties"],
 			summary: "Créer une partie",
 			description: "Crée une nouvelle partie (authentification requise)",
-			security: [{ bearerAuth: [] }],
+			security: [{ sessionCookie: [] }],
 			body: {
 				type: "object",
 				properties: {
@@ -84,7 +84,7 @@ export function gamesRoutes(app: FastifyInstance) {
 			tags: ["Parties"],
 			summary: "Action sur une partie",
 			description: "Exécute une action sur une partie pour l'utilisateur connecté (join, leave ; start et finish réservés au créateur)",
-			security: [{ bearerAuth: [] }],
+			security: [{ sessionCookie: [] }],
 			params: {
 				type: "object",
 				properties: {
@@ -112,7 +112,7 @@ export function gamesRoutes(app: FastifyInstance) {
 			tags: ["Parties"],
 			summary: "Modifier les paramètres d'une partie",
 			description: "Modifie les paramètres d'une partie existante (réservé au créateur). Uniquement possible si la partie est en attente (pending).",
-			security: [{ bearerAuth: [] }],
+			security: [{ sessionCookie: [] }],
 			params: {
 				type: "object",
 				properties: {
@@ -138,7 +138,7 @@ export function gamesRoutes(app: FastifyInstance) {
 			tags: ["Parties"],
 			summary: "Supprimer une partie",
 			description: "Supprime une partie existante (authentification requise)",
-			security: [{ bearerAuth: [] }],
+			security: [{ sessionCookie: [] }],
 			params: {
 				type: "object",
 				properties: {

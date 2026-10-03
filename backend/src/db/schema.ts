@@ -1,12 +1,12 @@
 import { relations } from "drizzle-orm";
 import {
   boolean,
-  datetime,
   int,
   json,
   mysqlEnum,
   mysqlTable,
   primaryKey,
+  text,
   timestamp,
   varchar,
 } from "drizzle-orm/mysql-core";
@@ -19,27 +19,59 @@ const timestamps = {
   updatedAt: timestamp({ fsp: 3 }).notNull().defaultNow().$onUpdate(() => new Date()),
 };
 
+// Tables d'authentification gérées par Better Auth (src/auth.ts) : users, sessions, accounts, verifications.
+// Données personnelles limitées au pseudo et à l'email ; name vient de Google (sert à proposer un pseudo).
 export const users = mysqlTable("users", {
-  id: varchar({ length: 32 }).primaryKey(),
-  username: varchar({ length: 255 }).notNull().unique(),
-  firstname: varchar({ length: 255 }).notNull(),
-  lastname: varchar({ length: 255 }).notNull(),
+  id: varchar({ length: 36 }).primaryKey(),
+  name: varchar({ length: 255 }).notNull(),
+  // Pseudo : absent juste après une première connexion Google, le temps de le choisir
+  username: varchar({ length: 30 }).unique(),
   email: varchar({ length: 255 }).notNull().unique(),
-  password: varchar({ length: 255 }).notNull(),
+  emailVerified: boolean().notNull().default(false),
+  image: varchar({ length: 255 }),
   bestScore: int(),
-  verified: boolean().notNull().default(false),
-  verifiedToken: varchar({ length: 255 }),
-  verifiedTokenExpires: datetime({ fsp: 3 }),
-  avatar: varchar({ length: 255 }),
-  resetPasswordToken: varchar({ length: 255 }),
-  resetPasswordExpires: datetime({ fsp: 3 }),
+  ...timestamps,
+});
+
+export const sessions = mysqlTable("sessions", {
+  id: varchar({ length: 36 }).primaryKey(),
+  token: varchar({ length: 255 }).notNull().unique(),
+  expiresAt: timestamp({ fsp: 3 }).notNull(),
+  ipAddress: varchar({ length: 255 }),
+  userAgent: varchar({ length: 1024 }),
+  userId: varchar({ length: 36 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  ...timestamps,
+});
+
+// Moyens de connexion d'un utilisateur : "credential" (mot de passe haché) ou "google"
+export const accounts = mysqlTable("accounts", {
+  id: varchar({ length: 36 }).primaryKey(),
+  accountId: varchar({ length: 255 }).notNull(),
+  providerId: varchar({ length: 255 }).notNull(),
+  userId: varchar({ length: 36 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  accessToken: text(),
+  refreshToken: text(),
+  idToken: text(),
+  accessTokenExpiresAt: timestamp({ fsp: 3 }),
+  refreshTokenExpiresAt: timestamp({ fsp: 3 }),
+  scope: varchar({ length: 1024 }),
+  password: varchar({ length: 255 }),
+  ...timestamps,
+});
+
+// Jetons temporaires (réinitialisation de mot de passe, état OAuth)
+export const verifications = mysqlTable("verifications", {
+  id: varchar({ length: 36 }).primaryKey(),
+  identifier: varchar({ length: 255 }).notNull(),
+  value: text().notNull(),
+  expiresAt: timestamp({ fsp: 3 }).notNull(),
   ...timestamps,
 });
 
 export const games = mysqlTable("games", {
   id: varchar({ length: 16 }).primaryKey().$defaultFn(() => nanoid(5)),
-  creator: varchar({ length: 32 }).notNull().references(() => users.id, { onDelete: "cascade" }),
-  winner: varchar({ length: 32 }).references(() => users.id, { onDelete: "set null" }),
+  creator: varchar({ length: 36 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  winner: varchar({ length: 36 }).references(() => users.id, { onDelete: "set null" }),
   winnerScore: int(),
   state: mysqlEnum(["pending", "playing", "finished"]).notNull().default("pending"),
   roundNumber: int().notNull().default(0),
@@ -53,7 +85,7 @@ export const games = mysqlTable("games", {
 
 export const gamePlayers = mysqlTable("game_players", {
   gameId: varchar({ length: 16 }).notNull().references(() => games.id, { onDelete: "cascade" }),
-  userId: varchar({ length: 32 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar({ length: 36 }).notNull().references(() => users.id, { onDelete: "cascade" }),
   score: int().notNull().default(0),
   scoreByRound: json().$type<number[]>().notNull().$defaultFn(() => []),
   status: mysqlEnum(["connected", "disconnected"]).notNull().default("connected"),
@@ -62,6 +94,16 @@ export const gamePlayers = mysqlTable("game_players", {
 
 export const usersRelations = relations(users, ({ many }) => ({
   games: many(gamePlayers),
+  sessions: many(sessions),
+  accounts: many(accounts),
+}));
+
+export const sessionsRelations = relations(sessions, ({ one }) => ({
+  user: one(users, { fields: [sessions.userId], references: [users.id] }),
+}));
+
+export const accountsRelations = relations(accounts, ({ one }) => ({
+  user: one(users, { fields: [accounts.userId], references: [users.id] }),
 }));
 
 export const gamesRelations = relations(games, ({ one, many }) => ({

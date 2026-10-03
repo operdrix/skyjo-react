@@ -8,7 +8,7 @@ Fichier versionné pour reprendre le travail sur n'importe quel PC. Chargé par 
 - Phases 1 à 4 mergées (PR #24 à #27). **Phase 5 (inscription rapide, Better Auth) terminée** sur `feat/inscription-rapide`. Prochaine : phase 6 (ménage).
   - Auth : `backend/src/auth.ts` (Better Auth), routes `/api/auth/*` montées dans `app.ts`. Front : `frontend/src/lib/authClient.ts`, `UserContext` basé sur `authClient.useSession()`, garde `RequirePseudo`.
   - Tests : `createPlayer` inscrit via `/api/auth/sign-up/email` ; sockets avec `cookieHeader(player)`. Simuler un compte Google sans pseudo : `update users set username=null`.
-  - Google non testé de bout en bout (identifiants à créer dans Google Cloud Console par Olivier).
+  - Google testé de bout en bout le 2026-10-03 (prénom gardé, photo non stockée, email vérifié). Identifiants OAuth dans `backend/.env` local, à reporter dans Dokploy.
   - Tests des garde-fous : `backend/src/routes/games-auth.api.test.ts`, `backend/src/websockets/guards.api.test.ts`. Pour jouer un coup en test, passer d'abord la partie au tour du joueur en base (`currentPlayer`), sinon `play-move` est refusé.
   - Les tests d'API ont leur propre `BETTER_AUTH_SECRET` (`backend/vitest.config.ts`) ; le back refuse de démarrer sans.
   - Après un pull qui touche au schéma : `make db-reset` (base jetable). Le back applique les migrations au démarrage.

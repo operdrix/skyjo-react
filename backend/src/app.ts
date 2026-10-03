@@ -86,6 +86,8 @@ export async function buildApp() {
     .register(cors, {
       origin: frontendOrigins(process.env.FRONTEND_HOST),
       credentials: true,
+      // @fastify/cors 10+ n'autorise plus que GET, HEAD et POST par défaut
+      methods: ["GET", "HEAD", "POST", "PATCH", "DELETE"],
     })
     .register(fastifySwagger, {
       openapi: {

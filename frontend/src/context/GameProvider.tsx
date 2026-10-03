@@ -1,16 +1,7 @@
 import { GameType } from "@/types/types";
-import { createContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { GameContext } from "@/context/GameContext";
 
-type GameContextType = {
-  gameId: string | null;
-  game: GameType | null;
-  setGameId: (gameId: string) => void;
-  setGame: (game: GameType) => void;
-  sound: boolean;
-  setSound: (sound: boolean) => void;
-};
-
-export const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export const GameProvider = ({ children }: {
   children: React.ReactNode;

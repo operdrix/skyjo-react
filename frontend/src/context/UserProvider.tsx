@@ -1,23 +1,9 @@
 import { authClient } from "@/lib/authClient";
 import { suggestPseudo } from "@/lib/pseudo";
 import { setLogoutCallback } from "@/services/apiService";
-import { createContext, useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "react";
+import { UserContext } from "@/context/UserContext";
 
-type UserContextType = {
-  userId: string | null;
-  userName: string | null;
-  userEmail: string | null;
-  // Connecté avec un pseudo : peut jouer
-  isAuthentified: boolean;
-  // Connecté (Google) mais pseudo pas encore choisi
-  needsPseudo: boolean;
-  suggestedPseudo: string;
-  loading: boolean;
-  logout: () => void;
-  refresh: () => void;
-};
-
-export const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: {
   children: React.ReactNode;

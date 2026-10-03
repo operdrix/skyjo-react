@@ -10,13 +10,11 @@ const ModalScoreEndGame = () => {
   const { sendMessage, subscribeToEvent, unsubscribeFromEvent } = useWebSocket();
   const { userId } = useUser();
   const [loading, setLoading] = useState<boolean>(false);
-  const [isCreator, setIsCreator] = useState<boolean>(false);
   const [position, setPosition] = useState<number>(1);
 
-  useEffect(() => {
-    if (!game || !userId) return;
-    setIsCreator(game.creator === userId)
+  const isCreator = Boolean(game && userId && game.creator === userId);
 
+  useEffect(() => {
     const handlePlayAgain = (newGame: GameType) => {
       setGame(newGame);
     }
@@ -25,7 +23,7 @@ const ModalScoreEndGame = () => {
     return () => {
       unsubscribeFromEvent('play-again', handlePlayAgain)
     }
-  }, [game, setGame, subscribeToEvent, unsubscribeFromEvent, userId]);
+  }, [setGame, subscribeToEvent, unsubscribeFromEvent]);
 
   const handleNextRound = () => {
     setLoading(true);

@@ -1,24 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// WebSocketContext.tsx
-import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { WebSocketContext } from "@/context/WebSocketContext";
 
-export interface WebSocketContextType {
-    socket: Socket | null;
-    isConnected: boolean;
-    loading: boolean;
-    error: string | null;
-    joinRoom: (room: string) => void;
-    sendMessage: (event: string, data: any) => void;
-    subscribeToEvent: (event: string, callback: (data: any) => void) => void;
-    unsubscribeFromEvent: (event: string, callback: (data: any) => void) => void;
-    reconnect: () => void;
-    disconnect: () => void;
-    subscribeToError: (callback: (error: string) => void) => void;
-    clearError: () => void;
-}
-
-export const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined);
 
 interface WebSocketProviderProps {
     children: React.ReactNode;
@@ -27,58 +10,48 @@ interface WebSocketProviderProps {
 }
 
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, url, enabled = true }) => {
-    const [socket, setSocket] = useState<Socket | null>(null);
+    // Socket créé sans se connecter (la connexion est ouverte dans l'effet ci-dessous)
+    const socket = useMemo<Socket | null>(() => enabled ? io(url, {
+        transports: ['polling', 'websocket'],  // Commence par polling qui transmet mieux les cookies
+        autoConnect: false,
+        withCredentials: true  // Envoie automatiquement les cookies httpOnly
+    }) : null, [url, enabled]);
     const [isConnected, setIsConnected] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true); // Ajout de loading pour suivre l’état de connexion
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        console.log('[WebSocket] useEffect - enabled:', enabled, 'url:', url);
-
-        // Ne pas connecter si non activé
-        if (!enabled) {
-            console.log('[WebSocket] Connexion désactivée (enabled=false)');
-            setLoading(false);
+        if (!socket) {
             return;
         }
 
-        console.log('[WebSocket] Tentative de connexion à:', url);
-        const socketInstance = io(
-            url,
-            {
-                transports: ['polling', 'websocket'],  // Commence par polling qui transmet mieux les cookies
-                autoConnect: true,
-                withCredentials: true  // Envoie automatiquement les cookies httpOnly
-            }
-        );
-
-        setLoading(true); // La connexion commence
-
-        socketInstance.on('connect', () => {
+        const onConnect = () => {
             setIsConnected(true);
             setLoading(false); // La connexion est établie
             setError(null);    // Réinitialiser l'erreur si la connexion est rétablie
-        });
-
-        socketInstance.on('disconnect', () => {
+        };
+        const onDisconnect = () => {
             setIsConnected(false);
             setLoading(false); // Fin du chargement même en cas de déconnexion
             setError('Disconnected from WebSocket server');
-        });
-
-        socketInstance.on('connect_error', (err: any) => {
-            console.error('Connection error:', err.message);
-            setError(`Connection error: ${err.message}`);
-            setLoading(false); // Arrêter le chargement en cas d’erreur de connexion
-        });
-
-        setSocket(socketInstance);
-
-        // Clean up on unmount
-        return () => {
-            socketInstance.disconnect();
         };
-    }, [url, enabled]); // enabled contrôle si la connexion doit être établie
+        const onConnectError = (err: Error) => {
+            setError(`Connection error: ${err.message}`);
+            setLoading(false); // Arrêter le chargement en cas d'erreur de connexion
+        };
+
+        socket.on('connect', onConnect);
+        socket.on('disconnect', onDisconnect);
+        socket.on('connect_error', onConnectError);
+        socket.connect();
+
+        return () => {
+            socket.off('connect', onConnect);
+            socket.off('disconnect', onDisconnect);
+            socket.off('connect_error', onConnectError);
+            socket.disconnect();
+        };
+    }, [socket]);
 
     const joinRoom = useCallback((gameId: string) => {
         if (socket && isConnected) {
@@ -86,22 +59,21 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, 
         }
     }, [socket, isConnected]);
 
-    const sendMessage = useCallback((event: string, data: any) => {
+    const sendMessage = useCallback((event: string, data: unknown) => {
         if (socket && isConnected) {
             socket.emit(event, data);
         } else {
-            console.warn('Socket is not connected.');
             setError('Cannot send message: Socket is not connected.');
         }
     }, [socket, isConnected]);
 
-    const subscribeToEvent = useCallback((event: string, callback: (data: any) => void) => {
+    const subscribeToEvent = useCallback(<T,>(event: string, callback: (data: T) => void) => {
         if (socket) {
             socket.on(event, callback);
         }
     }, [socket]);
 
-    const unsubscribeFromEvent = useCallback((event: string, callback: (data: any) => void) => {
+    const unsubscribeFromEvent = useCallback(<T,>(event: string, callback: (data: T) => void) => {
         if (socket) {
             socket.off(event, callback);
         }
@@ -134,7 +106,8 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, 
     const contextValue = useMemo(() => ({
         socket,
         isConnected,
-        loading,
+        // Sans connexion demandée, rien n'est en cours de chargement
+        loading: enabled && loading,
         error,
         joinRoom,
         sendMessage,
@@ -144,7 +117,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, 
         disconnect,
         subscribeToError,
         clearError,
-    }), [socket, isConnected, loading, error, joinRoom, sendMessage, subscribeToEvent, unsubscribeFromEvent, reconnect, disconnect, subscribeToError, clearError]);
+    }), [socket, isConnected, enabled, loading, error, joinRoom, sendMessage, subscribeToEvent, unsubscribeFromEvent, reconnect, disconnect, subscribeToError, clearError]);
 
     return (
         <WebSocketContext.Provider value={contextValue}>

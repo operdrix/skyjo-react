@@ -1,6 +1,6 @@
 import App from '@/App.tsx'
 import AppLayout from '@/AppLayout.tsx'
-import { UserProvider } from '@/context/UserContext.tsx'
+import { UserProvider } from '@/context/UserProvider.tsx'
 import '@/index.css'
 import AuthLayout from '@/pages/auth/AuthLayout.tsx'
 import Login from '@/pages/auth/Login.tsx'

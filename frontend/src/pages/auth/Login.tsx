@@ -19,18 +19,17 @@ function Login() {
   const location = useLocation();
   const navigate = useNavigate();
   const { refresh } = useUser();
-  const [message, setMessage] = useState<MessageType | null>(null);
+  const message: MessageType | null = location.state?.message ?? null;
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [withEmail, setWithEmail] = useState<boolean>(false);
   const redirect: string = location.state?.from || '/';
 
   useEffect(() => {
-    if (location.state?.message) {
-      setMessage(location.state.message);
+    if (message) {
       const modal = document.getElementById('message_modal');
       (modal as HTMLDialogElement)?.showModal?.();
     }
-  }, [location]);
+  }, [message]);
 
   const handleSubmit = async (values: { email: string; password: string }) => {
     setErrorMessage('');

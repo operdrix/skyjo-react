@@ -1,4 +1,3 @@
-import { useCallback, useEffect, useState } from "react"
 
 interface ModalProps {
   id: string
@@ -84,42 +83,8 @@ const SvgWarning = () => (
   </svg>
 )
 
+// Fenêtre native <dialog> : l'appelant l'ouvre avec showModal(), le bouton Fermer la referme
 export default function Modal({ id, title, message, type = "alert", open = false }: ModalProps) {
-  const [isOpen, setIsOpen] = useState(open)
-
-  const openModal = useCallback(() => {
-    const modal = document.getElementById(id)
-    if (modal) {
-      (modal as HTMLDialogElement).showModal()
-      setIsOpen(true)
-    }
-  }, [id])
-
-  const closeModal = useCallback(() => {
-    const modal = document.getElementById(id)
-    if (modal) {
-      (modal as HTMLDialogElement).close()
-      setIsOpen(false)
-    }
-  }, [id])
-
-  useEffect(() => {
-    const modal = document.getElementById(id)
-    if (modal) {
-      modal.addEventListener('close', () => {
-        setIsOpen(false)
-      })
-    }
-  }, [id])
-
-  useEffect(() => {
-    if (isOpen) {
-      openModal()
-    } else {
-      closeModal()
-    }
-  }, [isOpen, openModal, closeModal])
-
   const classVariant = {
     alert: '',
     success: 'alert-success',
@@ -129,7 +94,7 @@ export default function Modal({ id, title, message, type = "alert", open = false
   }
 
   return (
-    <dialog id={id} className="modal modal-bottom sm:modal-middle" open={isOpen}>
+    <dialog id={id} className="modal modal-bottom sm:modal-middle" open={open}>
       <div className="modal-box">
         <div role="alert" className={`alert ${classVariant[type]}`}>
           {type === 'success' && <SvgSuccess />}

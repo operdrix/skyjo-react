@@ -2,7 +2,7 @@ import ErrorMessage from "@/components/game/messages/ErrorMessage";
 import { useUser } from "@/hooks/User";
 import { api } from "@/services/apiService";
 import { GameType } from "@/types/types";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 
 const JoinPublic = () => {
@@ -12,30 +12,25 @@ const JoinPublic = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const fetchGames = useCallback(async () => {
-    if (!userId) return;
+  const [reload, setReload] = useState<number>(0);
 
-    setLoading(true);
-    setError(null); // Reset error state before fetching
-    try {
-      const response = await api.get('games?state=pending&privateRoom=false');
+  // Chargement des parties publiques en attente (rechargées via le bouton)
+  useEffect(() => {
+    if (!userId) return;
+    let active = true;
+    api.get('games?state=pending&privateRoom=false').then((response) => {
+      if (!active) return;
       if (response.data) {
         setGames(response.data);
-      } else if (response.error) {
-        console.error("Error fetching game:", response.error);
-        setError("La partie n'existe pas.");
+      } else {
+        setError(response.code === 500 ? "Une erreur réseau s'est produite." : "La partie n'existe pas.");
       }
-    } catch (error) {
-      console.error("Network error:", error);
-      setError("Une erreur réseau s'est produite.");
-    } finally {
       setLoading(false);
-    }
-  }, [userId]);
-
-  useEffect(() => {
-    fetchGames();
-  }, [fetchGames]);
+    });
+    return () => {
+      active = false;
+    };
+  }, [userId, reload]);
 
   if (loading || userLoading || !games) {
     return (
@@ -73,7 +68,11 @@ const JoinPublic = () => {
       <div className="container relative mx-auto bg-base-300 flex flex-col justify-between sm:rounded-box p-5 min-h-[40vh]">
         <button
           className="absolute right-0 top-0 btn btn-ghost m-2"
-          onClick={fetchGames} // Directly call the fetchGames function on button click
+          onClick={() => {
+            setLoading(true);
+            setError(null);
+            setReload(count => count + 1);
+          }}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

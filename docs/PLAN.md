@@ -59,7 +59,15 @@ TDD obligatoire à partir de la phase 1 : chaque comportement est d'abord couver
    - Mot de passe oublié conservé (mail via Mailpit / Gmail). Emails plus jamais exposés par `/api/users`.
    - Migration initiale régénérée (base jetable) : `make db-reset` après pull.
    - Google à configurer : `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` (voir `backend/.env.example`) ; sans eux le bouton affiche un message et l'email reste disponible.
-6. **Ménage** : corriger les avertissements React Compiler (`react-hooks/immutability` : mutations directes de `game.gameData` dans `Deck`, `Discard`, `PlayerSet` ; `react-hooks/set-state-in-effect`) puis les repasser en erreur, découper le bundle (> 500 kB), retirer les `console.log`, unifier le style (indentation, Prettier), découper `Game.tsx`, `WaitingRoom.tsx`, `Dashboard.tsx`, README racine + `CLAUDE.md`, CI stricte (lint, build, tests bloquants), CORS sans `localhost:4173` en dur.
+6. **Ménage** (branche `feat/menage`) : **fait**
+   - Front sans mutation de l'état React : coups calculés par `src/game/moves.ts` (copie) ; plus de setState synchrone dans les effets ; contextes (`*Context.ts`) séparés des providers. Règles React Compiler, `only-export-components` et `no-console` en erreur.
+   - `Game.tsx` (369 → 190 lignes), `WaitingRoom.tsx`, `Dashboard.tsx` découpés ; placement des joueurs (`game/seats.ts`) et statistiques (`game/stats.ts`) en fonctions pures testées ; squelette de chargement commun.
+   - Routes chargées à la demande : plus de fichier JS > 500 kB (principal ≈ 280 kB).
+   - Prettier (back, front, shared) vérifié par `make lint`, `make format` ; `.editorconfig`.
+   - CORS : `FRONTEND_HOST` accepte une liste, plus de `localhost:4173` en dur.
+   - CI : un seul workflow `validate.yml`, lint + tests (MySQL et Mailpit en services) + build bloquants.
+   - README racine, `CLAUDE.md` à jour.
+   - Correctifs : son de fin de manche joué à chaque rendu, redirection vers `/game/create` inexistante.
 
 ## Vérification
 - Chaque phase : `npm run lint`, `npm test`, `npm run build` (front et back) verts.

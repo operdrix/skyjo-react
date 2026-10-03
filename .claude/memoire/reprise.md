@@ -1,11 +1,13 @@
-# Mémoire projet : état et reprise (maj 2026-10-03, inscription rapide)
+# Mémoire projet : état et reprise (maj 2026-10-03, fin phase 6)
 
 Fichier versionné pour reprendre le travail sur n'importe quel PC. Chargé par `CLAUDE.md`. À tenir à jour en fin de session.
 
 ## Où on en est
 - Socle posé et mergé (PR #22 `CLAUDE.md`/Makefile/skills/Mailpit, PR #23 flux de branches). `dev` est la branche par défaut, `main` la version stable.
 - Décisions validées : voir `docs/PLAN.md` (jeu entre amis, base jetable, garde-fous légers, Drizzle + backend TS, dernières majeures, Vitest, TDD obligatoire, ordre : tests → dépendances → Drizzle+TS → garde-fous → ménage).
-- Phases 1 à 4 mergées (PR #24 à #27). **Phase 5 (inscription rapide, Better Auth) terminée** sur `feat/inscription-rapide`. Prochaine : phase 6 (ménage).
+- Phases 1 à 5 mergées (PR #24 à #28). **Phase 6 (ménage) terminée** sur `feat/menage` : le plan de remise en route est terminé.
+  - Front : coups dans `src/game/moves.ts` (jamais de mutation de `game.gameData`), logique pure dans `src/game/`, routes paresseuses dans `main.tsx`.
+  - Style : Prettier, `make format` ; `make lint` échoue si un fichier n'est pas formaté.
   - Auth : `backend/src/auth.ts` (Better Auth), routes `/api/auth/*` montées dans `app.ts`. Front : `frontend/src/lib/authClient.ts`, `UserContext` basé sur `authClient.useSession()`, garde `RequirePseudo`.
   - Tests : `createPlayer` inscrit via `/api/auth/sign-up/email` ; sockets avec `cookieHeader(player)`. Simuler un compte Google sans pseudo : `update users set username=null`.
   - Google testé de bout en bout le 2026-10-03 (prénom gardé, photo non stockée, email vérifié). Identifiants OAuth dans `backend/.env` local, à reporter dans Dokploy.
@@ -15,7 +17,6 @@ Fichier versionné pour reprendre le travail sur n'importe quel PC. Chargé par 
   - Dokploy : contexte de build `.` + Docker File `backend/Dockerfile` / `frontend/Dockerfile` (à régler au prochain déploiement).
   - Contrôleur parties : `loadGame` renvoie le format API (`players[].game_players`, `creatorPlayer`) ; les coups passent par `applyMove` (transaction + `FOR UPDATE`).
   - Node local ≥ 22.22 requis par react-router 8 (Docker/CI en Node 24).
-  - Lint front : 11 warnings React Compiler volontaires (traités en phase 5).
   - Tests websocket : `backend/src/websockets/*.api.test.ts` (`socket.io-client` en devDependency du back, `app.listen({ port: 0 })`).
   - Règles pures : `backend/src/game/rules.js` (+ `rules.test.js`). `controllers/games.js` ne garde que l'accès base.
   - `backend/src/app.js` exporte `buildApp()` ; `server.js` = connexion, sync, listen.
@@ -46,7 +47,7 @@ Restent :
 
 ## Astuces de test manuel
 - Comparer avant/après un changement visuel : `git worktree add <scratch>/old dev`, `npm ci`, Vite ancien sur :4173 et nouveau sur un autre port, avec `FRONTEND_HOST=http://localhost:5173,http://localhost:4173` pour le back. Les cookies `localhost` sont partagés entre ports : une connexion sert aux deux.
-- Un navigateur partage ses cookies : pour un 2e joueur, utiliser un script Node avec `socket.io-client` (dans `frontend/node_modules`) et le cookie de session `better-auth.session_token` obtenu via `POST /api/auth/sign-in/email` (`curl -c`, en-tête `Origin: http://localhost:5173`). Le protocole du client React est dans `frontend/src/components/game/PlayerSet.tsx`, `Deck.tsx`, `Discard.tsx`.
+- Un navigateur partage ses cookies : pour un 2e joueur, utiliser un script Node avec `socket.io-client` (dans `frontend/node_modules`) et le cookie de session `better-auth.session_token` obtenu via `POST /api/auth/sign-in/email` (`curl -c`, en-tête `Origin: http://localhost:5173`). Les coups à envoyer (`play-move`) sont ceux de `frontend/src/game/moves.ts`. Après `navigate` dans Chrome, le premier clic peut tomber avant le chargement de la page : recliquer.
 - Événements socket : `player-joined-game`, `start-game`, `initial-turn-card {room, playerId, cardId}`, `play-move {room, gameData}`. Pendant `initialReveal`, `currentPlayer` vaut `null` : chaque joueur révèle 2 cartes sans attendre son tour.
 - Tester l'image de prod en local : `make full` (front :8081, back :3000), puis `docker compose --env-file backend/.env --profile full rm -sf backend frontend` pour libérer :3000.
 - Routes front : `/auth/register`, `/auth/login`, `/create`, `/join/:id` (salle d'attente), `/game/:id`.

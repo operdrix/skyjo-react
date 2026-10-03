@@ -116,7 +116,7 @@ function RequestResetPassword() {
                   className="btn btn-primary w-full py-2.5 text-sm shadow-xs hover:shadow-md font-semibold text-center inline-block space-x-4"
                   disabled={loading}
                 >
-                  <span>Envoyer de mail de réinitialisation</span>
+                  <span>Envoyer le mail de réinitialisation</span>
                   {loading && <span className="loading loading-spinner loading-sm"></span>}
                 </button>
               </div>

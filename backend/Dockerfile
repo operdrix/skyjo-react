@@ -13,6 +13,10 @@ COPY backend ./
 # Vérification des types, puis retrait des dépendances de dev
 RUN npm run typecheck && npm prune --omit=dev
 
+# Version de la release (fournie par la CI), affichée au démarrage
+ARG APP_VERSION=dev
+ENV APP_VERSION=${APP_VERSION}
+
 # Les variables d'environnement seront fournies par Dokploy
 EXPOSE 3000
 

@@ -58,7 +58,7 @@ const Drawer = ({ children }: { children: React.ReactNode }) => {
             <>
               {isAuthentified && (
                 <li>
-                  <Link to={"/dashboard"}>Mon historique</Link>
+                  <Link to={"/dashboard"}>Mon espace</Link>
                 </li>
               )}
               <li>

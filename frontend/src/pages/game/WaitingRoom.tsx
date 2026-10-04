@@ -12,6 +12,7 @@ import { useWebSocket } from "@/hooks/WebSocket";
 import { api } from "@/services/apiService";
 import type { ErrorType, GameType } from "@/types/types";
 import notify from "@/utils/notify";
+import { toast } from "@/lib/toast";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 
@@ -74,9 +75,8 @@ const WaitingRoom = () => {
     const player = game.players.find((player) => player.id === userId);
     if (!player) {
       if (game.players.length >= game.maxPlayers) {
-        navigate("/", {
-          state: { message: "La partie est pleine" },
-        });
+        toast({ type: "error", message: "La partie est pleine." });
+        navigate("/");
         return;
       }
 
@@ -108,9 +108,8 @@ const WaitingRoom = () => {
 
     const handlePlayerLeft = (updatedGame: GameType | ErrorType) => {
       if (typeof updatedGame === "object" && "code" in updatedGame) {
-        navigate("/", {
-          state: { message: "La partie n'existe plus." },
-        });
+        toast({ type: "error", message: "La partie n'existe plus." });
+        navigate("/");
         return;
       }
       setGame(updatedGame);

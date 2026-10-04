@@ -34,7 +34,7 @@ const Header = () => {
         </NavLink>
         {isAuthentified && (
           <NavLink to="/dashboard" className={navLinkClass}>
-            Mon historique
+            Mon espace
           </NavLink>
         )}
       </nav>

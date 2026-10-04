@@ -6,7 +6,7 @@ import Discard from "@/components/game/Discard";
 import Instructions from "@/components/game/Instructions";
 import ErrorMessage from "@/components/game/messages/ErrorMessage";
 import ModalScore from "@/components/game/messages/ModalScore";
-import ModalScoreEndGame from "@/components/game/messages/ModalScoreEndGame";
+import RoundResults from "@/components/game/RoundResults";
 import ReconnectMessage from "@/components/game/messages/ReconnectMessage";
 import WaitingDeal from "@/components/game/messages/WaitingDeal";
 import PlayerSet from "@/components/game/PlayerSet";
@@ -128,7 +128,6 @@ const Game = () => {
 
   return (
     <>
-      {game.gameData.currentStep === "endGame" && <ModalScoreEndGame />}
       <ModalScore />
 
       <div className="flex h-dvh flex-col">
@@ -139,7 +138,7 @@ const Game = () => {
         </div>
 
         <section
-          className={`game-area mx-auto w-full max-w-6xl px-2 pb-2 ${game.players.length === 2 ? "game-area-duel" : ""}`}
+          className={`game-area mx-auto w-full max-w-6xl px-2 pb-2 ${game.players.length === 2 ? "game-area-duel" : ""} ${roundOver ? "game-area-results" : ""}`}
         >
           {/* Ligne 1 : joueur d'en face */}
           <div className="game-area-top-center">
@@ -156,19 +155,17 @@ const Game = () => {
           )}
 
           {/* Zone de pioche et défausse */}
-          <div className="game-area-middle-center flex flex-col items-center justify-center md:gap-4">
-            <Instructions />
-            <div className="flex justify-center items-center gap-3 md:gap-9">
-              {/* Pioche */}
-              <Deck />
+          <div className="game-area-middle-center flex flex-col items-center justify-center">
+            {roundOver ? (
+              <RoundResults />
+            ) : (
+              <div className="flex items-center justify-center gap-3 md:gap-9">
+                {/* Pioche */}
+                <Deck />
 
-              {/* Défausse */}
-              <Discard />
-            </div>
-            {game.gameData.lastTurn && (
-              <p className="text-sm md:text-xl lg:text-2xl text-center font-bold text-warning animate-bounce">
-                Dernier tour !
-              </p>
+                {/* Défausse */}
+                <Discard />
+              </div>
             )}
           </div>
 
@@ -182,6 +179,18 @@ const Game = () => {
           <div className="game-area-bottom-center">
             <PlayerSet playerId={userId} isCurrentPlayerSet />
           </div>
+
+          {/* Bandeau du bas : consigne en cours */}
+          {!roundOver && (
+            <div className="game-area-hint">
+              <div className="game-hint" role="status">
+                <Instructions />
+                {game.gameData.lastTurn && (
+                  <span className="badge badge-warning shrink-0 font-bold">Dernier tour !</span>
+                )}
+              </div>
+            </div>
+          )}
         </section>
       </div>
     </>

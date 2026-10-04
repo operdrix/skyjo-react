@@ -31,4 +31,73 @@ describe("PlayerSet", () => {
 
     expect(screen.getByText("bob")).toBeTruthy();
   });
+
+  it("affiche les points de la manche à côté du nom en fin de manche", () => {
+    game.current = {
+      id: "g1",
+      players: [
+        { id: "ALICE", username: "alice", game_players: { score: 30, scoreByRound: [18, 12] } },
+        { id: "BOB", username: "bob", game_players: { score: 10, scoreByRound: [12, -2] } },
+      ],
+      gameData: {
+        currentStep: "endGame",
+        currentPlayer: null,
+        playersCards: { ALICE: [], BOB: [] },
+        discardPile: [],
+        deckCards: [],
+      },
+    };
+
+    render(<PlayerSet playerId="BOB" />);
+
+    expect(screen.getByLabelText("−2 points cette manche")).toBeTruthy();
+  });
+
+  it("titre ton propre jeu « Toi » avec la manche et ton total", () => {
+    game.current = {
+      id: "g1",
+      roundNumber: 2,
+      players: [
+        { id: "ALICE", username: "alice", game_players: { score: 23, scoreByRound: [23] } },
+        { id: "BOB", username: "bob", game_players: { score: 10, scoreByRound: [10] } },
+      ],
+      gameData: {
+        currentStep: "draw",
+        currentPlayer: "BOB",
+        playersCards: { ALICE: [] },
+        discardPile: [],
+        deckCards: [],
+      },
+    };
+
+    render(<PlayerSet playerId="ALICE" isCurrentPlayerSet />);
+
+    expect(screen.getByRole("heading", { name: /toi/i })).toBeTruthy();
+    expect(screen.getByText("Manche 2 · 23 pts")).toBeTruthy();
+    expect(screen.queryByText("alice")).toBeNull();
+  });
+
+  it("présente un adversaire dans son cadre avec son nom et son total", () => {
+    game.current = {
+      id: "g1",
+      roundNumber: 2,
+      players: [
+        { id: "ALICE", username: "alice", game_players: { score: 23, scoreByRound: [23] } },
+        { id: "BOB", username: "bob", game_players: { score: 14, scoreByRound: [14] } },
+      ],
+      gameData: {
+        currentStep: "draw",
+        currentPlayer: "BOB",
+        playersCards: { BOB: [] },
+        discardPile: [],
+        deckCards: [],
+      },
+    };
+
+    render(<PlayerSet playerId="BOB" smallSet />);
+
+    const panel = screen.getByRole("group", { name: "bob" });
+    expect(panel.textContent).toContain("14");
+    expect(panel.className).toContain("player-turn");
+  });
 });

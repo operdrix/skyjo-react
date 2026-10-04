@@ -1,3 +1,4 @@
+import { formatPoints, formatScore } from "@/game/scores";
 import GameCard from "@/components/game/GameCard";
 import { flipCard, replaceWithDiscard, replaceWithDrawn, revealInitialCard } from "@/game/moves";
 import { useGame } from "@/hooks/Game";
@@ -25,6 +26,9 @@ const PlayerSet = ({
 
   const playerCards = game.gameData?.playersCards?.[playerId] || [];
   const player = game.players.find((player) => player.id === playerId);
+  // En fin de manche : points marqués par ce joueur, affichés à côté de son nom
+  const rounds = player?.game_players?.scoreByRound ?? [];
+  const roundScore = game.gameData.currentStep === "endGame" && rounds.length > 0 ? rounds[rounds.length - 1] : null;
   const revealedCards = () => playerCards.filter((card) => card.revealed).length;
   const playerTurn =
     (game.gameData.currentPlayer === playerId && game.gameData.currentStep !== "endGame") ||
@@ -67,41 +71,77 @@ const PlayerSet = ({
     return "grid-cols-1";
   };
 
-  return (
-    <>
-      {/* <GameTurnNotifier isCurrentTurn={playerTurn && isCurrentPlayerSet} /> */}
+  const total = player?.game_players?.score ?? 0;
+  const roundBadge = roundScore !== null && (
+    <span
+      aria-label={`${formatPoints(roundScore)} points cette manche`}
+      className="badge badge-sm badge-accent font-display tabular-nums"
+    >
+      {formatPoints(roundScore)}
+    </span>
+  );
+  const cards = (
+    <div className={`grid gap-[calc(var(--card-w)*0.1)] ${getGridColsClass(playerCards?.length || 0)}`}>
+      {playerCards.map((card) => {
+        let disabled = false;
+        if (!isCurrentPlayerSet || !playerTurn) {
+          disabled = true;
+        } else if (game.gameData.currentStep === "initialReveal") {
+          disabled = revealedCards() >= 2;
+        } else if (game.gameData.currentStep === "draw") {
+          disabled = true;
+        } else if (game.gameData.currentStep === "replace-discard") {
+          disabled = false;
+        } else if (game.gameData.currentStep === "flip-deck") {
+          disabled = card.revealed;
+        }
 
-      <div className={`flex flex-col justify-center items-center ${smallSet ? "small-set" : ""}`}>
-        <h2
-          className={`mb-1 flex min-h-8 max-w-full items-center gap-2 rounded-full px-3 text-lg font-bold md:mb-2 ${playerTurn ? "player-turn bg-success text-success-content" : ""}`}
-        >
-          {playerTurn && <span className="loading loading-dots loading-sm" aria-label="À son tour"></span>}
+        return <GameCard key={card.id} card={card} disabled={disabled || loading} onClick={handleClickOnCard} />;
+      })}
+    </div>
+  );
+
+  // Ton jeu : « Toi » à gauche, manche et total à droite, au-dessus des cartes
+  if (isCurrentPlayerSet) {
+    return (
+      <section aria-labelledby={`joueur-${playerId}`} className="flex w-max max-w-full flex-col">
+        <div className="mb-1 flex items-center justify-between gap-2 md:mb-2">
+          <h2
+            id={`joueur-${playerId}`}
+            className={`flex min-h-7 items-center gap-1.5 rounded-full px-2 font-bold ${playerTurn ? "player-turn bg-success text-success-content" : ""}`}
+          >
+            {playerTurn && <span className="loading loading-dots loading-xs" aria-label="À ton tour"></span>}
+            Toi
+            <OnlineStatus status={player?.game_players?.status} />
+            {roundBadge}
+          </h2>
+          <p className="text-sm font-semibold whitespace-nowrap tabular-nums">
+            Manche {game.roundNumber} · {formatScore(total)} pts
+          </p>
+        </div>
+        {cards}
+      </section>
+    );
+  }
+
+  // Adversaire : un cadre avec son nom et son total, mis en évidence quand c'est son tour
+  return (
+    <div
+      role="group"
+      aria-label={player?.username}
+      className={`opponent-panel ${smallSet ? "small-set" : ""} ${playerTurn ? "player-turn" : ""}`}
+    >
+      <p className="mb-1 flex items-center justify-between gap-1 text-xs font-bold sm:text-sm">
+        <span className="flex min-w-0 items-center gap-1">
+          {playerTurn && <span className="loading loading-dots loading-xs shrink-0" aria-label="À son tour"></span>}
           <span className="truncate">{player?.username}</span>
           <OnlineStatus status={player?.game_players?.status} />
-        </h2>
-        <div className={`grid gap-[calc(var(--card-w)*0.1)] ${getGridColsClass(playerCards?.length || 0)}`}>
-          {playerCards.map((card) => {
-            let disabled = false;
-            if (!isCurrentPlayerSet || !playerTurn) {
-              disabled = true;
-            } else if (game.gameData.currentStep === "initialReveal") {
-              disabled = revealedCards() >= 2;
-            } else if (game.gameData.currentStep === "draw") {
-              disabled = true;
-            } else if (game.gameData.currentStep === "replace-discard") {
-              disabled = false;
-            } else if (game.gameData.currentStep === "flip-deck") {
-              disabled = card.revealed;
-            }
-
-            return <GameCard key={card.id} card={card} disabled={disabled || loading} onClick={handleClickOnCard} />;
-          })}
-        </div>
-        {/* <p className="h-6">
-        {playerTurn && <span className="loading loading-dots loading-md mt-2"></span>}
-      </p> */}
-      </div>
-    </>
+        </span>
+        {/* En fin de manche, les points de la manche remplacent le total (affiché dans les résultats) */}
+        <span className="shrink-0 tabular-nums">{roundBadge || formatScore(total)}</span>
+      </p>
+      {cards}
+    </div>
   );
 };
 

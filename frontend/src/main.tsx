@@ -1,4 +1,5 @@
 import App from "@/App.tsx";
+import Toaster from "@/components/Toaster";
 import AppLayout from "@/AppLayout.tsx";
 import { UserProvider } from "@/context/UserProvider.tsx";
 import "@/index.css";
@@ -52,5 +53,6 @@ const router = createBrowserRouter([
 createRoot(document.getElementById("root")!).render(
   <UserProvider>
     <RouterProvider router={router} />
+    <Toaster />
   </UserProvider>,
 );

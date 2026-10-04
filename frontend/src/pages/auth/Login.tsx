@@ -1,14 +1,13 @@
 import FormError from "@/components/auth/FormError";
 import GoogleButton from "@/components/auth/GoogleButton";
 import CustomField from "@/components/forms/CustomField";
-import Modal, { MessageType } from "@/components/Modal";
 import { useUser } from "@/hooks/User";
 import { authClient } from "@/lib/authClient";
 import { authErrorMessage } from "@/lib/authErrors";
 import { safeRedirect, withRedirect } from "@/lib/redirect";
 import { Field, Form, Formik } from "formik";
-import { useEffect, useState } from "react";
-import { Link, Navigate, useLocation, useSearchParams } from "react-router";
+import { useState } from "react";
+import { Link, Navigate, useSearchParams } from "react-router";
 import * as yup from "yup";
 
 const validationSchema = yup.object().shape({
@@ -17,20 +16,11 @@ const validationSchema = yup.object().shape({
 });
 
 function Login() {
-  const location = useLocation();
   const [searchParams] = useSearchParams();
   const { refresh, isAuthentified } = useUser();
-  const message: MessageType | null = location.state?.message ?? null;
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [withEmail, setWithEmail] = useState<boolean>(false);
   const redirect = safeRedirect(searchParams.get("redirect"));
-
-  useEffect(() => {
-    if (message) {
-      const modal = document.getElementById("message_modal");
-      (modal as HTMLDialogElement)?.showModal?.();
-    }
-  }, [message]);
 
   const handleSubmit = async (values: { email: string; password: string }) => {
     setErrorMessage("");
@@ -49,13 +39,6 @@ function Login() {
 
   return (
     <div className="flex flex-col items-center justify-center">
-      <Modal
-        id="message_modal"
-        title={message?.title || "Succès"}
-        message={message?.message || ""}
-        type={message?.type || "success"}
-      />
-
       <div className="w-full max-w-md">
         <h1 className="font-bold text-3xl mb-2">Content de te revoir !</h1>
         <p className="text-muted mb-5">Connecte-toi pour retrouver tes parties.</p>

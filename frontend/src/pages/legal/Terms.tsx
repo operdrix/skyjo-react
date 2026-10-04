@@ -69,9 +69,9 @@ const Terms = () => (
 
     <Section title="8. Fin d'utilisation">
       <p>
-        Vous pouvez supprimer votre compte à tout moment depuis votre{" "}
+        Vous pouvez supprimer votre compte à tout moment depuis la page{" "}
         <Link to="/dashboard" className="link">
-          tableau de bord
+          Mon espace
         </Link>
         . Un compte sans connexion pendant 3 ans est supprimé automatiquement.
       </p>

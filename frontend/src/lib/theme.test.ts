@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { nextMode, readThemePrefs, resolveTheme, writeThemePrefs } from "@/lib/theme";
+import { describe, expect, it, vi } from "vitest";
+import { isThemeStyle, nextMode, readThemePrefs, resolveTheme, setThemeStyle, writeThemePrefs } from "@/lib/theme";
 
 // Stockage en mémoire, au format de localStorage
 const memoryStorage = (initial: Record<string, string> = {}) => {
@@ -94,5 +94,30 @@ describe("nextMode", () => {
     expect(nextMode("clair")).toBe("sombre");
     expect(nextMode("sombre")).toBe("auto");
     expect(nextMode("auto")).toBe("clair");
+  });
+});
+
+describe("setThemeStyle", () => {
+  it("enregistre le thème en gardant le mode, l'applique et prévient les composants", () => {
+    localStorage.clear();
+    localStorage.setItem("theme-mode", "sombre");
+    const listener = vi.fn();
+    window.addEventListener("themechange", listener);
+
+    setThemeStyle("confettis");
+
+    expect(localStorage.getItem("theme-style")).toBe("confettis");
+    expect(localStorage.getItem("theme-mode")).toBe("sombre");
+    expect(document.documentElement.dataset.theme).toBe("confettis-sombre");
+    expect(listener).toHaveBeenCalled();
+    window.removeEventListener("themechange", listener);
+  });
+});
+
+describe("isThemeStyle", () => {
+  it("reconnaît les trois thèmes et rien d'autre", () => {
+    expect(["tapis", "neon", "confettis"].every(isThemeStyle)).toBe(true);
+    expect(isThemeStyle("cupcake")).toBe(false);
+    expect(isThemeStyle(null)).toBe(false);
   });
 });

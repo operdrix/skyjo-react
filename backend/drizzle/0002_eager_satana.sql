@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `theme` varchar(16) DEFAULT 'tapis' NOT NULL;

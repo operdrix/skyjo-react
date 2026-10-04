@@ -15,6 +15,13 @@
       "when": 1791100716269,
       "tag": "0001_moaning_maverick",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1791148801974,
+      "tag": "0002_eager_satana",
+      "breakpoints": true
     }
   ]
 }

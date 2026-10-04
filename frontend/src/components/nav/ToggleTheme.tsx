@@ -1,4 +1,13 @@
-import { applyTheme, isDarkOnly, nextMode, readThemePrefs, ThemeMode, ThemePrefs, writeThemePrefs } from "@/lib/theme";
+import {
+  applyTheme,
+  isDarkOnly,
+  nextMode,
+  readThemePrefs,
+  THEME_CHANGE_EVENT,
+  ThemeMode,
+  ThemePrefs,
+  writeThemePrefs,
+} from "@/lib/theme";
 import { useEffect, useState } from "react";
 
 const LABELS: Record<ThemeMode, string> = {
@@ -10,6 +19,13 @@ const LABELS: Record<ThemeMode, string> = {
 // Bascule clair → sombre → auto (suit le système)
 const ToggleTheme = ({ className = "" }: { className?: string }) => {
   const [prefs, setPrefs] = useState<ThemePrefs>(() => readThemePrefs(localStorage));
+
+  // Thème changé ailleurs (inscription, espace perso, session) : relire les préférences
+  useEffect(() => {
+    const onThemeChange = () => setPrefs(readThemePrefs(localStorage));
+    window.addEventListener(THEME_CHANGE_EVENT, onThemeChange);
+    return () => window.removeEventListener(THEME_CHANGE_EVENT, onThemeChange);
+  }, []);
 
   useEffect(() => {
     applyTheme(prefs);

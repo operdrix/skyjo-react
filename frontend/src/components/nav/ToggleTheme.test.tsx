@@ -1,5 +1,6 @@
 import ToggleTheme from "@/components/nav/ToggleTheme";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { setThemeStyle } from "@/lib/theme";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("ToggleTheme", () => {
@@ -33,6 +34,19 @@ describe("ToggleTheme", () => {
     expect(screen.queryByRole("button")).toBeNull();
     expect(document.documentElement.dataset.theme).toBe("neon");
     expect(document.documentElement.dataset.style).toBe("neon");
+  });
+
+  it("suit un changement de thème fait ailleurs (choix dans l'espace perso)", () => {
+    localStorage.setItem("theme-mode", "clair");
+    render(<ToggleTheme />);
+
+    act(() => setThemeStyle("neon"));
+    expect(screen.queryByRole("button")).toBeNull();
+
+    act(() => setThemeStyle("confettis"));
+    fireEvent.click(screen.getByRole("button", { name: /mode clair/i }));
+    expect(document.documentElement.dataset.theme).toBe("confettis-sombre");
+    expect(localStorage.getItem("theme-style")).toBe("confettis");
   });
 
   it("reprend l'ancien réglage « dark »", () => {

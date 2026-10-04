@@ -103,9 +103,9 @@ const PrivacyPage = () => (
       </p>
       <ul className="list-disc list-inside space-y-1">
         <li>
-          Supprimer votre compte : bouton « Supprimer mon compte » de votre{" "}
+          Supprimer votre compte : bouton « Supprimer mon compte » de la page{" "}
           <Link to="/dashboard" className="link">
-            tableau de bord
+            Mon espace
           </Link>{" "}
           (immédiat et définitif).
         </li>

@@ -1,3 +1,4 @@
+import { formatPoints } from "@/game/scores";
 import GameCard from "@/components/game/GameCard";
 import { flipCard, replaceWithDiscard, replaceWithDrawn, revealInitialCard } from "@/game/moves";
 import { useGame } from "@/hooks/Game";
@@ -25,6 +26,9 @@ const PlayerSet = ({
 
   const playerCards = game.gameData?.playersCards?.[playerId] || [];
   const player = game.players.find((player) => player.id === playerId);
+  // En fin de manche : points marqués par ce joueur, affichés à côté de son nom
+  const rounds = player?.game_players?.scoreByRound ?? [];
+  const roundScore = game.gameData.currentStep === "endGame" && rounds.length > 0 ? rounds[rounds.length - 1] : null;
   const revealedCards = () => playerCards.filter((card) => card.revealed).length;
   const playerTurn =
     (game.gameData.currentPlayer === playerId && game.gameData.currentStep !== "endGame") ||
@@ -78,6 +82,14 @@ const PlayerSet = ({
           {playerTurn && <span className="loading loading-dots loading-sm" aria-label="À son tour"></span>}
           <span className="truncate">{player?.username}</span>
           <OnlineStatus status={player?.game_players?.status} />
+          {roundScore !== null && (
+            <span
+              aria-label={`${formatPoints(roundScore)} points cette manche`}
+              className="badge badge-sm badge-accent font-display tabular-nums"
+            >
+              {formatPoints(roundScore)}
+            </span>
+          )}
         </h2>
         <div className={`grid gap-[calc(var(--card-w)*0.1)] ${getGridColsClass(playerCards?.length || 0)}`}>
           {playerCards.map((card) => {

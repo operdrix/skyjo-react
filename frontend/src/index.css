@@ -717,9 +717,14 @@
     "center center center"
     "bottom bottom bottom";
 }
+/* Fin de manche sur mobile : les résultats prennent le centre, les cartes du joueur rétrécissent un peu */
+.game-area-results {
+  --board-card-w: clamp(32px, min(17vw, 5.7dvh), 96px);
+}
 @media (min-width: 768px) {
   .game-area,
-  .game-area-duel {
+  .game-area-duel,
+  .game-area-results {
     --board-card-w: clamp(36px, min(17vw, 7.2dvh), 96px);
     --small-card-w: clamp(16px, min(4.6vw, 3.8dvh), 44px);
     --top-card-w: clamp(28px, min(12vw, 6.5dvh), 72px);
@@ -730,6 +735,11 @@
       "left center right"
       "bottom bottom bottom";
     align-content: stretch;
+  }
+}
+@media (min-width: 768px) {
+  .game-area.game-area-results {
+    --board-card-w: clamp(36px, min(17vw, 6.4dvh), 96px);
   }
 }
 .game-area-top-center {
@@ -833,5 +843,16 @@
 @media (min-width: 640px) {
   .sm\:modal-top {
     place-items: start center !important;
+  }
+}
+
+/* Arrivée des messages éphémères */
+.toast-enter {
+  animation: toast-in 200ms ease-out;
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
   }
 }

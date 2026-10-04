@@ -1,7 +1,7 @@
 import CardFan from "@/components/brand/CardFan";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { withRedirect } from "@/lib/redirect";
+import { goToLogin } from "@/lib/redirect";
 import { useUser } from "./hooks/User";
 import { api } from "./services/apiService";
 
@@ -18,15 +18,7 @@ function App() {
 
   const handleCreateGame = async () => {
     if (!userLoading && !isAuthentified) {
-      navigate(withRedirect("/auth/login", window.location.pathname), {
-        state: {
-          message: {
-            type: "info",
-            message: "Vous devez être connecté pour créer une partie !",
-            title: "Connexion requise",
-          },
-        },
-      });
+      goToLogin(navigate, window.location.pathname, "Connecte-toi pour créer une partie.");
       return;
     }
 

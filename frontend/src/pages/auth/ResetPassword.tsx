@@ -1,11 +1,13 @@
 import CustomField from "@/components/forms/CustomField";
-import { MessageType } from "@/components/Modal";
 import { authClient } from "@/lib/authClient";
 import { authErrorMessage } from "@/lib/authErrors";
 import { Field, Form, Formik } from "formik";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import * as yup from "yup";
+
+// Message affiché à la place du formulaire une fois la demande traitée
+type MessageType = { title: string; message: string; type?: "success" | "error" };
 
 function ResetPassword() {
   // Better Auth redirige ici avec ?token=… (ou ?error=INVALID_TOKEN si le lien a expiré)
@@ -47,8 +49,8 @@ function ResetPassword() {
 
   if (message) {
     return (
-      <div className="flex-1 container mx-auto flex items-center">
-        <div className="hero bg-base-200 min-h-[50vh] p-20">
+      <div className="flex flex-1 items-center">
+        <div className="hero panel min-h-[40vh] p-6 sm:p-10">
           <div className="hero-content flex-col lg:flex-row text-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -56,13 +58,13 @@ function ResetPassword() {
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
-              className="md:size-96 max-w-sm text-success"
+              className="size-24 md:size-32 text-success"
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
             </svg>
 
             <div>
-              <h1 className="text-5xl font-bold">{message.title}</h1>
+              <h1 className="text-3xl font-bold sm:text-4xl">{message.title}</h1>
               <p className="py-6 text-xl">{message.message}</p>
               <Link to={"/auth/login"} className="btn btn-primary">
                 Me connecter
@@ -76,8 +78,8 @@ function ResetPassword() {
 
   if (errorMessage) {
     return (
-      <div className="flex-1 container mx-auto flex items-center">
-        <div className="hero bg-base-200 min-h-[50vh] p-20">
+      <div className="flex flex-1 items-center">
+        <div className="hero panel min-h-[40vh] p-6 sm:p-10">
           <div className="hero-content flex-col lg:flex-row text-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -85,7 +87,7 @@ function ResetPassword() {
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
-              className="md:size-96 max-w-sm text-warning"
+              className="size-24 md:size-32 text-warning"
             >
               <path
                 strokeLinecap="round"
@@ -94,7 +96,7 @@ function ResetPassword() {
               />
             </svg>
             <div>
-              <h1 className="text-5xl font-bold">Une erreur est survenue 😕</h1>
+              <h1 className="text-3xl font-bold sm:text-4xl">Une erreur est survenue 😕</h1>
               <p className="py-6 text-xl">{errorMessage}</p>
               <Link to={"/auth/request-reset-password"} className="btn btn-primary">
                 Demander un nouveau mot de passe

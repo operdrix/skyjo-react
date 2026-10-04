@@ -4,6 +4,8 @@
 /* Les fichiers de police ne sont téléchargés que si le thème actif les utilise */
 @import "@fontsource-variable/bricolage-grotesque/wght.css";
 @import "@fontsource-variable/dm-sans/wght.css";
+@import "@fontsource-variable/baloo-2/wght.css";
+@import "@fontsource-variable/outfit/wght.css";
 
 /*
   Design system : voir docs/DESIGN.md.
@@ -226,6 +228,57 @@
   --c-high-ink: #ffffff;
 }
 
+/* Soirée néon (sombre seulement) */
+@plugin 'daisyui/theme' {
+  name: "neon";
+  color-scheme: dark;
+  --color-base-100: #241e4a;
+  --color-base-200: #2e2760;
+  --color-base-300: #3a3275;
+  --color-base-content: #ece8ff;
+  --color-primary: #ff6b8b;
+  --color-primary-content: #1a1030;
+  --color-secondary: #a88bff;
+  --color-secondary-content: #16122e;
+  --color-accent: #5ce1ff;
+  --color-accent-content: #16122e;
+  --color-neutral: #0e0b22;
+  --color-neutral-content: #ece8ff;
+  --color-info: #5ce1ff;
+  --color-info-content: #16122e;
+  --color-success: #b6f25c;
+  --color-success-content: #16122e;
+  --color-warning: #ffc46b;
+  --color-warning-content: #16122e;
+  --color-error: #ff4d4d;
+  --color-error-content: #16122e;
+  --radius-selector: 10px;
+  --radius-field: 16px;
+  --radius-box: 22px;
+  --size-selector: 0.25rem;
+  --size-field: 0.3rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+
+  --bg: #16122e;
+  --muted: #a49ccf;
+  --line: #ffffff1f;
+  --bw: 1px;
+  --card-face: #1e1840;
+  --card-line: #ffffff40;
+  --c-neg: #7cffb2;
+  --c-zero: #ece8ff;
+  --c-low: #5ce1ff;
+  --c-mid: #a88bff;
+  --c-high: #ff5c93;
+  --c-neg-ink: #16122e;
+  --c-zero-ink: #16122e;
+  --c-low-ink: #16122e;
+  --c-mid-ink: #16122e;
+  --c-high-ink: #16122e;
+}
+
 /*
   Valeurs avec des virgules (polices, dégradés) : hors du plugin DaisyUI,
   qui découpe les listes et ne garde que le dernier élément.
@@ -270,6 +323,23 @@
     radial-gradient(circle at 20% 22%, #ffc531 0 3px, transparent 3.5px),
     radial-gradient(circle at 78% 70%, #ff4f9a 0 3px, transparent 3.5px),
     radial-gradient(circle at 70% 18%, #12b886 0 2.5px, transparent 3px), #2a2d4f;
+}
+
+[data-style="neon"] {
+  --theme-font-display: "Baloo 2 Variable", "Outfit Variable", sans-serif;
+  --theme-font-body: "Outfit Variable", system-ui, sans-serif;
+}
+
+[data-theme="neon"] {
+  --page-bg:
+    radial-gradient(900px 600px at 10% 0%, #3a2a7a 0, transparent 60%),
+    radial-gradient(800px 600px at 100% 30%, #5a1f5e 0, transparent 55%),
+    radial-gradient(700px 500px at 40% 100%, #123e5a 0, transparent 60%), #16122e;
+  --shadow: 0 10px 30px #0006;
+  --shadow-sm: 0 4px 14px #0005;
+  --card-back:
+    radial-gradient(circle at 30% 25%, #ffffff22 1.5px, transparent 2px) 0 0 / 12px 12px,
+    linear-gradient(150deg, #5a3fd0, #c2408f);
 }
 
 @theme inline {
@@ -520,6 +590,79 @@
   .modal-box {
     border: var(--bw) solid var(--line);
     box-shadow: var(--shadow);
+  }
+}
+
+/* Soirée néon : surfaces en verre dépoli, contours et halos lumineux */
+[data-style="neon"] {
+  body {
+    background-attachment: fixed;
+  }
+  .panel {
+    background-color: color-mix(in oklab, var(--color-base-100) 80%, transparent);
+    backdrop-filter: blur(8px);
+  }
+  .btn:not(.btn-ghost, .btn-link, .btn-primary, .btn-secondary, .btn-error, .btn-success) {
+    background-color: #ffffff10;
+    border: 1px solid var(--line);
+  }
+  .btn-primary {
+    box-shadow: 0 6px 22px color-mix(in oklab, var(--color-primary) 40%, transparent);
+  }
+  .btn:not(:disabled):hover {
+    filter: brightness(1.08);
+  }
+  .input,
+  .select,
+  .textarea {
+    background-color: #ffffff0d;
+  }
+  .input:focus-within,
+  .select:focus-within,
+  .textarea:focus {
+    outline: 3px solid color-mix(in oklab, var(--color-accent) 40%, transparent);
+    outline-offset: 0;
+  }
+  .modal-box {
+    border: 1px solid var(--line);
+  }
+  .playing-card {
+    background: var(--card-face);
+    border: 2px solid var(--cc);
+    color: var(--cc);
+    box-shadow:
+      0 0 14px color-mix(in oklab, var(--cc) 55%, transparent),
+      inset 0 0 18px color-mix(in oklab, var(--cc) 20%, transparent);
+  }
+  .playing-card-value {
+    text-shadow: 0 0 12px var(--cc);
+  }
+  .playing-card-symbol {
+    color: var(--cc);
+  }
+  .playing-card-back {
+    background: var(--card-back);
+    border: 2px solid var(--card-line);
+    box-shadow: 0 6px 18px #0007;
+  }
+  .playing-card-mono {
+    background: #16122e;
+    color: #ff9a6b;
+    box-shadow: 0 0 12px #ff6b8b;
+  }
+  .player-turn {
+    box-shadow:
+      0 0 0 2px var(--color-success),
+      0 0 22px color-mix(in oklab, var(--color-success) 60%, transparent);
+    animation: neon-pulse 2s ease-in-out infinite;
+  }
+}
+
+@keyframes neon-pulse {
+  50% {
+    box-shadow:
+      0 0 0 2px var(--color-success),
+      0 0 34px color-mix(in oklab, var(--color-success) 80%, transparent);
   }
 }
 

@@ -26,6 +26,15 @@ describe("ToggleTheme", () => {
     expect(localStorage.getItem("theme-mode")).toBe("sombre");
   });
 
+  it("se masque avec Soirée néon, qui n'existe qu'en sombre", () => {
+    localStorage.setItem("theme-style", "neon");
+    localStorage.setItem("theme-mode", "clair");
+    render(<ToggleTheme />);
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(document.documentElement.dataset.theme).toBe("neon");
+    expect(document.documentElement.dataset.style).toBe("neon");
+  });
+
   it("reprend l'ancien réglage « dark »", () => {
     localStorage.setItem("theme", "dark");
     render(<ToggleTheme />);

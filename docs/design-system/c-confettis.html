@@ -1,0 +1,226 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg)}
+body{min-height:2340px;width:1680px;font-family:'DM Sans',sans-serif;color:var(--ink);padding:56px 64px 64px}
+h1,h2,h3,.disp,.btn,.gc .v,.logo,.stat b,.hero-title{font-family:'Bricolage Grotesque',sans-serif}
+.top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:36px;gap:40px}
+.top .k{font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.top h1{font-size:76px;line-height:1;font-weight:800;margin:6px 0 12px}
+.top p{font-size:21px;color:var(--muted);max-width:760px;line-height:1.45}
+.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:520px}
+.chip{padding:7px 14px;border-radius:999px;font-weight:700;font-size:14px;color:var(--ink)}
+.row{display:grid;gap:28px;margin-bottom:28px}
+.panel{background:var(--surface);border-radius:var(--r);padding:26px 28px}
+.panel h3{font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:18px;font-weight:700}
+.pal{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.sw{display:flex;flex-direction:column;gap:2px;font-size:14px}
+.chipc{height:66px;border-radius:calc(var(--r) - 4px);margin-bottom:8px;border:1.5px solid #8882}
+.sw code{font-size:12px;color:var(--muted)} .sw small{color:var(--muted);font-size:12px}
+.typo .d1{font-size:54px;font-weight:800;line-height:1.05}
+.typo .d2{font-size:28px;font-weight:700;margin:8px 0 10px}
+.typo p{font-size:16px;line-height:1.6;color:var(--muted)}
+.typo .meta{margin-top:14px;font-size:13px;color:var(--muted);display:flex;gap:18px}
+.typo .meta b{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:46px;padding:0 22px;border-radius:calc(var(--r) - 2px);font-weight:700;font-size:17px;white-space:nowrap}
+.btn-primary{background:var(--primary);color:var(--primary-ink)}
+.btn-secondary{background:var(--secondary);color:var(--secondary-ink)}
+.btn-ghost{background:transparent;color:var(--ink)}
+.btn.sm{height:36px;padding:0 14px;font-size:14px}
+.btn.block{width:100%}
+.comp{display:flex;flex-direction:column;gap:16px}
+.comp .line{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.input{height:46px;border-radius:calc(var(--r) - 4px);padding:0 14px;display:flex;align-items:center;font-size:15px;color:var(--muted);background:var(--surface);width:100%}
+.lbl{font-size:13px;font-weight:700;margin-bottom:6px;display:block}
+.tag-ok{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
+.toggle{width:46px;height:26px;border-radius:99px;background:var(--ok);position:relative;border:var(--bw) solid var(--line)}
+.toggle::after{content:"";position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:50%;right:3px;transform:translateY(-50%)}
+/* cartes */
+.gc{position:relative;width:74px;aspect-ratio:5/7;border-radius:12px;display:grid;place-items:center;overflow:hidden;flex:none}
+.gc .v{position:relative;z-index:1;font-size:30px;font-weight:800;margin-top:10%}
+.gc .sym{position:absolute;z-index:1;top:6%;left:8%;font-size:11px;width:20px;height:20px;border-radius:6px;display:grid;place-items:center;line-height:1}
+.gc.back .mono{position:relative;z-index:1;width:46%;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:20px}
+.gc.xs{width:100%;border-radius:8px} .gc.xs .v{font-size:20px} .gc.xs .sym{width:14px;height:14px;font-size:8px;border-radius:4px} .gc.xs .mono{font-size:12px}
+.gc.xxs{width:100%;border-radius:4px;border-width:1.5px} .gc.xxs .v{font-size:10px} .gc.xxs .sym,.gc.xxs .mono{display:none}
+.scale{display:flex;gap:18px;align-items:flex-end}
+.scale-item{display:flex;flex-direction:column;align-items:center;gap:8px} .scale-item small{font-size:12px;color:var(--muted);font-weight:700}
+.notes{list-style:none;display:flex;flex-direction:column;gap:10px;font-size:15px;line-height:1.45}
+.notes li{padding-left:22px;position:relative} .notes li::before{content:"";position:absolute;left:0;top:7px;width:10px;height:10px;border-radius:3px;background:var(--primary)}
+/* cadres */
+.frame{border-radius:var(--r);overflow:hidden;background:var(--surface)}
+.bar{height:34px;display:flex;align-items:center;gap:7px;padding:0 14px;background:var(--surface2);border-bottom:var(--bw) solid var(--line)}
+.bar i{width:11px;height:11px;border-radius:50%;background:#8886} .bar span{margin-left:12px;font-size:12px;color:var(--muted)}
+.screen{background:var(--bg);position:relative;overflow:hidden}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:16px 28px}
+.logo{font-weight:800;font-size:22px;display:flex;align-items:center;gap:10px}
+.logo .lm{width:30px;height:38px;border-radius:7px;background:var(--primary);display:grid;place-items:center;color:var(--primary-ink);font-size:17px;transform:rotate(-8deg)}
+.nav .links{display:flex;gap:22px;align-items:center;font-weight:600;font-size:15px}
+.hero{display:grid;grid-template-columns:1.15fr 1fr;align-items:center;padding:26px 44px 30px;gap:20px}
+.hero-title em{white-space:nowrap}
+.hero-title{font-size:44px;line-height:1.04;font-weight:800}
+.hero p{font-size:17px;color:var(--muted);margin:16px 0 24px;line-height:1.5;max-width:430px}
+.fan{position:relative;height:250px}
+.fan .gc{position:absolute;width:112px;left:50%;top:30px} .fan .gc .v{font-size:44px} .fan .gc .sym{width:26px;height:26px;font-size:14px}
+.feat{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:0 44px 34px}
+.feat div{background:var(--surface);border-radius:var(--r);padding:16px 18px;font-size:14px;color:var(--muted)}
+.feat b{display:block;color:var(--ink);font-size:16px;margin-bottom:4px;font-family:'Bricolage Grotesque'}
+.deco{position:absolute;width:420px;right:10px;top:40px;opacity:.95;pointer-events:none}
+.phone{width:300px;border-radius:38px;padding:10px;background:var(--surface)}
+.phone .screen{border-radius:30px;height:610px;padding:46px 18px 18px;display:flex;flex-direction:column;gap:14px}
+.phone .notch{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:84px;height:22px;border-radius:99px;background:#0d0d12}
+.phone h2{font-size:22px;font-weight:800;line-height:1.1}
+.phone .sub{font-size:14px;color:var(--muted)}
+.divider{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px} .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
+.pl{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:calc(var(--r) - 4px);background:var(--surface)}
+.pl .nm{flex:1;font-weight:700;font-size:15px} .pl small{display:block;font-weight:500;color:var(--muted);font-size:12px}
+.avatar{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-weight:800;color:#16122E;background:var(--ac);font-family:'Bricolage Grotesque'}
+.empty{border:2px dashed color-mix(in srgb,var(--muted) 45%,transparent);background:transparent;color:var(--muted);font-size:14px;justify-content:center}
+.share{display:flex;gap:8px;align-items:center;padding:8px 8px 8px 14px;border-radius:calc(var(--r) - 4px);background:var(--surface2);font-size:13px;font-weight:600}
+.share span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.board{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.opps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.opp{padding:7px;border-radius:12px;background:var(--surface)} .opp .b{display:grid;grid-template-columns:repeat(4,1fr);gap:2px}
+.opp p{font-size:11px;font-weight:700;margin-bottom:5px;display:flex;justify-content:space-between}
+.pile{display:flex;justify-content:center;gap:16px;align-items:center} .pile .gc{width:62px} .pile .gc .v{font-size:26px}
+.hint{margin-top:auto;padding:10px 12px;border-radius:12px;background:var(--surface2);font-size:13px;font-weight:600;text-align:center}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:6px 28px 16px}
+.stat{border-radius:var(--r);padding:14px 16px;font-size:13px;color:var(--muted)} .stat b{display:block;font-size:30px;color:var(--ink);line-height:1.1}
+.hist{padding:0 28px 24px;display:flex;flex-direction:column;gap:10px}
+.hrow{display:grid;grid-template-columns:44px 1fr auto auto;gap:14px;align-items:center;padding:12px 16px;border-radius:calc(var(--r) - 4px);background:var(--surface);font-size:14px}
+.medal{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-family:'Bricolage Grotesque'}
+.legal{display:grid;grid-template-columns:170px 1fr;gap:28px;padding:20px 28px 26px}
+.legal nav{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600}
+.legal nav a{padding:7px 10px;border-radius:9px;color:var(--muted)} .legal nav a.on{background:var(--surface2);color:var(--ink)}
+.legal h2{font-size:26px;font-weight:800} .legal h4{font-size:16px;margin:14px 0 4px;font-family:'Bricolage Grotesque'}
+.legal p{font-size:14px;line-height:1.65;color:var(--muted);max-width:62ch}
+.cap{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 10px 4px}
+.turn{border-radius:10px}
+
+:root{--bg:#F4F5FB;--surface:#FFFFFF;--surface2:#EEF0FF;--ink:#16182B;--muted:#62667F;--line:#E2E4F0;
+--primary:#3D5AFE;--primary-ink:#FFFFFF;--secondary:#FF9F1C;--secondary-ink:#16182B;--ok:#12B886;--accent:#FF4F9A;
+--r:16px;--bw:1px;--sh:0 1px 2px #16182B0f,0 12px 32px #16182B14;--sh-sm:0 1px 2px #16182B14,0 4px 10px #16182B10}
+.panel,.frame,.phone{border:1px solid var(--line);box-shadow:var(--sh)}
+.btn-primary{box-shadow:0 6px 16px #3D5AFE40}
+.btn-secondary{background:var(--surface2);color:var(--primary)}
+.btn-ghost{border:1px solid var(--line)}
+.input{border:1.5px solid var(--line)}
+.input.focus{border-color:var(--primary);box-shadow:0 0 0 4px #3D5AFE22}
+.chip{background:var(--surface2)}
+.gc{background:var(--cc);box-shadow:0 3px 8px #16182B22;border:1px solid #16182B10}
+.gc .v{color:var(--ci)}
+.gc .sym{color:var(--ci);opacity:.9;background:transparent}
+.gc::after{content:"";position:absolute;width:62%;aspect-ratio:1;right:-18%;bottom:-14%;border-radius:50%;background:#ffffff26}
+.gc.r1::after{background:#16182B0c}
+.gc.r2::after{border-radius:0;transform:rotate(45deg);right:-24%;bottom:-22%}
+.gc.r3::after{border-radius:0;clip-path:polygon(50% 0,100% 100%,0 100%);border:none}
+.gc.r4::after{border-radius:40% 0}
+.gc.back{background:#16182B}
+.gc.back::after{display:none}
+.gc.back .mono{background:#fff;color:#16182B}
+.gc.back .confetti{position:absolute;inset:0;background:radial-gradient(circle at 20% 22%,#FFC531 0 3px,transparent 3.5px),radial-gradient(circle at 78% 70%,#FF4F9A 0 3px,transparent 3.5px),radial-gradient(circle at 70% 18%,#12B886 0 2.5px,transparent 3px),radial-gradient(circle at 26% 80%,#fff 0 2.5px,transparent 3px)}
+.hero-title em{font-style:normal;color:var(--primary);position:relative}
+.hero-title em::after{content:"";position:absolute;left:0;right:0;bottom:-.08em;height:.14em;background:var(--accent);border-radius:9px}
+.avatar{box-shadow:0 0 0 3px var(--surface)}
+.stat{background:var(--surface);box-shadow:var(--sh-sm)}
+.tag-ok{background:#12B88618;color:#0B8A63}
+
+</style></head><body>
+<div class="top">
+  <div><div class="k">Proposition C · design system</div><h1>Confettis</h1><p>Clair, net, couleurs franches et formes géométriques. Moderne comme une appli, festif comme une fin de partie.</p></div>
+  <div class="chips"><span class="chip">pop</span><span class="chip">géométrique</span><span class="chip">propre</span><span class="chip">clair + sombre</span></div>
+</div>
+
+<div class="row" style="grid-template-columns:1.05fr 1.1fr 1fr">
+  <div class="panel"><h3>Palette</h3><div class="pal"><div class="sw"><div class="chipc" style="background:#F4F5FB"></div><b>Brume</b><code>#F4F5FB</code><small>fond</small></div><div class="sw"><div class="chipc" style="background:#16182B"></div><b>Ardoise</b><code>#16182B</code><small>texte</small></div><div class="sw"><div class="chipc" style="background:#3D5AFE"></div><b>Bleu électrique</b><code>#3D5AFE</code><small>primaire</small></div><div class="sw"><div class="chipc" style="background:#FF4F9A"></div><b>Rose bonbon</b><code>#FF4F9A</code><small>accent</small></div><div class="sw"><div class="chipc" style="background:#12B886"></div><b>Jade</b><code>#12B886</code><small>succès, prêt</small></div><div class="sw"><div class="chipc" style="background:#FF9F1C"></div><b>Mangue</b><code>#FF9F1C</code><small>secondaire</small></div></div></div>
+  <div class="panel typo"><h3>Typographie</h3>
+    <div class="d1 disp">Plus petit score</div>
+    <div class="d2 disp">gagne la partie !</div>
+    <p>Texte courant en DM Sans : lisible sur les règles, l'historique et les pages légales. Les titres en Bricolage Grotesque apportent le côté jeu.</p>
+    <div class="meta"><span>Titres <b>Bricolage Grotesque</b></span><span>Texte <b>DM Sans</b></span><span>Échelle <b>14 · 16 · 20 · 28 · 40 · 54</b></span></div>
+  </div>
+  <div class="panel comp"><h3>Composants</h3>
+    <div class="line"><span class="btn btn-primary">Créer une partie</span><span class="btn btn-secondary">Rejoindre</span></div>
+    <div class="line"><span class="btn btn-ghost sm">Annuler</span><span class="btn btn-primary sm pressed">Pressé</span><span class="tag-ok">● Prêt</span><span class="chip">3 / 8 joueurs</span><span class="toggle"></span></div>
+    <div><span class="lbl">Pseudo</span><div class="input focus">Captain Carotte</div></div>
+  </div>
+</div>
+
+<div class="row" style="grid-template-columns:1.35fr 1fr">
+  <div class="panel"><h3>Cartes : couleur + symbole par tranche (lisible en daltonisme, distinct du jeu original)</h3><div class="scale"><div class="scale-item"><div class="gc r0 " style="--cc:#12B886;--ci:#FFFFFF"><span class="v">−2</span><span class="sym">◆</span></div><small>−2 à −1</small></div><div class="scale-item"><div class="gc r0 " style="--cc:#12B886;--ci:#FFFFFF"><span class="v">−1</span><span class="sym">◆</span></div><small>&nbsp;</small></div><div class="scale-item"><div class="gc r1 " style="--cc:#FFFFFF;--ci:#16182B"><span class="v">0</span><span class="sym">●</span></div><small>0</small></div><div class="scale-item"><div class="gc r2 " style="--cc:#3D5AFE;--ci:#FFFFFF"><span class="v">3</span><span class="sym">▲</span></div><small>1 à 4</small></div><div class="scale-item"><div class="gc r3 " style="--cc:#FF9F1C;--ci:#16182B"><span class="v">6</span><span class="sym">■</span></div><small>5 à 8</small></div><div class="scale-item"><div class="gc r4 " style="--cc:#FF4F9A;--ci:#FFFFFF"><span class="v">10</span><span class="sym">✱</span></div><small>9 à 12</small></div><div class="scale-item"><div class="gc r4 " style="--cc:#FF4F9A;--ci:#FFFFFF"><span class="v">12</span><span class="sym">✱</span></div><small>&nbsp;</small></div><div class="scale-item"><div class="gc back "><span class="confetti"></span><span class="mono">O</span></div><small>dos</small></div></div></div>
+  <div class="panel"><h3>Principes</h3><ul class="notes"><li>Cartes en aplat de couleur + motif géométrique propre à chaque tranche (lisible en daltonisme).</li><li>Confettis SVG en décor (accueil, fin de partie) : jamais derrière du texte courant.</li><li>Ombres douces, rayon 16 px, beaucoup d'air : sobre sur les pages légales et l'historique.</li><li>Mode sombre : fond #12131F, surfaces #1C1E30, mêmes accents.</li></ul></div>
+</div>
+
+<div class="row" style="grid-template-columns:1.12fr 1fr">
+  <div><div class="cap">Accueil · desktop</div><div class="frame"><div class="bar"><i></i><i></i><i></i><span>jeu.olivgames.fr</span></div><div class="screen"><svg class="deco" viewBox="0 0 400 220" aria-hidden="true">
+<circle cx="30" cy="40" r="9" fill="#FFC531"/><rect x="340" y="30" width="16" height="16" rx="3" fill="#FF4F9A" transform="rotate(20 348 38)"/>
+<polygon points="300,170 318,200 282,200" fill="#12B886"/><path d="M60 180 q12 -16 24 0 t24 0" stroke="#3D5AFE" stroke-width="5" fill="none" stroke-linecap="round"/>
+<circle cx="380" cy="120" r="6" fill="#3D5AFE"/><rect x="120" y="20" width="10" height="22" rx="5" fill="#FF9F1C" transform="rotate(-30 125 31)"/></svg>
+    <div class="nav"><div class="logo"><span class="lm">O</span>Les cartes d'Olivier</div><div class="links"><span>Règles</span><span>Parties publiques</span><span>Historique</span><span class="btn btn-primary sm">Connexion</span></div></div>
+    <div class="hero"><div><div class="hero-title">Retourne, échange,<br>fais le <em>plus petit</em><br>score.</div><p>Le jeu de cartes entre amis, en ligne et gratuit. Crée un salon, partage le lien, c'est parti.</p>
+      <div class="line" style="display:flex;gap:12px"><span class="btn btn-primary">＋ Créer une partie</span><span class="btn btn-ghost">Rejoindre</span></div></div>
+      <div class="fan">
+        <div style="position:absolute;inset:0"><div class="gc back " style="transform:translateX(-150%) rotate(-16deg) translateY(30px)"><span class="confetti"></span><span class="mono">O</span></div></div>
+        <div style="position:absolute;inset:0"><div class="gc r0 " style="transform:translateX(-90%) rotate(-6deg);--cc:#12B886;--ci:#FFFFFF"><span class="v">−2</span><span class="sym">◆</span></div></div>
+        <div style="position:absolute;inset:0"><div class="gc r1 " style="transform:translateX(-25%) rotate(5deg) translateY(4px);--cc:#FFFFFF;--ci:#16182B"><span class="v">0</span><span class="sym">●</span></div></div>
+        <div style="position:absolute;inset:0"><div class="gc r4 " style="transform:translateX(42%) rotate(15deg) translateY(26px);--cc:#FF4F9A;--ci:#FFFFFF"><span class="v">12</span><span class="sym">✱</span></div></div>
+      </div></div>
+    <div class="feat"><div><b>Salon privé</b>Un lien à partager, même sans compte Google.</div><div><b>2 à 8 joueurs</b>Sur téléphone, tablette ou ordi.</div><div><b>Ton historique</b>Victoires, adversaires, meilleurs scores.</div></div>
+  </div></div></div>
+  <div><div class="cap">Historique · desktop</div><div class="frame"><div class="bar"><i></i><i></i><i></i><span>/dashboard</span></div><div class="screen" style="padding-top:18px">
+    <div style="padding:0 28px 14px;display:flex;justify-content:space-between;align-items:center"><h2 class="disp" style="font-size:30px;font-weight:800">Salut Olivier 👋</h2><span class="btn btn-primary sm">Nouvelle partie</span></div>
+    <div class="stats"><div class="stat"><b>42</b>parties</div><div class="stat"><b>17</b>victoires</div><div class="stat"><b>−6</b>meilleur score</div><div class="stat"><b>38</b>moyenne</div></div>
+    <div style="padding:0 28px 14px;display:flex;gap:8px;flex-wrap:wrap"><span class="chip" style="background:var(--primary);color:var(--primary-ink)">Tous</span><span class="chip">Camille · 9-4</span><span class="chip">Léo · 3-5</span><span class="chip">Mamie Jo · 5-2</span></div>
+    <div class="hist">
+      <div class="hrow"><span class="medal" style="background:#12B886;color:#16182B">1</span><span><b>Victoire</b> · avec Camille, Léo</span><span style="color:var(--muted)">hier</span><b>48 pts</b></div>
+      <div class="hrow"><span class="medal" style="background:var(--surface2)">3</span><span><b>3ᵉ place</b> · avec Mamie Jo, Léo</span><span style="color:var(--muted)">28 sept.</span><b>112 pts</b></div>
+      <div class="hrow"><span class="medal" style="background:var(--surface2)">2</span><span><b>2ᵉ place</b> · avec Camille</span><span style="color:var(--muted)">21 sept.</span><b>87 pts</b></div>
+    </div>
+  </div></div></div>
+</div>
+
+<div class="row" style="grid-template-columns:300px 300px 300px 1fr;gap:34px">
+  <div><div class="cap">Connexion · mobile</div><div class="phone"><div class="screen"><span class="notch"></span>
+    <div class="logo" style="font-size:18px"><span class="lm">O</span>Les cartes d'Olivier</div>
+    <div style="margin-top:14px"><h2>Content de te revoir !</h2><p class="sub" style="margin-top:6px">Connecte-toi pour retrouver tes parties.</p></div>
+    <span class="btn btn-ghost block" style="background:var(--surface)"><b style="color:#4285F4">G</b> Continuer avec Google</span>
+    <div class="divider">ou</div>
+    <div><span class="lbl">Email</span><div class="input">camille@exemple.fr</div></div>
+    <div><span class="lbl">Mot de passe</span><div class="input">••••••••</div></div>
+    <span class="btn btn-primary block">Se connecter</span>
+    <p class="sub" style="text-align:center">Pas encore de compte ? <b style="color:var(--primary)">Créer un compte</b></p>
+  </div></div></div>
+
+  <div><div class="cap">Salle d'attente · mobile</div><div class="phone"><div class="screen"><span class="notch"></span>
+    <div style="display:flex;justify-content:space-between;align-items:center"><h2>Salon 4F2A</h2><span class="chip">🔒 Privé</span></div>
+    <div class="share"><span>jeu.olivgames.fr/join/4f2a…</span><span class="btn btn-secondary sm">Copier</span></div>
+    <div class="sub" style="display:flex;justify-content:space-between;font-weight:700"><span>Joueurs</span><span>3 / 6</span></div>
+    <div class="pl"><span class="avatar" style="--ac:#FFC43D">O</span><span class="nm">Olivier<small>Créateur</small></span><span class="tag-ok">● Là</span></div>
+    <div class="pl"><span class="avatar" style="--ac:#7CDFFF">C</span><span class="nm">Camille</span><span class="tag-ok">● Là</span></div>
+    <div class="pl"><span class="avatar" style="--ac:#FF9AB8">L</span><span class="nm">Léo</span><span class="tag-ok">● Là</span></div>
+    <div class="pl empty">En attente d'un joueur…</div>
+    <span class="btn btn-primary block" style="margin-top:auto">Lancer la partie</span>
+  </div></div></div>
+
+  <div><div class="cap">Partie · mobile (4×3 adaptatif)</div><div class="phone"><div class="screen" style="gap:12px"><span class="notch"></span>
+    <div class="opps">
+      <div class="opp turn"><p><span>Camille</span><span>14</span></p><div class="b"><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc r3 xxs" style="--cc:#FF9F1C;--ci:#16182B"><span class="v">5</span><span class="sym">■</span></div><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc r2 xxs" style="--cc:#3D5AFE;--ci:#FFFFFF"><span class="v">1</span><span class="sym">▲</span></div><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc r4 xxs" style="--cc:#FF4F9A;--ci:#FFFFFF"><span class="v">9</span><span class="sym">✱</span></div><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc r1 xxs" style="--cc:#FFFFFF;--ci:#16182B"><span class="v">0</span><span class="sym">●</span></div><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div></div></div>
+      <div class="opp"><p><span>Léo</span><span>9</span></p><div class="b"><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div></div></div>
+      <div class="opp"><p><span>Jo</span><span>21</span></p><div class="b"><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc r1 xxs" style="--cc:#FFFFFF;--ci:#16182B"><span class="v">0</span><span class="sym">●</span></div><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc r4 xxs" style="--cc:#FF4F9A;--ci:#FFFFFF"><span class="v">9</span><span class="sym">✱</span></div><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc r2 xxs" style="--cc:#3D5AFE;--ci:#FFFFFF"><span class="v">1</span><span class="sym">▲</span></div><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc r3 xxs" style="--cc:#FF9F1C;--ci:#16182B"><span class="v">5</span><span class="sym">■</span></div><div class="gc back xxs"><span class="confetti"></span><span class="mono">O</span></div></div></div>
+    </div>
+    <div class="pile"><div class="gc back "><span class="confetti"></span><span class="mono">O</span></div><div class="gc r3 " style="--cc:#FF9F1C;--ci:#16182B"><span class="v">5</span><span class="sym">■</span></div></div>
+    <div class="sub" style="display:flex;justify-content:space-between;font-weight:700;color:var(--ink)"><span>Toi</span><span>Manche 2 · 23 pts</span></div>
+    <div class="board"><div class="gc back xs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc r2 xs" style="--cc:#3D5AFE;--ci:#FFFFFF"><span class="v">4</span><span class="sym">▲</span></div><div class="gc back xs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc r0 xs" style="--cc:#12B886;--ci:#FFFFFF"><span class="v">−1</span><span class="sym">◆</span></div><div class="gc r3 xs" style="--cc:#FF9F1C;--ci:#16182B"><span class="v">7</span><span class="sym">■</span></div><div class="gc back xs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc back xs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc r1 xs" style="--cc:#FFFFFF;--ci:#16182B"><span class="v">0</span><span class="sym">●</span></div><div class="gc back xs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc r4 xs" style="--cc:#FF4F9A;--ci:#FFFFFF"><span class="v">11</span><span class="sym">✱</span></div><div class="gc back xs"><span class="confetti"></span><span class="mono">O</span></div><div class="gc r2 xs" style="--cc:#3D5AFE;--ci:#FFFFFF"><span class="v">2</span><span class="sym">▲</span></div></div>
+    <div class="hint">Au tour de Camille…</div>
+  </div></div></div>
+
+  <div><div class="cap">Pages légales · desktop</div><div class="frame"><div class="bar"><i></i><i></i><i></i><span>/privacy</span></div><div class="screen">
+    <div class="legal"><nav><a class="on">Confidentialité</a><a>Mentions légales</a><a>Conditions</a><a>Cookies</a></nav>
+    <div><h2>Confidentialité</h2><p style="font-size:12px;margin-top:2px">Mise à jour le 4 octobre 2026</p>
+    <h4>Ce qu'on garde</h4><p>Ton pseudo et ton email, rien d'autre. Pas de nom, pas de photo, pas de publicité ni de traceur.</p>
+    <h4>Combien de temps</h4><p>Un compte inactif depuis 3 ans est supprimé automatiquement. Tu peux le supprimer toi-même depuis ton historique.</p>
+    <h4>Tes droits</h4><p>Accès, rectification, effacement : écris-nous, réponse sous un mois.</p></div></div>
+    <div style="margin:0 28px 24px;padding:14px 18px;border-radius:var(--r);background:var(--surface2);font-size:13px;color:var(--muted)">Pied de page léger : liens légaux + version, même couleur que le fond (fini le gros bloc noir).</div>
+  </div></div></div>
+</div>
+</body></html>

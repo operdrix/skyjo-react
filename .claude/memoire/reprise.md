@@ -1,4 +1,4 @@
-# Mémoire projet : état et reprise (maj 2026-10-04, en production)
+# Mémoire projet : état et reprise (maj 2026-10-04, en production v3.2.0)
 
 Fichier versionné pour reprendre le travail sur n'importe quel PC. Chargé par `CLAUDE.md`. À tenir à jour en fin de session.
 
@@ -29,7 +29,8 @@ Fichier versionné pour reprendre le travail sur n'importe quel PC. Chargé par 
   - Tests back : projets Vitest `unit` (sans base) et `api` (`*.api.test.js`, base `skyjo_test` créée par `test/global-setup.js` avec le compte root, **MySQL et Mailpit requis** : `make db-up`). Helpers dans `backend/test/helpers.js` (`createPlayer`, `findSensitiveFields`).
   - Front : Vitest 2 + Testing Library (`frontend/vitest.config.ts`), à monter avec Vite en phase 2.
 
-## Refonte du design (2026-10-04, étapes 1-3 mergées PR #42-#44, étape 4 choix du thème sur `feat/choix-theme`)
+## Refonte du design (terminée, en prod v3.2.0 le 2026-10-04, PR #42 à #46)
+- Planches d'origine des 3 thèmes : `docs/design-system/` (écarts avec la version finale dans son README).
 - Référence : `docs/DESIGN.md` (preview jetable `docs/design-preview.html`). 3 thèmes au choix (`tapis` par défaut, `neon`, `confettis`), stockés en `users.theme` + copie locale.
 - Ordre prévu : 1) jetons + thème Tapis sur les pages hors jeu, 2) Confettis + plateau adaptatif, 3) Néon, 4) choix du thème (inscription, `/auth/pseudo`, espace perso) + pages légales.
 - Étape 1 faite (branche `feat/design-system`) : `src/lib/theme.ts`, `src/game/cards.ts`, `PlayingCard`, thème `tapis` dans `index.css`. Piège : le plugin `daisyui/theme` découpe les valeurs à virgules (polices, dégradés), les définir hors plugin.

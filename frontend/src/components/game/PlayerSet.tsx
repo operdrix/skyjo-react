@@ -72,11 +72,14 @@ const PlayerSet = ({
       {/* <GameTurnNotifier isCurrentTurn={playerTurn && isCurrentPlayerSet} /> */}
 
       <div className={`flex flex-col justify-center items-center ${smallSet ? "small-set" : ""}`}>
-        <h2 className="indicator items-center gap-3 text-xl font-bold mb-2 min-h-8">
-          {playerTurn && <span className="loading loading-dots loading-md"></span>}
-          {player?.username} <OnlineStatus status={player?.game_players?.status} />
+        <h2
+          className={`mb-1 flex min-h-8 max-w-full items-center gap-2 rounded-full px-3 text-lg font-bold md:mb-2 ${playerTurn ? "bg-success text-success-content" : ""}`}
+        >
+          {playerTurn && <span className="loading loading-dots loading-sm" aria-label="À son tour"></span>}
+          <span className="truncate">{player?.username}</span>
+          <OnlineStatus status={player?.game_players?.status} />
         </h2>
-        <div className={`grid gap-1 md:gap-2 ${getGridColsClass(playerCards?.length || 0)}`}>
+        <div className={`grid gap-[calc(var(--card-w)*0.1)] ${getGridColsClass(playerCards?.length || 0)}`}>
           {playerCards.map((card) => {
             let disabled = false;
             if (!isCurrentPlayerSet || !playerTurn) {
@@ -104,12 +107,13 @@ const PlayerSet = ({
 
 const OnlineStatus = ({ status }: { status: "connected" | "disconnected" | undefined }) => {
   if (!status) return null;
+  const connected = status === "connected";
   return (
-    // <span className={`indicator-item loading loading-ring loading-xs ${status === 'connected' ? 'text-success' : 'text-error'}`}></span>
-    // <span className={`indicator-item text-xl ${status === 'connected' ? 'text-success' : 'text-error'}`}>•</span>
-    <sup className={`text-base font-mono -left-2 ${status === "connected" ? "text-success" : "text-error"}`}>
-      &bull;
-    </sup>
+    <span
+      role="img"
+      aria-label={connected ? "connecté" : "déconnecté"}
+      className={`inline-block size-2.5 shrink-0 rounded-full border-2 border-line ${connected ? "bg-success" : "bg-error"}`}
+    />
   );
 };
 

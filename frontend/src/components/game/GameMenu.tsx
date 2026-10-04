@@ -22,10 +22,14 @@ export default function GameMenu() {
         </div>
       </dialog>
 
-      {/* Boutons de gauche */}
-      <div className="flex flex-col gap-4 absolute p-2 mt-8 sm:mt-4">
-        <div className="tooltip tooltip-right" data-tip="Retour à l'accueil">
-          <button className="btn btn-circle" onClick={() => navigate("/")}>
+      {/* Boutons de gauche de la barre d'outils */}
+      <div className="flex gap-2">
+        <div className="tooltip tooltip-bottom" data-tip="Retour à l'accueil">
+          <button
+            className="btn btn-circle btn-sm sm:btn-md"
+            onClick={() => navigate("/")}
+            aria-label="Retour à l'accueil"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-6 w-6"
@@ -38,8 +42,12 @@ export default function GameMenu() {
           </button>
         </div>
         {/* Bouton pour afficher les scores */}
-        <div className="tooltip tooltip-right" data-tip="Tableau des scores">
-          <button className="btn btn-circle" onClick={() => openDialog("modal-score")}>
+        <div className="tooltip tooltip-bottom" data-tip="Tableau des scores">
+          <button
+            className="btn btn-circle btn-sm sm:btn-md"
+            onClick={() => openDialog("modal-score")}
+            aria-label="Tableau des scores"
+          >
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -64,8 +72,12 @@ export default function GameMenu() {
           </button>
         </div>
         {/* Bouton pour afficher les règles */}
-        <div className="tooltip tooltip-right" data-tip="Règles du jeu">
-          <button className="btn btn-circle" onClick={() => openDialog("modalRules")}>
+        <div className="tooltip tooltip-bottom" data-tip="Règles du jeu">
+          <button
+            className="btn btn-circle btn-sm sm:btn-md"
+            onClick={() => openDialog("modalRules")}
+            aria-label="Règles du jeu"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"

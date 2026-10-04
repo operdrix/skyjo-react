@@ -39,7 +39,7 @@ Valeurs de `data-theme` sur `<html>` : `tapis`, `tapis-sombre`, `neon`, `confett
 
 - **Data/Tables** : police body du thème avec `font-variant-numeric: tabular-nums` (scores, historique, tableau de fin de manche).
 - **Code** : aucune.
-- **Loading** : auto-hébergé (paquets `@fontsource`, sous-ensemble latin, woff2). Seules les polices du thème actif sont chargées. Pas d'appel à Google Fonts en production (transfert d'IP). Kalam et Courgette sont retirées.
+- **Loading** : auto-hébergé (paquets `@fontsource-variable`, woff2). Toutes les `@font-face` sont déclarées, mais le navigateur ne télécharge que les fichiers des polices réellement utilisées par le thème actif. Pas d'appel à Google Fonts en production (transfert d'IP). Kalam et Courgette sont retirées.
 - **Scale** : 14 / 16 / 20 / 28 / 40 / 56 / 88 px (titres fluides avec `clamp()`). Texte courant 16 px minimum, 18 px pour les intros.
 
 ## Color
@@ -77,7 +77,7 @@ Couleur **et** symbole par tranche de valeur (lisible en daltonisme), avec des t
 | 5 à 8 | ■ | `#FF8A3D` | `#A88BFF` | `#FF9F1C` / ardoise |
 | 9 à 12 | ✱ | `#8C3B86` | `#FF5C93` | `#FF4F9A` / blanc |
 
-- Jetons : `--c-neg`, `--c-zero`, `--c-low`, `--c-mid`, `--c-high` (+ `-ink`). Les variables actuelles `--color-card-*` sont remplacées.
+- Jetons : `--c-neg`, `--c-zero`, `--c-low`, `--c-mid`, `--c-high` (+ `-ink`). La tranche se calcule depuis la valeur (`src/game/cards.ts`) ; le champ `color` envoyé par le serveur n'est plus utilisé pour l'affichage.
 - Tapis : face crème `#FFFDF8`, bandeau coloré en haut, chiffre encre. Néon : face `#1E1840`, chiffre et contour lumineux. Confettis : aplat + forme géométrique par tranche (rond, losange, triangle, goutte).
 - Accessibilité : `aria-label` du type « carte 7 » ou « carte cachée » sur chaque carte.
 
@@ -104,9 +104,10 @@ Couleur **et** symbole par tranche de valeur (lisible en daltonisme), avec des t
 - **Pied de page** : léger, couleur du fond, liens légaux + version. Le gros bloc noir et le logo « # » disparaissent.
 
 ### Plateau de jeu (tous écrans)
-- Grille du joueur 4 × 3 dont la largeur des cartes suit la place disponible (container queries) : `--card-w: min((100cqw - 3 × gap) / 4, (hauteur disponible / 3) × 5/7)`. Tailles de police des cartes proportionnelles à `--card-w`.
-- Mobile : adversaires en miniatures en haut, pioche et défausse au centre, plateau du joueur, barre d'état en bas (« Au tour de Camille… »).
-- Desktop : adversaires autour, cartes plafonnées pour rester lisibles sans dépasser l'écran.
+- Largeur des cartes calculée sur la largeur ET la hauteur de l'écran (`.game-area` dans `index.css`), tout est proportionnel à `--card-w`.
+- Mobile (< 768 px) : barre d'outils compacte en haut, adversaires sur une rangée (un tiers de largeur chacun), pioche et défausse au centre, joueur en bas. Joueur `clamp(36px, min(20vw, 8dvh), 96px)`, adversaire unique à 2 joueurs `clamp(28px, min(15vw, 5dvh), 72px)`, adversaires réduits `clamp(16px, min((100vw - 40px) / 13.5, 4dvh), 44px)`.
+- Desktop (≥ 768 px) : adversaires en face, à gauche et à droite de la pioche. Joueur `clamp(36px, min(17vw, 7.2dvh), 96px)`, adversaires réduits `clamp(16px, min(4.6vw, 3.8dvh), 44px)`.
+- Vérifié sans défilement sur 375 × 667, 393 × 852, 360 × 800 et 1440 × 900, à 2, 3 et 4 joueurs.
 - Joueur dont c'est le tour : contour `--success` (Tapis, Confettis) ou halo (Néon).
 
 ## Motion
@@ -131,3 +132,5 @@ Couleur **et** symbole par tranche de valeur (lisible en daltonisme), avec des t
 | 2026-10-04 | Nom « Skyjo d'Olivier » conservé | Choix du propriétaire ; mention de non-affiliation à Magilano maintenue dans les mentions légales |
 | 2026-10-04 | Outfit au lieu d'Inter (Néon), bouton primaire en aplat | Éviter les choix trop génériques |
 | 2026-10-04 | Polices auto-hébergées | Pas de transfert d'IP vers Google Fonts (RGPD) |
+| 2026-10-04 | Valeurs à virgules hors du plugin `daisyui/theme` | Le plugin découpe les listes (polices, dégradés, ombres multiples) et ne garde que le dernier élément |
+| 2026-10-04 | Plateau : cartes cliquables en `<button>`, tranche calculée depuis la valeur | Jouable au clavier ; plus de dépendance au code couleur du jeu original |

@@ -155,25 +155,17 @@ const Game = () => {
           )}
 
           {/* Zone de pioche et défausse */}
-          <div className="game-area-middle-center flex flex-col items-center justify-center md:gap-4">
+          <div className="game-area-middle-center flex flex-col items-center justify-center">
             {roundOver ? (
               <RoundResults />
             ) : (
-              <>
-                <Instructions />
-                <div className="flex justify-center items-center gap-3 md:gap-9">
-                  {/* Pioche */}
-                  <Deck />
+              <div className="flex items-center justify-center gap-3 md:gap-9">
+                {/* Pioche */}
+                <Deck />
 
-                  {/* Défausse */}
-                  <Discard />
-                </div>
-                {game.gameData.lastTurn && (
-                  <p className="text-sm md:text-xl lg:text-2xl text-center font-bold text-warning animate-bounce">
-                    Dernier tour !
-                  </p>
-                )}
-              </>
+                {/* Défausse */}
+                <Discard />
+              </div>
             )}
           </div>
 
@@ -187,6 +179,18 @@ const Game = () => {
           <div className="game-area-bottom-center">
             <PlayerSet playerId={userId} isCurrentPlayerSet />
           </div>
+
+          {/* Bandeau du bas : consigne en cours */}
+          {!roundOver && (
+            <div className="game-area-hint">
+              <div className="game-hint" role="status">
+                <Instructions />
+                {game.gameData.lastTurn && (
+                  <span className="badge badge-warning shrink-0 font-bold">Dernier tour !</span>
+                )}
+              </div>
+            </div>
+          )}
         </section>
       </div>
     </>

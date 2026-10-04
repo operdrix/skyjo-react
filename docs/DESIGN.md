@@ -106,6 +106,7 @@ Couleur **et** symbole par tranche de valeur (lisible en daltonisme), avec des t
 ### Plateau de jeu (tous écrans)
 - Largeur des cartes calculée sur la largeur ET la hauteur de l'écran (`.game-area` dans `index.css`), tout est proportionnel à `--card-w`.
 - Mobile (< 768 px) : barre d'outils compacte en haut, adversaires sur une rangée (un tiers de largeur chacun), pioche et défausse au centre, joueur en bas. Joueur `clamp(36px, min(20vw, 8dvh), 96px)`, adversaire unique à 2 joueurs `clamp(28px, min(15vw, 5dvh), 72px)`, adversaires réduits `clamp(16px, min((100vw - 40px) / 13.5, 4dvh), 44px)`.
+- Toutes tailles : adversaires dans un cadre (nom, total ; points de la manche en fin de manche), « Toi · Manche N · X pts » au-dessus du jeu du joueur, consigne dans un bandeau en bas de la table (comme la maquette de la planche A).
 - Desktop (≥ 768 px) : adversaires en face, à gauche et à droite de la pioche. Joueur `clamp(36px, min(17vw, 7.2dvh), 96px)`, adversaires réduits `clamp(16px, min(4.6vw, 3.8dvh), 44px)`.
 - Vérifié sans défilement sur 375 × 667, 393 × 852, 360 × 800 et 1440 × 900, à 2, 3 et 4 joueurs.
 - Joueur dont c'est le tour : contour `--success` (Tapis, Confettis) ou halo (Néon).

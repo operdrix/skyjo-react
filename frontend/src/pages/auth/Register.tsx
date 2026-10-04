@@ -4,10 +4,11 @@ import CustomField from "@/components/forms/CustomField";
 import { useUser } from "@/hooks/User";
 import { authClient } from "@/lib/authClient";
 import { authErrorMessage } from "@/lib/authErrors";
+import { safeRedirect, withRedirect } from "@/lib/redirect";
 import { PSEUDO_MAX, PSEUDO_MIN, PSEUDO_PATTERN } from "@/lib/pseudo";
 import { Field, Form, Formik } from "formik";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, Navigate, useSearchParams } from "react-router";
 import * as yup from "yup";
 
 const validationSchema = yup.object().shape({
@@ -23,8 +24,9 @@ const validationSchema = yup.object().shape({
 });
 
 function Register() {
-  const navigate = useNavigate();
-  const { refresh } = useUser();
+  const [searchParams] = useSearchParams();
+  const { refresh, isAuthentified } = useUser();
+  const redirect = safeRedirect(searchParams.get("redirect"));
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [withEmail, setWithEmail] = useState<boolean>(false);
 
@@ -36,9 +38,13 @@ function Register() {
       setErrorMessage(authErrorMessage(error));
       return;
     }
+    // La redirection se fait une fois la session rechargée
     refresh();
-    navigate("/");
   };
+
+  if (isAuthentified) {
+    return <Navigate to={redirect} replace />;
+  }
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-4">
@@ -47,7 +53,7 @@ function Register() {
         <p className="text-center mb-5">Un clic et c'est parti !</p>
 
         <div className="bg-base-200 shadow-sm rounded-lg px-5 py-7 flex flex-col gap-4">
-          <GoogleButton />
+          <GoogleButton redirect={redirect} />
 
           {withEmail ? (
             <Formik
@@ -101,7 +107,7 @@ function Register() {
 
         <p className="text-sm text-center mt-5">
           Déjà un compte ?{" "}
-          <Link to="/auth/login" className="link">
+          <Link to={withRedirect("/auth/login", redirect)} className="link">
             Me connecter
           </Link>
         </p>

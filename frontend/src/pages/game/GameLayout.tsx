@@ -5,6 +5,7 @@ import Footer from "@/components/nav/Footer";
 import Header from "@/components/nav/Header";
 import { GameProvider } from "@/context/GameProvider";
 import { WebSocketProvider } from "@/context/WebSocketProvider";
+import { withRedirect } from "@/lib/redirect";
 import { useUser } from "@/hooks/User";
 import { useEffect } from "react";
 import RequirePseudo from "@/components/auth/RequirePseudo";
@@ -18,14 +19,13 @@ const GameLayout = () => {
   // Vérifier si l'utilisateur est connecté au site
   useEffect(() => {
     if (!userLoading && !isAuthentified && !needsPseudo) {
-      navigate("/auth/login", {
+      navigate(withRedirect("/auth/login", window.location.pathname), {
         state: {
           message: {
             type: "info",
             message: "Vous devez être connecté pour accéder à cette page",
             title: "Connexion requise",
           },
-          from: window.location.pathname,
         },
       });
     }

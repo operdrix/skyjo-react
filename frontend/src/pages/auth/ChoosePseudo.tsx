@@ -3,10 +3,11 @@ import CustomField from "@/components/forms/CustomField";
 import { useUser } from "@/hooks/User";
 import { authClient } from "@/lib/authClient";
 import { authErrorMessage } from "@/lib/authErrors";
+import { safeRedirect } from "@/lib/redirect";
 import { PSEUDO_MAX, PSEUDO_MIN, PSEUDO_PATTERN } from "@/lib/pseudo";
 import { Field, Form, Formik } from "formik";
 import { useState } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router";
+import { Navigate, useSearchParams } from "react-router";
 import * as yup from "yup";
 
 const validationSchema = yup.object().shape({
@@ -21,11 +22,10 @@ const validationSchema = yup.object().shape({
 
 // Après une première connexion Google : choix du pseudo, pré-rempli avec le prénom
 function ChoosePseudo() {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { needsPseudo, isAuthentified, suggestedPseudo, loading, refresh } = useUser();
   const [errorMessage, setErrorMessage] = useState<string>("");
-  const redirect: string = location.state?.from || "/";
+  const redirect = safeRedirect(searchParams.get("redirect"));
 
   if (!loading && !needsPseudo) {
     return <Navigate to={isAuthentified ? redirect : "/auth/login"} replace />;
@@ -38,8 +38,8 @@ function ChoosePseudo() {
       setErrorMessage(authErrorMessage(error));
       return;
     }
+    // Une fois la session rechargée, le pseudo est connu et la page redirige d'elle-même
     refresh();
-    navigate(redirect, { replace: true });
   };
 
   return (

@@ -5,9 +5,10 @@ import Modal, { MessageType } from "@/components/Modal";
 import { useUser } from "@/hooks/User";
 import { authClient } from "@/lib/authClient";
 import { authErrorMessage } from "@/lib/authErrors";
+import { safeRedirect, withRedirect } from "@/lib/redirect";
 import { Field, Form, Formik } from "formik";
 import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router";
+import { Link, Navigate, useLocation, useSearchParams } from "react-router";
 import * as yup from "yup";
 
 const validationSchema = yup.object().shape({
@@ -17,12 +18,12 @@ const validationSchema = yup.object().shape({
 
 function Login() {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { refresh } = useUser();
+  const [searchParams] = useSearchParams();
+  const { refresh, isAuthentified } = useUser();
   const message: MessageType | null = location.state?.message ?? null;
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [withEmail, setWithEmail] = useState<boolean>(false);
-  const redirect: string = location.state?.from || "/";
+  const redirect = safeRedirect(searchParams.get("redirect"));
 
   useEffect(() => {
     if (message) {
@@ -38,9 +39,13 @@ function Login() {
       setErrorMessage(authErrorMessage(error));
       return;
     }
+    // La redirection se fait une fois la session rechargée (sinon la page de jeu renverrait ici)
     refresh();
-    navigate(redirect);
   };
+
+  if (isAuthentified) {
+    return <Navigate to={redirect} replace />;
+  }
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-4">
@@ -99,7 +104,7 @@ function Login() {
 
         <p className="text-sm text-center mt-5">
           Pas encore de compte ?{" "}
-          <Link to="/auth/register" className="link">
+          <Link to={withRedirect("/auth/register", redirect)} className="link">
             Créer un compte
           </Link>
         </p>

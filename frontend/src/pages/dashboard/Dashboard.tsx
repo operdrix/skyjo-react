@@ -1,3 +1,4 @@
+import DeleteAccount from "@/components/dashboard/DeleteAccount";
 import GameHistoryCard from "@/components/dashboard/GameHistoryCard";
 import OpponentCard from "@/components/dashboard/OpponentCard";
 import StatsBar from "@/components/dashboard/StatsBar";
@@ -133,6 +134,7 @@ const Dashboard = () => {
           </div>
         </>
       )}
+      <DeleteAccount />
     </div>
   );
 };

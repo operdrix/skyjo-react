@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { username } from "better-auth/plugins";
+import { eq } from "drizzle-orm";
 import { db } from "./db/index.ts";
 import * as schema from "./db/schema.ts";
 import { logger } from "./utils/logger.ts";
@@ -43,7 +44,11 @@ export function createAuth(secret: string) {
     basePath: "/api/auth",
     trustedOrigins: frontendOrigins(process.env.FRONTEND_HOST),
     database: drizzleAdapter(db, { provider: "mysql", schema }),
-    user: { modelName: "users" },
+    user: {
+      modelName: "users",
+      // Droit à l'effacement : sans mot de passe, Better Auth exige une connexion de moins de 24 h
+      deleteUser: { enabled: true },
+    },
     session: { modelName: "sessions" },
     account: {
       modelName: "accounts",
@@ -70,6 +75,16 @@ export function createAuth(secret: string) {
         displayUsername: false,
       }),
     ],
+    databaseHooks: {
+      session: {
+        create: {
+          // Chaque connexion repousse la suppression automatique des comptes inactifs
+          after: async (session) => {
+            await db.update(schema.users).set({ lastActiveAt: new Date() }).where(eq(schema.users.id, session.userId));
+          },
+        },
+      },
+    },
     hooks: {
       // Le pseudo est obligatoire à l'inscription par email (avec Google, il est choisi juste après)
       before: createAuthMiddleware(async (ctx) => {

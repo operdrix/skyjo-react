@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `last_active_at` timestamp(3);

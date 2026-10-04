@@ -3,6 +3,7 @@ import { buildApp } from "./app.ts";
 import { pool, runMigrations } from "./db/index.ts";
 //logger
 import { logger } from "./utils/logger.ts";
+import { purgeExpiredSessions, purgeInactiveUsers } from "./controllers/users.ts";
 
 import dotenv from "dotenv";
 
@@ -57,6 +58,19 @@ try {
   logger.error("Erreur critique :", (error as Error).message);
   process.exit(1); // Arrêter le processus en cas d'échec total
 }
+
+// Conservation limitée (RGPD) : ménage au démarrage puis chaque jour
+async function purgePersonalData() {
+  try {
+    const users = await purgeInactiveUsers();
+    const sessions = await purgeExpiredSessions();
+    logger.info(`Purge RGPD : ${users} compte(s) inactif(s), ${sessions} session(s) expirée(s) supprimés`);
+  } catch (error) {
+    logger.error("Purge RGPD impossible :", (error as Error).message);
+  }
+}
+await purgePersonalData();
+setInterval(purgePersonalData, 24 * 3600 * 1000).unref();
 
 const app = await buildApp();
 

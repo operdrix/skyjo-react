@@ -48,7 +48,7 @@ function Login() {
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-4">
+    <div className="flex flex-col items-center justify-center">
       <Modal
         id="message_modal"
         title={message?.title || "Succès"}
@@ -56,10 +56,11 @@ function Login() {
         type={message?.type || "success"}
       />
 
-      <div className="w-full max-w-sm">
-        <h1 className="font-bold text-center text-2xl mb-5">Connexion au jeu</h1>
+      <div className="w-full max-w-md">
+        <h1 className="font-bold text-3xl mb-2">Content de te revoir !</h1>
+        <p className="text-muted mb-5">Connecte-toi pour retrouver tes parties.</p>
 
-        <div className="bg-base-200 shadow-sm rounded-lg px-5 py-7 flex flex-col gap-4">
+        <div className="panel px-5 py-7 sm:px-7 flex flex-col gap-4">
           <GoogleButton redirect={redirect} />
 
           {withEmail ? (

@@ -38,7 +38,7 @@ const GameLayout = () => {
     <WebSocketProvider url={import.meta.env.VITE_BACKEND_WS as string} enabled={!userLoading && isAuthentified}>
       <GameProvider>
         <Drawer>
-          <div className="flex flex-col min-h-screen font-kalam">
+          <div className="flex flex-col min-h-screen">
             {!isGamePage && <Header />}
             <RequirePseudo />
             {!isGamePage && <Footer />}

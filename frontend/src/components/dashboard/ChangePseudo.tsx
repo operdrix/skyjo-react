@@ -38,7 +38,7 @@ const ChangePseudo = () => {
   };
 
   return (
-    <section className="w-full max-w-xl mt-8 p-4 border border-base-300 rounded-box space-y-2">
+    <section className="panel w-full max-w-xl mt-10 p-5 space-y-2">
       <h2 className="text-lg font-bold">Mon pseudo</h2>
       {success && <p className="text-sm text-success">Pseudo modifié.</p>}
       {editing ? (

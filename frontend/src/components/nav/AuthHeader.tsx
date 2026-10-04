@@ -1,23 +1,18 @@
+import Logo from "@/components/brand/Logo";
 import ToggleTheme from "@/components/nav/ToggleTheme";
-import { Link, NavLink } from "react-router";
+import { Link } from "react-router";
 
 const AuthHeader = () => {
   return (
-    <div className="navbar bg-base-100">
-      <div className="flex-1">
-        <Link to={"/"} className="btn btn-ghost text-xl">
-          Skyjo d'Olivier
+    <header className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-4 py-3">
+      <Logo />
+      <div className="flex items-center gap-2">
+        <Link to="/" className="btn btn-ghost btn-sm">
+          Accueil
         </Link>
-      </div>
-      <div className="flex-none">
-        <ul className="menu menu-horizontal px-1">
-          <li>
-            <NavLink to={"/"}>Accueil</NavLink>
-          </li>
-        </ul>
         <ToggleTheme />
       </div>
-    </div>
+    </header>
   );
 };
 

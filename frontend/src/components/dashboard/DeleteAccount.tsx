@@ -29,9 +29,9 @@ const DeleteAccount = () => {
   };
 
   return (
-    <section className="w-full max-w-xl my-8 p-4 border border-error/40 rounded-box space-y-2">
+    <section className="w-full max-w-xl my-8 p-5 border-2 border-dashed border-error/60 rounded-box space-y-2">
       <h2 className="text-lg font-bold">Supprimer mon compte</h2>
-      <p className="text-sm opacity-80">
+      <p className="text-sm text-muted">
         Votre compte, votre email, les parties que vous avez créées et votre historique seront supprimés définitivement.
       </p>
       {error && <p className="text-sm text-error">{error}</p>}

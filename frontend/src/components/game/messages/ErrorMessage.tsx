@@ -20,7 +20,7 @@ export default function ErrorMessage({ error, button }: ErrorMessageProps) {
 
   return (
     <div className="flex-1 container mx-auto flex items-center">
-      <div className="hero bg-base-200 min-h-[50vh] sm:p-20">
+      <div className="hero panel min-h-[50vh] sm:p-16">
         <div className="hero-content flex-col lg:flex-row text-center">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -40,10 +40,7 @@ export default function ErrorMessage({ error, button }: ErrorMessageProps) {
             <h1 className="text-5xl font-bold">Une erreur est survenue 😕</h1>
             <p className="py-6 text-xl">{error}</p>
             {button && (
-              <button
-                onClick={button.action}
-                className="btn [--btn-color:var(--color-card-red)] [--btn-fg:var(--color-base-100)]"
-              >
+              <button onClick={button.action} className="btn btn-primary">
                 {button.label}
               </button>
             )}

@@ -35,9 +35,15 @@ const Cookies = () => (
               <td>5 minutes</td>
             </tr>
             <tr>
-              <td>theme</td>
+              <td>theme-style</td>
               <td>Stockage local du navigateur</td>
-              <td>Mémoriser le thème clair ou sombre choisi</td>
+              <td>Mémoriser le thème d'affichage choisi</td>
+              <td>Jusqu'à ce que vous l'effaciez</td>
+            </tr>
+            <tr>
+              <td>theme-mode</td>
+              <td>Stockage local du navigateur</td>
+              <td>Mémoriser le mode clair, sombre ou automatique</td>
               <td>Jusqu'à ce que vous l'effaciez</td>
             </tr>
             <tr>

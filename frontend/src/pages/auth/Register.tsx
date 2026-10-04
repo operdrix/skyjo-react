@@ -41,12 +41,12 @@ function Register() {
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <h1 className="font-bold text-center text-2xl mb-2">Créer un compte</h1>
-        <p className="text-center mb-5">Un clic et c'est parti !</p>
+    <div className="flex flex-col items-center justify-center">
+      <div className="w-full max-w-md">
+        <h1 className="font-bold text-3xl mb-2">Créer un compte</h1>
+        <p className="text-muted mb-5">Un clic et c'est parti !</p>
 
-        <div className="bg-base-200 shadow-sm rounded-lg px-5 py-7 flex flex-col gap-4">
+        <div className="panel px-5 py-7 sm:px-7 flex flex-col gap-4">
           <GoogleButton redirect={redirect} />
 
           {withEmail ? (

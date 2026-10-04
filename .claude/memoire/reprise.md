@@ -29,6 +29,11 @@ Fichier versionné pour reprendre le travail sur n'importe quel PC. Chargé par 
   - Tests back : projets Vitest `unit` (sans base) et `api` (`*.api.test.js`, base `skyjo_test` créée par `test/global-setup.js` avec le compte root, **MySQL et Mailpit requis** : `make db-up`). Helpers dans `backend/test/helpers.js` (`createPlayer`, `findSensitiveFields`).
   - Front : Vitest 2 + Testing Library (`frontend/vitest.config.ts`), à monter avec Vite en phase 2.
 
+## Refonte du design (2026-10-04, à démarrer)
+- Référence : `docs/DESIGN.md` (preview jetable `docs/design-preview.html`). 3 thèmes au choix (`tapis` par défaut, `neon`, `confettis`), stockés en `users.theme` + copie locale.
+- Ordre prévu : 1) jetons + thème Tapis sur les pages hors jeu, 2) Confettis + plateau adaptatif, 3) Néon, 4) choix du thème (inscription, `/auth/pseudo`, espace perso) + pages légales.
+- Chrome headless ne descend pas sous 500 px de large : une capture à 390 px est tronquée, pas un vrai rendu mobile.
+
 ## Reprendre sur un autre PC
 1. `git checkout dev && git pull`, puis `make install && make dev` (Docker requis ; `make env` crée les `.env` depuis les `.env.example`).
 2. Back http://localhost:3000 (Swagger `/api/documentation`), front http://localhost:5173, phpMyAdmin :8080, Mailpit :8025.

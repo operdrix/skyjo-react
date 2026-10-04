@@ -44,21 +44,23 @@ const Create = () => {
   }
 
   return (
-    <div className="flex-1 container mx-auto flex items-center">
+    <div className="mx-auto flex w-full max-w-5xl flex-1 items-center px-4 py-6">
       <div className="flex flex-col justify-center w-full">
-        <div className="hero bg-base-200 sm:rounded-box min-h-[50vh]">
+        <div className="hero panel min-h-[50vh]">
           <div className="hero-content text-center">
             <div className="max-w-lg">
-              <h1 className="text-5xl font-bold text-title font-courgette py-4">Créez une partie !</h1>
-              <p className="py-6 text-xl">
+              <h1 className="text-5xl font-bold py-4">Créez une partie !</h1>
+              <p className="py-4 text-xl text-muted">
                 Vous êtes prêt à jouer ? Cliquez sur le bouton ci-dessous pour créer une partie et inviter vos amis à
                 vous rejoindre.
               </p>
-              <p className="py-6 text-xl">Vous pourrez commencer la partie dès que tous les joueurs seront prêts.</p>
+              <p className="py-4 text-xl text-muted">
+                Vous pourrez commencer la partie dès que tous les joueurs seront prêts.
+              </p>
               <div className="flex flex-wrap justify-center gap-4">
                 <div className="tooltip w-full sm:w-auto" data-tip="Partagez le lien avec vos amis seulement">
                   <button
-                    className="btn btn-neutral w-full sm:w-auto [--btn-color:var(--color-card-negative)] [--btn-fg:var(--color-base-100)]"
+                    className="btn btn-primary btn-lg w-full sm:w-auto"
                     disabled={loading}
                     onClick={() => handleCreateGame(true)}
                   >
@@ -82,7 +84,7 @@ const Create = () => {
                 </div>
                 <div className="tooltip w-full sm:w-auto" data-tip="Laissez les autres joueurs vous rejoindre">
                   <button
-                    className="btn btn-neutral w-full sm:w-auto [--btn-color:var(--color-card-green)] [--btn-fg:var(--color-base-100)]"
+                    className="btn btn-secondary btn-lg w-full sm:w-auto"
                     disabled={loading}
                     onClick={() => handleCreateGame(false)}
                   >

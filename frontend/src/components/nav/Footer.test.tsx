@@ -1,5 +1,6 @@
 import Footer from "@/components/nav/Footer";
 import { cleanup, render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 describe("Footer", () => {
@@ -10,13 +11,21 @@ describe("Footer", () => {
 
   it("affiche le numéro de version de la release", () => {
     vi.stubEnv("VITE_APP_VERSION", "3.0.0");
-    render(<Footer />);
+    render(
+      <MemoryRouter>
+        <Footer />
+      </MemoryRouter>,
+    );
     expect(screen.getByText("v3.0.0")).toBeTruthy();
   });
 
   it("affiche « dev » hors release", () => {
     vi.stubEnv("VITE_APP_VERSION", "");
-    render(<Footer />);
+    render(
+      <MemoryRouter>
+        <Footer />
+      </MemoryRouter>,
+    );
     expect(screen.getByText("dev")).toBeTruthy();
   });
 });

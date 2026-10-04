@@ -87,7 +87,11 @@ function Register() {
           )}
 
           <p className="text-xs text-center opacity-70">
-            Seuls votre pseudo et votre email sont conservés. En continuant, vous acceptez la{" "}
+            En continuant, vous acceptez les{" "}
+            <Link to="/cgu" className="link">
+              conditions d'utilisation
+            </Link>
+            . Seuls votre pseudo et votre email sont demandés : voir la{" "}
             <Link to="/privacy" className="link">
               politique de confidentialité
             </Link>

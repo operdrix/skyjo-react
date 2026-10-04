@@ -1,4 +1,5 @@
 import ChangePseudo from "@/components/dashboard/ChangePseudo";
+import ChangeTheme from "@/components/dashboard/ChangeTheme";
 import DeleteAccount from "@/components/dashboard/DeleteAccount";
 import GameHistoryCard from "@/components/dashboard/GameHistoryCard";
 import OpponentCard from "@/components/dashboard/OpponentCard";
@@ -94,13 +95,13 @@ const Dashboard = () => {
   const filteredOpponent = opponents.find((opponent) => opponent.id === opponentFilter);
 
   return (
-    <div className="flex-1 flex items-center container mx-auto flex-col px-4 mt-5">
+    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-6">
       <StatsBar stats={stats} userName={userName} />
       {games.length === 0 && (
-        <div className="flex-1 flex items-center justify-center flex-col space-y-3">
+        <div className="panel-soft mt-8 flex w-full flex-col items-center justify-center gap-3 p-8 text-center">
           <p>Vous n'avez pas encore terminé de partie.</p>
           <p>
-            <Link to="/create" className="btn btn-primary ml-4">
+            <Link to="/create" className="btn btn-primary">
               Créer une partie
             </Link>
           </p>
@@ -108,8 +109,8 @@ const Dashboard = () => {
       )}
       {games.length > 0 && (
         <>
-          <h2 className="text-2xl font-bold mt-4">
-            Tes adversaires <span className="text-xs">(Parties terminées)</span>
+          <h2 className="text-2xl font-bold mt-8">
+            Tes adversaires <span className="text-sm font-normal text-muted">(parties terminées)</span>
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 my-4">
             {opponents.map((opponent) => (
@@ -122,7 +123,7 @@ const Dashboard = () => {
             ))}
           </div>
 
-          <h2 className="text-2xl font-bold mt-4">
+          <h2 className="text-2xl font-bold mt-6">
             Tes parties
             {filteredOpponent && " contre " + filteredOpponent.username}
           </h2>
@@ -136,6 +137,7 @@ const Dashboard = () => {
         </>
       )}
       <ChangePseudo />
+      <ChangeTheme />
       <DeleteAccount />
     </div>
   );

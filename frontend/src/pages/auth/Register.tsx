@@ -1,11 +1,13 @@
 import FormError from "@/components/auth/FormError";
 import GoogleButton from "@/components/auth/GoogleButton";
 import CustomField from "@/components/forms/CustomField";
+import ThemeField from "@/components/forms/ThemeField";
 import { useUser } from "@/hooks/User";
 import { authClient } from "@/lib/authClient";
 import { authErrorMessage } from "@/lib/authErrors";
 import { safeRedirect, withRedirect } from "@/lib/redirect";
 import { pseudoSchema } from "@/lib/pseudo";
+import { readThemePrefs, type ThemeStyle } from "@/lib/theme";
 import { Field, Form, Formik } from "formik";
 import { useState } from "react";
 import { Link, Navigate, useSearchParams } from "react-router";
@@ -24,10 +26,20 @@ function Register() {
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [withEmail, setWithEmail] = useState<boolean>(false);
 
-  const handleSubmit = async ({ email, username, password }: { email: string; username: string; password: string }) => {
+  const handleSubmit = async ({
+    email,
+    username,
+    password,
+    theme,
+  }: {
+    email: string;
+    username: string;
+    password: string;
+    theme: ThemeStyle;
+  }) => {
     setErrorMessage("");
     const pseudo = username.trim();
-    const { error } = await authClient.signUp.email({ email, password, name: pseudo, username: pseudo });
+    const { error } = await authClient.signUp.email({ email, password, name: pseudo, username: pseudo, theme });
     if (error) {
       setErrorMessage(authErrorMessage(error));
       return;
@@ -41,17 +53,17 @@ function Register() {
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <h1 className="font-bold text-center text-2xl mb-2">Créer un compte</h1>
-        <p className="text-center mb-5">Un clic et c'est parti !</p>
+    <div className="flex flex-col items-center justify-center">
+      <div className="w-full max-w-md">
+        <h1 className="font-bold text-3xl mb-2">Créer un compte</h1>
+        <p className="text-muted mb-5">Un clic et c'est parti !</p>
 
-        <div className="bg-base-200 shadow-sm rounded-lg px-5 py-7 flex flex-col gap-4">
+        <div className="panel px-5 py-7 sm:px-7 flex flex-col gap-4">
           <GoogleButton redirect={redirect} />
 
           {withEmail ? (
             <Formik
-              initialValues={{ email: "", username: "", password: "" }}
+              initialValues={{ email: "", username: "", password: "", theme: readThemePrefs(localStorage).style }}
               validationSchema={validationSchema}
               onSubmit={handleSubmit}
             >
@@ -75,6 +87,7 @@ function Register() {
                   type="password"
                   autoComplete="new-password"
                 />
+                <ThemeField />
                 <button type="submit" className="btn btn-primary w-full">
                   Créer mon compte et jouer
                 </button>

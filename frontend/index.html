@@ -1,11 +1,25 @@
 <!doctype html>
-<html lang="fr">
+<html lang="fr" data-theme="tapis" data-style="tapis">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/images/logo-color.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Skyjo en ligne</title>
-    <meta name="description" content="Jouez à Skyjo en ligne avec vos amis" />
+    <title>Skyjo d'Olivier</title>
+    <meta name="description" content="Le jeu de cartes entre amis, en ligne et gratuit" />
+    <script>
+      // Applique le thème avant le rendu React pour éviter un flash (même logique que src/lib/theme.ts)
+      (function () {
+        try {
+          var s = localStorage.getItem("theme-style");
+          var m =
+            localStorage.getItem("theme-mode") || { dark: "sombre", light: "clair" }[localStorage.getItem("theme")];
+          var style = s === "confettis" || s === "neon" ? s : "tapis";
+          var dark = m === "sombre" || (m !== "clair" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+          document.documentElement.dataset.theme = style === "neon" ? style : dark ? style + "-sombre" : style;
+          document.documentElement.dataset.style = style;
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

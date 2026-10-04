@@ -1,5 +1,6 @@
 import { authClient } from "@/lib/authClient";
 import { suggestPseudo } from "@/lib/pseudo";
+import { isThemeStyle, readThemePrefs, setThemeStyle } from "@/lib/theme";
 import { setLogoutCallback } from "@/services/apiService";
 import { useCallback, useEffect } from "react";
 import { UserContext } from "@/context/UserContext";
@@ -20,6 +21,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       refetch();
     }
   }, [refetch]);
+
+  // Le thème enregistré sur le compte l'emporte sur la copie locale (il suit le joueur d'un appareil à l'autre)
+  const accountTheme = user?.theme;
+  useEffect(() => {
+    if (isThemeStyle(accountTheme) && accountTheme !== readThemePrefs(localStorage).style) {
+      setThemeStyle(accountTheme);
+    }
+  }, [accountTheme]);
 
   // Session expirée côté serveur (401) : on recharge l'état de session
   useEffect(() => {

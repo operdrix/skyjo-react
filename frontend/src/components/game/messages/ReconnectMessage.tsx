@@ -8,7 +8,7 @@ export default function ReconnectMessage({ reconnect = true }: { reconnect?: boo
 
   return (
     <div className="flex-1 container mx-auto flex items-center">
-      <div className="hero bg-base-200 min-h-[50vh] sm:p-20">
+      <div className="hero panel min-h-[50vh] sm:p-16">
         <div className="hero-content flex-col lg:flex-row text-center">
           {reconnect && (
             <svg
@@ -27,7 +27,7 @@ export default function ReconnectMessage({ reconnect = true }: { reconnect?: boo
             </svg>
           )}
           <div>
-            <h1 className="text-5xl font-bold text-title">
+            <h1 className="text-4xl font-bold sm:text-5xl">
               {reconnect ? "Tentative de reconnexion en cours" : "Connexion en cours"}
             </h1>
             <p className="py-6 text-xl">

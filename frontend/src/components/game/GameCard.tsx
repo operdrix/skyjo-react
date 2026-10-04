@@ -1,5 +1,6 @@
 import { useGame } from "@/hooks/Game";
 import { useUser } from "@/hooks/User";
+import PlayingCard from "@/components/PlayingCard";
 import { Card } from "@/types/types";
 import { useEffect, useRef, useState } from "react";
 
@@ -62,57 +63,40 @@ function FlipCard({ card, onClick, disabled }: { card: Card; onClick?: () => voi
     prevRevealedRef.current = card.revealed;
   }, [card.revealed]);
 
-  function getCardColorClass(color: string, revealed: boolean) {
-    if (!revealed) return "bg-base-200 text-base-content";
-    switch (color) {
-      case "red":
-        return "bg-card-red text-black";
-      case "green":
-        return "bg-card-green text-black";
-      case "yellow":
-        return "bg-card-yellow text-black";
-      case "zero":
-        return "bg-card-zero text-black";
-      case "negative":
-        return "bg-card-negative text-black";
-      default:
-        return "bg-base-200  text-base-content";
-    }
-  }
-
-  const cardColorClass = getCardColorClass(card.color, card.revealed);
   const isFlipped = card.revealed;
-
-  return (
-    <div
-      className={`relative select-none ${disabled ? "" : "cursor-pointer"} ${!disabled ? "animate-small-scale" : ""} ${card.onHand ? "rotate-12" : ""}`}
-      onClick={disabled ? undefined : onClick}
+  const label = card.revealed ? `carte ${card.value}` : "carte cachée";
+  const className = `game-card ${disabled ? "" : "game-card-playable cursor-pointer animate-small-scale"} ${card.onHand ? "rotate-12" : ""}`;
+  const faces = (
+    <span
+      className={`game-card-inner ${shouldAnimate ? "game-card-animated" : ""} ${isFlipped ? "game-card-flipped" : ""}`}
     >
-      <div className="perspective">
-        <div
-          className={`play-card transform transform-style-preserve-3d ${shouldAnimate ? "transition-transform duration-500" : ""} ${isFlipped ? "rotate-y-180" : ""}`}
-        >
-          {/* Face avant (cachée) */}
-          <div
-            className={`absolute w-full h-full flex justify-center items-center rounded-sm border-2 border-black backface-hidden ${cardColorClass}`}
-          >
-            ?
-          </div>
-          {/* Face arrière (révélée) */}
-          <div
-            className={`absolute w-full h-full flex justify-center items-center rounded-sm border-2 border-black backface-hidden rotate-y-180 ${cardColorClass}`}
-          >
-            {card.revealed ? card.value : "?"}
-          </div>
-        </div>
-      </div>
-    </div>
+      <span className="game-card-face" aria-hidden={isFlipped}>
+        <PlayingCard />
+      </span>
+      {isFlipped && (
+        <span className="game-card-face game-card-front">
+          <PlayingCard value={card.value} />
+        </span>
+      )}
+    </span>
+  );
+
+  // Une carte jouable est un bouton (clavier compris), les autres sont de simples images
+  if (disabled) return <div className={className}>{faces}</div>;
+  return (
+    <button type="button" className={className} onClick={onClick} aria-label={label}>
+      {faces}
+    </button>
   );
 }
 
 // Carte derrière (ex: pour la pioche ou la défausse)
-function ExtraCardBehind({ border = true }: { border?: boolean }) {
-  return <div className={`play-card ${border && "border-2 border-black"} absolute text-black bg-white top-0`}>?</div>;
+function ExtraCardBehind() {
+  return (
+    <span className="game-card game-card-behind" aria-hidden="true">
+      <PlayingCard />
+    </span>
+  );
 }
 
 // Icône de la corbeille (pour la défausse en mode decide-deck)
@@ -124,7 +108,7 @@ function DiscardBin() {
       viewBox="0 0 24 24"
       strokeWidth={1.5}
       stroke="currentColor"
-      className="w-6 h-6 text-red-600 animate-small-scale"
+      className="size-1/2 text-error animate-small-scale"
     >
       <path
         strokeLinecap="round"
@@ -155,7 +139,7 @@ function DeckCard({
   return (
     <div className="relative flex flex-col justify-center items-center gap-2">
       {showBehind && <ExtraCardBehind />}
-      <div className="z-20">
+      <div className="relative">
         <FlipCard card={card} onClick={onClick} disabled={disabled} />
       </div>
       <span>
@@ -194,9 +178,14 @@ function DiscardCard({
 }) {
   return (
     <div className="relative flex flex-col justify-center items-center gap-2">
-      {showBehind && <ExtraCardBehind border={!showBin} />}
+      {showBehind && <ExtraCardBehind />}
       {showBin ? (
-        <button className="play-card play-card-discard z-0" disabled={disabled} onClick={onClick}>
+        <button
+          className="game-card game-card-bin"
+          disabled={disabled}
+          onClick={onClick}
+          aria-label="Défausser la carte piochée"
+        >
           <DiscardBin />
         </button>
       ) : (

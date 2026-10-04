@@ -1,38 +1,44 @@
 import { LAST_UPDATE } from "@/pages/legal/legal";
-import { Link } from "react-router";
+import { NavLink } from "react-router";
 
 type Props = { title: string; children: React.ReactNode };
 
-// Mise en page commune des pages légales
+const PAGES = [
+  { to: "/mentions-legales", label: "Mentions légales" },
+  { to: "/privacy", label: "Confidentialité" },
+  { to: "/cgu", label: "Conditions d'utilisation" },
+  { to: "/cookies", label: "Cookies" },
+];
+
+// Mise en page commune des pages légales : navigation entre pages + texte à largeur de lecture
 export const LegalLayout = ({ title, children }: Props) => (
-  <div className="flex justify-center p-4">
-    <article className="max-w-3xl w-full bg-base-100 shadow-xl rounded-xl p-6 space-y-6">
-      <header className="text-center space-y-1">
-        <h1 className="text-3xl font-bold text-primary">{title}</h1>
-        <p className="text-sm opacity-70">Dernière mise à jour : {LAST_UPDATE}</p>
+  <div className="mx-auto grid w-full max-w-5xl grid-cols-[minmax(0,1fr)] gap-6 px-4 py-6 md:grid-cols-[200px_minmax(0,1fr)]">
+    <nav aria-label="Pages légales" className="flex flex-wrap gap-2 md:sticky md:top-6 md:flex-col md:self-start">
+      {PAGES.map(({ to, label }) => (
+        <NavLink
+          key={to}
+          to={to}
+          className={({ isActive }) =>
+            `rounded-field px-3 py-2 text-sm font-semibold ${isActive ? "bg-base-200 text-base-content" : "text-muted hover:bg-base-200"}`
+          }
+        >
+          {label}
+        </NavLink>
+      ))}
+    </nav>
+    <article className="panel min-w-0 max-w-[68ch] space-y-6 p-5 sm:p-8">
+      <header className="space-y-1">
+        <h1 className="text-3xl font-bold sm:text-4xl">{title}</h1>
+        <p className="text-sm text-muted">Dernière mise à jour : {LAST_UPDATE}</p>
       </header>
       {children}
-      <nav className="flex flex-wrap justify-center gap-4 text-sm pt-4 border-t border-base-300">
-        <Link to="/mentions-legales" className="link link-hover">
-          Mentions légales
-        </Link>
-        <Link to="/privacy" className="link link-hover">
-          Confidentialité
-        </Link>
-        <Link to="/cgu" className="link link-hover">
-          Conditions d'utilisation
-        </Link>
-        <Link to="/cookies" className="link link-hover">
-          Cookies
-        </Link>
-      </nav>
     </article>
   </div>
 );
 
 export const Section = ({ title, children }: Props) => (
   <section className="space-y-2">
-    <h2 className="text-xl font-semibold text-secondary">{title}</h2>
+    <h2 className="text-xl font-semibold">{title}</h2>
     {children}
   </section>
 );

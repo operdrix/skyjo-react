@@ -15,7 +15,7 @@ export default function RoomSettings({
   return (
     <>
       <div className="divider"></div>
-      <h3 className="text-xl">Paramètres de jeu</h3>
+      <h3 className="text-xl font-semibold">Paramètres de jeu</h3>
       <div className="flex flex-col space-y-2">
         <div className="flex justify-between">
           <span>Nombre de joueurs max</span>
@@ -25,7 +25,7 @@ export default function RoomSettings({
               min={Math.max(2, game.players.length)}
               max="4"
               defaultValue={game.maxPlayers || 4}
-              className="range"
+              className="range range-primary"
               step="1"
               onChange={onChangeMaxPlayers}
             />
@@ -39,11 +39,11 @@ export default function RoomSettings({
       </div>
       <div className="flex flex-1 items-end justify-center">
         <button
-          className="btn btn-neutral [--btn-color:var(--color-card-red)] [--btn-fg:var(--color-base-100)] text-xl w-full"
+          className="btn btn-primary btn-lg w-full"
           onClick={onStart}
           disabled={game.players.length < 2 || starting}
         >
-          👾 Commencer la partie 👾
+          Lancer la partie
           {starting && <span className="loading loading-spinner loading-sm"></span>}
         </button>
       </div>

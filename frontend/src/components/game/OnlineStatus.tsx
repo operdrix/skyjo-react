@@ -3,14 +3,14 @@ const OnlineStatus = ({ isConnected, className }: { isConnected: boolean; classN
     <>
       {isConnected && (
         <div className={`tooltip ${className}`} data-tip="Vous êtes bien connecté au serveur.">
-          <div className="badge badge-success bg-green-500 text-white gap-2">
+          <div className="badge badge-success gap-2">
             <span className="loading loading-ring loading-xs"></span>
             En ligne
           </div>
         </div>
       )}
       {!isConnected && (
-        <div className={`badge badge-error text-white gap-2 ${className}`}>
+        <div className={`badge badge-error gap-2 ${className}`}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"

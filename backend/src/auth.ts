@@ -14,6 +14,9 @@ const USERNAME_PATTERN = /^[\p{L}\p{N} ._-]+$/u;
 
 export const AUTH_BASE_URL = process.env.APP_URL || "http://localhost:3000";
 
+// Thèmes d'affichage proposés (voir docs/DESIGN.md)
+export const THEMES = ["tapis", "neon", "confettis"];
+
 export const USERNAME_REQUIRED = "Choisissez un pseudo pour jouer";
 
 // Connexion Google si les identifiants OAuth sont fournis
@@ -48,6 +51,10 @@ export function createAuth(secret: string) {
       modelName: "users",
       // Droit à l'effacement : sans mot de passe, Better Auth exige une connexion de moins de 24 h
       deleteUser: { enabled: true },
+      // Thème d'affichage : choisi à l'inscription, modifiable via update-user
+      additionalFields: {
+        theme: { type: "string", required: false, defaultValue: "tapis", input: true },
+      },
     },
     session: { modelName: "sessions" },
     account: {
@@ -90,6 +97,14 @@ export function createAuth(secret: string) {
       before: createAuthMiddleware(async (ctx) => {
         if (ctx.path === "/sign-up/email" && !ctx.body?.username) {
           throw new APIError("BAD_REQUEST", { message: "Le pseudo est obligatoire" });
+        }
+        const theme = ctx.body?.theme;
+        if (
+          (ctx.path === "/sign-up/email" || ctx.path === "/update-user") &&
+          theme !== undefined &&
+          !THEMES.includes(theme)
+        ) {
+          throw new APIError("BAD_REQUEST", { message: "Thème inconnu" });
         }
       }),
     },

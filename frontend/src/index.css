@@ -1,92 +1,678 @@
 @import "tailwindcss";
+@import "@fontsource-variable/fredoka/wght.css";
+@import "@fontsource-variable/nunito/wght.css";
+/* Les fichiers de police ne sont téléchargés que si le thème actif les utilise */
+@import "@fontsource-variable/bricolage-grotesque/wght.css";
+@import "@fontsource-variable/dm-sans/wght.css";
+@import "@fontsource-variable/baloo-2/wght.css";
+@import "@fontsource-variable/outfit/wght.css";
 
+/*
+  Design system : voir docs/DESIGN.md.
+  Chaque thème définit les couleurs DaisyUI et des jetons sémantiques maison.
+  Les composants n'utilisent que ces jetons, jamais de couleur codée en dur.
+  data-theme (couleurs, clair/sombre) et data-style (effets propres au thème) sont posés sur <html>
+  par le script de index.html puis par ToggleTheme.
+*/
 @plugin 'daisyui' {
-  themes:
-    light --default,
-    dark --prefersdark;
+  themes: false;
 }
 
-/* Thèmes DaisyUI 5 ajustés pour garder le rendu de la v4 et la couleur du logo */
+/* Tapis de jeu (clair) */
 @plugin 'daisyui/theme' {
-  name: "light";
+  name: "tapis";
   default: true;
-  --logo-text: #001f3f;
-  /* hauteur des champs et boutons de DaisyUI 4 (3rem au lieu de 2.5rem) */
+  color-scheme: light;
+  --color-base-100: #ffffff;
+  --color-base-200: #ffebc8;
+  --color-base-300: #f7ddb0;
+  --color-base-content: #1f1a33;
+  --color-primary: #ff5a3c;
+  --color-primary-content: #1f1a33;
+  --color-secondary: #b9a7ff;
+  --color-secondary-content: #1f1a33;
+  --color-accent: #ffc43d;
+  --color-accent-content: #1f1a33;
+  --color-neutral: #1f1a33;
+  --color-neutral-content: #fff6e6;
+  --color-info: #4c9aff;
+  --color-info-content: #1f1a33;
+  --color-success: #3cc6a4;
+  --color-success-content: #1f1a33;
+  --color-warning: #ffc43d;
+  --color-warning-content: #1f1a33;
+  --color-error: #d7263d;
+  --color-error-content: #ffffff;
+  --radius-selector: 6px;
+  --radius-field: 10px;
+  --radius-box: 14px;
+  --size-selector: 0.25rem;
   --size-field: 0.3rem;
-  /* neutral de DaisyUI 4 (gris ardoise), plus doux que celui de la v5 */
-  --color-neutral: #2b3440;
-  --color-neutral-content: #d7dde4;
+  --border: 2px;
+  --depth: 0;
+  --noise: 0;
+
+  --bg: #fff6e6;
+  --muted: #6b6380;
+  --line: #1f1a33;
+  --bw: 2.5px;
+  --shadow: 4px 4px 0 var(--line);
+  --shadow-sm: 2px 2px 0 var(--line);
+  --card-face: #fffdf8;
+  --card-line: #1f1a33;
+  --c-neg: #2fb7a0;
+  --c-zero: #f4ead6;
+  --c-low: #ffd45e;
+  --c-mid: #ff8a3d;
+  --c-high: #8c3b86;
+  --c-neg-ink: #1f1a33;
+  --c-zero-ink: #1f1a33;
+  --c-low-ink: #1f1a33;
+  --c-mid-ink: #1f1a33;
+  --c-high-ink: #ffffff;
 }
 
+/* Tapis de jeu (sombre) */
 @plugin 'daisyui/theme' {
-  name: "dark";
+  name: "tapis-sombre";
   prefersdark: true;
-  --logo-text: #4692e1;
+  color-scheme: dark;
+  --color-base-100: #2a2445;
+  --color-base-200: #352e57;
+  --color-base-300: #40386a;
+  --color-base-content: #fff6e6;
+  --color-primary: #ff6a4d;
+  --color-primary-content: #1f1a33;
+  --color-secondary: #b9a7ff;
+  --color-secondary-content: #1f1a33;
+  --color-accent: #ffc43d;
+  --color-accent-content: #1f1a33;
+  --color-neutral: #0e0b1c;
+  --color-neutral-content: #fff6e6;
+  --color-info: #7db5ff;
+  --color-info-content: #1f1a33;
+  --color-success: #3cc6a4;
+  --color-success-content: #1f1a33;
+  --color-warning: #ffc43d;
+  --color-warning-content: #1f1a33;
+  --color-error: #ff5c6c;
+  --color-error-content: #1f1a33;
+  --radius-selector: 6px;
+  --radius-field: 10px;
+  --radius-box: 14px;
+  --size-selector: 0.25rem;
   --size-field: 0.3rem;
-  --color-neutral: #2a323c;
-  --color-neutral-content: #a6adbb;
+  --border: 2px;
+  --depth: 0;
+  --noise: 0;
+
+  --bg: #1f1a33;
+  --muted: #b8b0cf;
+  --line: #0e0b1c;
+  --bw: 2.5px;
+  --shadow: 4px 4px 0 var(--line);
+  --shadow-sm: 2px 2px 0 var(--line);
+  --card-face: #fff6e6;
+  --card-line: #0e0b1c;
+  --c-neg: #2fb7a0;
+  --c-zero: #f4ead6;
+  --c-low: #ffd45e;
+  --c-mid: #ff8a3d;
+  --c-high: #8c3b86;
+  --c-neg-ink: #1f1a33;
+  --c-zero-ink: #1f1a33;
+  --c-low-ink: #1f1a33;
+  --c-mid-ink: #1f1a33;
+  --c-high-ink: #ffffff;
 }
 
-@theme {
-  --font-kalam: Kalam, sans-serif;
-  --font-courgette: Courgette, cursive;
+/* Confettis (clair) */
+@plugin 'daisyui/theme' {
+  name: "confettis";
+  color-scheme: light;
+  --color-base-100: #ffffff;
+  --color-base-200: #eef0ff;
+  --color-base-300: #e2e4f0;
+  --color-base-content: #16182b;
+  --color-primary: #3d5afe;
+  --color-primary-content: #ffffff;
+  --color-secondary: #ff9f1c;
+  --color-secondary-content: #16182b;
+  --color-accent: #ff4f9a;
+  --color-accent-content: #ffffff;
+  --color-neutral: #16182b;
+  --color-neutral-content: #f4f5fb;
+  --color-info: #228be6;
+  --color-info-content: #ffffff;
+  --color-success: #12b886;
+  --color-success-content: #16182b;
+  --color-warning: #f59f00;
+  --color-warning-content: #16182b;
+  --color-error: #e03131;
+  --color-error-content: #ffffff;
+  --radius-selector: 8px;
+  --radius-field: 12px;
+  --radius-box: 16px;
+  --size-selector: 0.25rem;
+  --size-field: 0.3rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
 
-  --color-card-negative: #5992e7;
-  --color-card-zero: #a0c4ff;
-  --color-card-green: #7ace7a;
-  --color-card-yellow: #f3e948;
-  --color-card-red: #f56e6e;
-  --color-title: #ff5630;
+  --bg: #f4f5fb;
+  --muted: #62667f;
+  --line: #e2e4f0;
+  --bw: 1px;
+  --card-face: #ffffff;
+  --card-line: #16182b;
+  --c-neg: #12b886;
+  --c-zero: #ffffff;
+  --c-low: #3d5afe;
+  --c-mid: #ff9f1c;
+  --c-high: #ff4f9a;
+  --c-neg-ink: #16182b;
+  --c-zero-ink: #16182b;
+  --c-low-ink: #ffffff;
+  --c-mid-ink: #16182b;
+  --c-high-ink: #ffffff;
 }
 
-@theme inline {
-  --color-logo-text: var(--logo-text);
+/* Confettis (sombre) */
+@plugin 'daisyui/theme' {
+  name: "confettis-sombre";
+  color-scheme: dark;
+  --color-base-100: #1c1e30;
+  --color-base-200: #262945;
+  --color-base-300: #2e3150;
+  --color-base-content: #eef0ff;
+  --color-primary: #3d5afe;
+  --color-primary-content: #ffffff;
+  --color-secondary: #ff9f1c;
+  --color-secondary-content: #16182b;
+  --color-accent: #ff4f9a;
+  --color-accent-content: #ffffff;
+  --color-neutral: #0b0c15;
+  --color-neutral-content: #eef0ff;
+  --color-info: #4dabf7;
+  --color-info-content: #ffffff;
+  --color-success: #2bd49f;
+  --color-success-content: #16182b;
+  --color-warning: #ffb224;
+  --color-warning-content: #16182b;
+  --color-error: #ff6b6b;
+  --color-error-content: #ffffff;
+  --radius-selector: 8px;
+  --radius-field: 12px;
+  --radius-box: 16px;
+  --size-selector: 0.25rem;
+  --size-field: 0.3rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+
+  --bg: #12131f;
+  --muted: #9ca0bd;
+  --line: #2e3150;
+  --bw: 1px;
+  --card-face: #ffffff;
+  --card-line: #16182b;
+  --c-neg: #12b886;
+  --c-zero: #ffffff;
+  --c-low: #3d5afe;
+  --c-mid: #ff9f1c;
+  --c-high: #ff4f9a;
+  --c-neg-ink: #16182b;
+  --c-zero-ink: #16182b;
+  --c-low-ink: #ffffff;
+  --c-mid-ink: #16182b;
+  --c-high-ink: #ffffff;
+}
+
+/* Soirée néon (sombre seulement) */
+@plugin 'daisyui/theme' {
+  name: "neon";
+  color-scheme: dark;
+  --color-base-100: #241e4a;
+  --color-base-200: #2e2760;
+  --color-base-300: #3a3275;
+  --color-base-content: #ece8ff;
+  --color-primary: #ff6b8b;
+  --color-primary-content: #1a1030;
+  --color-secondary: #a88bff;
+  --color-secondary-content: #16122e;
+  --color-accent: #5ce1ff;
+  --color-accent-content: #16122e;
+  --color-neutral: #0e0b22;
+  --color-neutral-content: #ece8ff;
+  --color-info: #5ce1ff;
+  --color-info-content: #16122e;
+  --color-success: #b6f25c;
+  --color-success-content: #16122e;
+  --color-warning: #ffc46b;
+  --color-warning-content: #16122e;
+  --color-error: #ff4d4d;
+  --color-error-content: #16122e;
+  --radius-selector: 10px;
+  --radius-field: 16px;
+  --radius-box: 22px;
+  --size-selector: 0.25rem;
+  --size-field: 0.3rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+
+  --bg: #16122e;
+  --muted: #a49ccf;
+  --line: #ffffff1f;
+  --bw: 1px;
+  --card-face: #1e1840;
+  --card-line: #ffffff40;
+  --c-neg: #7cffb2;
+  --c-zero: #ece8ff;
+  --c-low: #5ce1ff;
+  --c-mid: #a88bff;
+  --c-high: #ff5c93;
+  --c-neg-ink: #16122e;
+  --c-zero-ink: #16122e;
+  --c-low-ink: #16122e;
+  --c-mid-ink: #16122e;
+  --c-high-ink: #16122e;
 }
 
 /*
-  The default border color has changed to `currentcolor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
+  Valeurs avec des virgules (polices, dégradés) : hors du plugin DaisyUI,
+  qui découpe les listes et ne garde que le dernier élément.
 */
+:root,
+[data-style="tapis"] {
+  --theme-font-display: "Fredoka Variable", "Nunito Variable", sans-serif;
+  --theme-font-body: "Nunito Variable", system-ui, sans-serif;
+}
+
+:root,
+[data-theme="tapis"] {
+  --page-bg: radial-gradient(#1f1a3314 1.2px, transparent 1.2px) 0 0 / 18px 18px, #fff6e6;
+  --card-back: repeating-linear-gradient(45deg, #1f1a33 0 7px, #2d2650 7px 14px);
+}
+
+[data-theme="tapis-sombre"] {
+  --page-bg: radial-gradient(#fff6e60f 1.2px, transparent 1.2px) 0 0 / 18px 18px, #1f1a33;
+  --card-back: repeating-linear-gradient(45deg, #0e0b1c 0 7px, #2d2650 7px 14px);
+}
+
+[data-style="confettis"] {
+  --theme-font-display: "Bricolage Grotesque Variable", "DM Sans Variable", sans-serif;
+  --theme-font-body: "DM Sans Variable", system-ui, sans-serif;
+}
+
+[data-theme="confettis"] {
+  --page-bg: #f4f5fb;
+  --shadow: 0 1px 2px #16182b0f, 0 12px 32px #16182b14;
+  --shadow-sm: 0 1px 2px #16182b14, 0 4px 10px #16182b10;
+  --card-back:
+    radial-gradient(circle at 20% 22%, #ffc531 0 3px, transparent 3.5px),
+    radial-gradient(circle at 78% 70%, #ff4f9a 0 3px, transparent 3.5px),
+    radial-gradient(circle at 70% 18%, #12b886 0 2.5px, transparent 3px), #16182b;
+}
+
+[data-theme="confettis-sombre"] {
+  --page-bg: #12131f;
+  --shadow: 0 12px 32px #0008;
+  --shadow-sm: 0 4px 10px #0006;
+  --card-back:
+    radial-gradient(circle at 20% 22%, #ffc531 0 3px, transparent 3.5px),
+    radial-gradient(circle at 78% 70%, #ff4f9a 0 3px, transparent 3.5px),
+    radial-gradient(circle at 70% 18%, #12b886 0 2.5px, transparent 3px), #2a2d4f;
+}
+
+[data-style="neon"] {
+  --theme-font-display: "Baloo 2 Variable", "Outfit Variable", sans-serif;
+  --theme-font-body: "Outfit Variable", system-ui, sans-serif;
+}
+
+[data-theme="neon"] {
+  --page-bg:
+    radial-gradient(900px 600px at 10% 0%, #3a2a7a 0, transparent 60%),
+    radial-gradient(800px 600px at 100% 30%, #5a1f5e 0, transparent 55%),
+    radial-gradient(700px 500px at 40% 100%, #123e5a 0, transparent 60%), #16122e;
+  --shadow: 0 10px 30px #0006;
+  --shadow-sm: 0 4px 14px #0005;
+  --card-back:
+    radial-gradient(circle at 30% 25%, #ffffff22 1.5px, transparent 2px) 0 0 / 12px 12px,
+    linear-gradient(150deg, #5a3fd0, #c2408f);
+}
+
+@theme inline {
+  --font-sans: var(--theme-font-body);
+  --font-display: var(--theme-font-display);
+  --color-bg: var(--bg);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+}
+
 @layer base {
+  /* Tailwind 4 met currentcolor par défaut : bordure discrète tirée du texte du thème */
   *,
   ::after,
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-gray-200, currentcolor);
+    border-color: color-mix(in oklab, var(--color-base-content) 15%, transparent);
+  }
+
+  html {
+    background-color: var(--bg);
+  }
+
+  body {
+    background: var(--page-bg);
+    color: var(--color-base-content);
+    font-family: var(--theme-font-body);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--theme-font-display);
   }
 }
 
-@font-face {
-  font-family: "Kalam";
-  src: url("/fonts/Kalam-Light.ttf") format("truetype");
-  font-weight: 300;
-  font-style: normal;
+@layer components {
+  /* Surface posée sur la table : carte de contenu, panneau, formulaire */
+  .panel {
+    background-color: var(--color-base-100);
+    border: var(--bw) solid var(--line);
+    border-radius: var(--radius-box);
+    box-shadow: var(--shadow);
+  }
+
+  .panel-soft {
+    background-color: var(--color-base-200);
+    border-radius: var(--radius-box);
+  }
+
+  .eyebrow {
+    font-size: 0.8125rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* Carte décorative (PlayingCard) : base commune, l'habillage dépend du thème (voir plus bas) */
+  .playing-card {
+    --w: var(--card-w, 72px);
+    --cc: var(--c-zero);
+    --ci: var(--c-zero-ink);
+    position: relative;
+    flex: none;
+    width: var(--w);
+    aspect-ratio: 5 / 7;
+    border-radius: calc(var(--w) * 0.16);
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    user-select: none;
+  }
+  .playing-card[data-tier="neg"] {
+    --cc: var(--c-neg);
+    --ci: var(--c-neg-ink);
+  }
+  .playing-card[data-tier="low"] {
+    --cc: var(--c-low);
+    --ci: var(--c-low-ink);
+  }
+  .playing-card[data-tier="mid"] {
+    --cc: var(--c-mid);
+    --ci: var(--c-mid-ink);
+  }
+  .playing-card[data-tier="high"] {
+    --cc: var(--c-high);
+    --ci: var(--c-high-ink);
+  }
+  .playing-card-value {
+    position: relative;
+    z-index: 1;
+    margin-top: 10%;
+    font-family: var(--theme-font-display);
+    font-weight: 700;
+    font-size: calc(var(--w) * 0.42);
+    font-variant-numeric: tabular-nums;
+  }
+  .playing-card-symbol {
+    position: absolute;
+    z-index: 1;
+    top: 6%;
+    left: 8%;
+    width: calc(var(--w) * 0.27);
+    height: calc(var(--w) * 0.27);
+    border-radius: calc(var(--w) * 0.08);
+    display: grid;
+    place-items: center;
+    font-size: calc(var(--w) * 0.15);
+    line-height: 1;
+  }
+  .playing-card-back {
+    background: var(--card-back);
+  }
+  .playing-card-mono {
+    position: relative;
+    z-index: 1;
+    width: 46%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-family: var(--theme-font-display);
+    font-weight: 700;
+    font-size: calc(var(--w) * 0.26);
+  }
 }
 
-@font-face {
-  font-family: "Kalam";
-  src: url("/fonts/Kalam-Regular.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
+/* Cartes Tapis de jeu : face crème, bandeau coloré, contour encre */
+[data-style="tapis"] {
+  .playing-card {
+    background: var(--card-face);
+    border: 2.5px solid var(--card-line);
+    box-shadow: 2px 2px 0 var(--card-line);
+    color: #1f1a33;
+  }
+  .playing-card-back {
+    background: var(--card-back);
+  }
+  .playing-card:not(.playing-card-back)::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 28%;
+    background: var(--cc);
+    border-bottom: 2px solid var(--card-line);
+  }
+  .playing-card-symbol {
+    background: var(--cc);
+    color: var(--ci);
+    border: 1.5px solid var(--card-line);
+  }
+  .playing-card-mono {
+    background: var(--color-accent);
+    color: #1f1a33;
+    border: 2px solid #1f1a33;
+  }
 }
 
-@font-face {
-  font-family: "Kalam";
-  src: url("/fonts/Kalam-Bold.ttf") format("truetype");
-  font-weight: 700;
-  font-style: normal;
+/* Cartes Confettis : aplat de couleur + forme géométrique propre à chaque tranche */
+[data-style="confettis"] {
+  .playing-card {
+    background: var(--cc);
+    color: var(--ci);
+    border: 1px solid #16182b14;
+    box-shadow: 0 3px 8px #16182b22;
+  }
+  .playing-card-back {
+    background: var(--card-back);
+  }
+  .playing-card:not(.playing-card-back)::after {
+    content: "";
+    position: absolute;
+    width: 62%;
+    aspect-ratio: 1;
+    right: -18%;
+    bottom: -14%;
+    border-radius: 50%;
+    background: #ffffff2e;
+  }
+  .playing-card[data-tier="zero"]::after {
+    background: #16182b0c;
+  }
+  .playing-card[data-tier="low"]::after {
+    border-radius: 0;
+    transform: rotate(45deg);
+    right: -24%;
+    bottom: -22%;
+  }
+  .playing-card[data-tier="mid"]::after {
+    border-radius: 0;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  }
+  .playing-card[data-tier="high"]::after {
+    border-radius: 40% 0;
+  }
+  .playing-card-symbol {
+    color: var(--ci);
+  }
+  .playing-card-mono {
+    background: #ffffff;
+    color: #16182b;
+  }
+  .btn-primary {
+    box-shadow: 0 6px 16px color-mix(in oklab, var(--color-primary) 30%, transparent);
+  }
+  .btn:not(.btn-ghost, .btn-link, :disabled):active {
+    transform: scale(0.97);
+  }
+  .input:focus-within,
+  .select:focus-within,
+  .textarea:focus {
+    outline: 4px solid color-mix(in oklab, var(--color-primary) 20%, transparent);
+    outline-offset: 0;
+    border-color: var(--color-primary);
+  }
 }
 
-@font-face {
-  font-family: "Courgette";
-  src: url("/fonts/Courgette-Regular.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
+/* Effets propres au thème Tapis de jeu : bordures encre et ombres pleines décalées */
+[data-style="tapis"] {
+  .btn:not(.btn-ghost, .btn-link) {
+    border: 2px solid var(--line);
+    box-shadow: var(--shadow-sm);
+    transition:
+      transform 80ms ease-out,
+      box-shadow 80ms ease-out;
+  }
+  .btn:not(.btn-ghost, .btn-link, :disabled):active {
+    transform: translate(2px, 2px);
+    box-shadow: none;
+  }
+  .input,
+  .select,
+  .textarea {
+    border: 2px solid var(--line);
+  }
+  .input:focus-within,
+  .select:focus-within,
+  .textarea:focus {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 1px;
+  }
+  .badge {
+    border: 2px solid var(--line);
+  }
+  .modal-box {
+    border: var(--bw) solid var(--line);
+    box-shadow: var(--shadow);
+  }
+}
+
+/* Soirée néon : surfaces en verre dépoli, contours et halos lumineux */
+[data-style="neon"] {
+  body {
+    background-attachment: fixed;
+  }
+  .panel {
+    background-color: color-mix(in oklab, var(--color-base-100) 80%, transparent);
+    backdrop-filter: blur(8px);
+  }
+  .btn:not(.btn-ghost, .btn-link, .btn-primary, .btn-secondary, .btn-error, .btn-success) {
+    background-color: #ffffff10;
+    border: 1px solid var(--line);
+  }
+  .btn-primary {
+    box-shadow: 0 6px 22px color-mix(in oklab, var(--color-primary) 40%, transparent);
+  }
+  .btn:not(:disabled):hover {
+    filter: brightness(1.08);
+  }
+  .input,
+  .select,
+  .textarea {
+    background-color: #ffffff0d;
+  }
+  .input:focus-within,
+  .select:focus-within,
+  .textarea:focus {
+    outline: 3px solid color-mix(in oklab, var(--color-accent) 40%, transparent);
+    outline-offset: 0;
+  }
+  .modal-box {
+    border: 1px solid var(--line);
+  }
+  .playing-card {
+    background: var(--card-face);
+    border: 2px solid var(--cc);
+    color: var(--cc);
+    box-shadow:
+      0 0 14px color-mix(in oklab, var(--cc) 55%, transparent),
+      inset 0 0 18px color-mix(in oklab, var(--cc) 20%, transparent);
+  }
+  .playing-card-value {
+    text-shadow: 0 0 12px var(--cc);
+  }
+  .playing-card-symbol {
+    color: var(--cc);
+  }
+  .playing-card-back {
+    background: var(--card-back);
+    border: 2px solid var(--card-line);
+    box-shadow: 0 6px 18px #0007;
+  }
+  .playing-card-mono {
+    background: #16122e;
+    color: #ff9a6b;
+    box-shadow: 0 0 12px #ff6b8b;
+  }
+  .player-turn {
+    box-shadow:
+      0 0 0 2px var(--color-success),
+      0 0 22px color-mix(in oklab, var(--color-success) 60%, transparent);
+    animation: neon-pulse 2s ease-in-out infinite;
+  }
+}
+
+@keyframes neon-pulse {
+  50% {
+    box-shadow:
+      0 0 0 2px var(--color-success),
+      0 0 34px color-mix(in oklab, var(--color-success) 80%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .animate-small-scale {
@@ -103,66 +689,140 @@
   }
 }
 
+/*
+  Plateau de jeu : la largeur des cartes suit la place disponible (largeur ET hauteur de l'écran),
+  pour que les 4 joueurs tiennent sans défilement du téléphone au grand écran.
+*/
 .game-area {
+  /* Mobile : adversaires sur une rangée en haut, pioche au centre, joueur en bas */
+  --board-card-w: clamp(36px, min(20vw, 8dvh), 96px);
+  --small-card-w: clamp(16px, min(calc((100vw - 40px) / 13.5), 4dvh), 44px);
+  --top-card-w: clamp(28px, min(15vw, 5dvh), 72px);
   display: grid;
-  grid-template-columns: 28% 44% 28%;
-  grid-template-rows: repeat(2, 2fr) 3fr;
-  grid-column-gap: 0px;
-  grid-row-gap: 0px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: auto auto auto;
+  grid-template-areas:
+    "left top right"
+    "center center center"
+    "bottom bottom bottom";
+  align-content: space-evenly;
+  gap: 0.5rem;
+  flex: 1;
+  min-height: 0;
+}
+/* À deux joueurs, l'adversaire prend toute la rangée du haut */
+.game-area-duel {
+  grid-template-areas:
+    "top top top"
+    "center center center"
+    "bottom bottom bottom";
+}
+@media (min-width: 768px) {
+  .game-area,
+  .game-area-duel {
+    --board-card-w: clamp(36px, min(17vw, 7.2dvh), 96px);
+    --small-card-w: clamp(16px, min(4.6vw, 3.8dvh), 44px);
+    --top-card-w: clamp(28px, min(12vw, 6.5dvh), 72px);
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+      "top top top"
+      "left center right"
+      "bottom bottom bottom";
+    align-content: stretch;
+  }
 }
 .game-area-top-center {
-  grid-area: 1 / 1 / 2 / 4;
+  grid-area: top;
   @apply flex justify-center items-end;
+  --card-w: var(--top-card-w);
 }
 .game-area-middle-left {
-  grid-area: 2 / 1 / 3 / 2;
-  @apply flex justify-end items-center;
+  grid-area: left;
+  @apply flex justify-center items-end md:justify-end md:items-center;
 }
 .game-area-middle-center {
-  grid-area: 2 / 2 / 3 / 3;
+  grid-area: center;
   @apply flex justify-center items-center;
+  --card-w: var(--board-card-w);
 }
 .game-area-middle-right {
-  grid-area: 2 / 3 / 3 / 4;
-  @apply flex justify-start items-center;
+  grid-area: right;
+  @apply flex justify-center items-end md:justify-start md:items-center;
 }
 .game-area-bottom-center {
-  grid-area: 3 / 1 / 4 / 4;
+  grid-area: bottom;
   @apply flex justify-center items-start;
-}
-
-.play-card {
-  /* h-8 w-5 md:h-16 md:w-12 md:text-2xl */
-  @apply bg-base-200 rounded-sm flex justify-center items-center select-none h-16 w-12 text-2xl;
+  --card-w: var(--board-card-w);
 }
 
 .small-set {
-  .play-card {
-    @apply h-7 w-5 sm:h-10 sm:w-8 md:h-16 md:w-12 text-xl md:text-2xl;
-  }
+  --card-w: var(--small-card-w);
+  max-width: 100%;
   h2 {
-    @apply text-base sm:text-lg gap-2 sm:gap-3 flex-wrap;
-    span {
-      @apply loading-xs sm:loading-md;
-    }
+    @apply min-h-6 max-w-full px-2 text-sm sm:text-base gap-1 sm:gap-2;
   }
 }
 
-.play-card-discard {
-  @apply border-2 border-red-600 border-dashed bg-base-200! rounded-md text-red-600;
+/* Carte du plateau : deux faces, retournement en 3D */
+.game-card {
+  position: relative;
+  display: block;
+  flex: none;
+  width: var(--card-w, 48px);
+  aspect-ratio: 5 / 7;
+  padding: 0;
+  border: 0;
+  background: none;
+  border-radius: calc(var(--card-w, 48px) * 0.16);
+  perspective: 600px;
+  user-select: none;
 }
-
-.perspective {
-  perspective: 1000px;
+.game-card:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
 }
-.transform-style-preserve-3d {
+.game-card-inner {
+  position: absolute;
+  inset: 0;
   transform-style: preserve-3d;
 }
-.rotate-y-180 {
+.game-card-animated {
+  transition: transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.game-card-flipped {
   transform: rotateY(180deg);
 }
-.backface-hidden {
+.game-card-face {
+  position: absolute;
+  inset: 0;
   backface-visibility: hidden;
+}
+.game-card-front {
+  transform: rotateY(180deg);
+}
+.game-card-face .playing-card {
+  width: 100%;
+}
+.game-card-playable .playing-card {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+/* Carte sous la pioche ou la défausse, légèrement décalée */
+.game-card-behind {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+}
+.game-card-behind .playing-card {
+  width: 100%;
+}
+/* Défausse en attente : jeter la carte piochée */
+.game-card-bin {
+  display: grid;
+  place-items: center;
+  border: 2.5px dashed var(--color-error);
+  background: color-mix(in oklab, var(--color-error) 10%, transparent);
 }
 
 @media (min-width: 640px) {

@@ -1,7 +1,7 @@
 const WaitingDeal = () => {
   return (
     <div className="flex-1 container mx-auto flex items-center">
-      <div className="hero bg-base-200 min-h-[50vh] sm:p-20">
+      <div className="hero panel min-h-[50vh] sm:p-16">
         <div className="hero-content flex-col lg:flex-row text-center">
           <svg
             version="1.1"

@@ -1,10 +1,12 @@
 import FormError from "@/components/auth/FormError";
 import CustomField from "@/components/forms/CustomField";
+import ThemeField from "@/components/forms/ThemeField";
 import { useUser } from "@/hooks/User";
 import { authClient } from "@/lib/authClient";
 import { authErrorMessage } from "@/lib/authErrors";
 import { safeRedirect } from "@/lib/redirect";
 import { pseudoSchema } from "@/lib/pseudo";
+import { readThemePrefs, type ThemeStyle } from "@/lib/theme";
 import { Field, Form, Formik } from "formik";
 import { useState } from "react";
 import { Navigate, useSearchParams } from "react-router";
@@ -25,9 +27,9 @@ function ChoosePseudo() {
     return <Navigate to={isAuthentified ? redirect : "/auth/login"} replace />;
   }
 
-  const handleSubmit = async ({ username }: { username: string }) => {
+  const handleSubmit = async ({ username, theme }: { username: string; theme: ThemeStyle }) => {
     setErrorMessage("");
-    const { error } = await authClient.updateUser({ username: username.trim() });
+    const { error } = await authClient.updateUser({ username: username.trim(), theme });
     if (error) {
       setErrorMessage(authErrorMessage(error));
       return;
@@ -37,18 +39,18 @@ function ChoosePseudo() {
   };
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <h1 className="font-bold text-center text-2xl mb-2">Choisissez votre pseudo</h1>
-        <p className="text-center mb-5">C'est le nom que verront les autres joueurs.</p>
+    <div className="flex flex-col items-center justify-center">
+      <div className="w-full max-w-md">
+        <h1 className="font-bold text-3xl mb-2">Choisissez votre pseudo</h1>
+        <p className="text-muted mb-5">C'est le nom que verront les autres joueurs.</p>
 
         <Formik
-          initialValues={{ username: suggestedPseudo }}
+          initialValues={{ username: suggestedPseudo, theme: readThemePrefs(localStorage).style }}
           enableReinitialize
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
         >
-          <Form className="bg-base-200 shadow-sm rounded-lg px-5 py-7">
+          <Form className="panel px-5 py-7 sm:px-7">
             <FormError message={errorMessage} />
             <Field
               component={CustomField}
@@ -58,6 +60,7 @@ function ChoosePseudo() {
               autoComplete="nickname"
               autoFocus
             />
+            <ThemeField />
             <button type="submit" className="btn btn-primary w-full">
               Valider et jouer
             </button>

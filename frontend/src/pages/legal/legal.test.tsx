@@ -62,4 +62,18 @@ describe("pages légales", () => {
     expect(text()).toContain("better-auth.session_token");
     expect(text()).toContain("exemptés de consentement");
   });
+
+  it("politique de confidentialité : déclare le thème d'affichage du compte", () => {
+    renderPage(<PrivacyPage />);
+
+    expect(screen.getByRole("cell", { name: /thème d'affichage/i })).toBeTruthy();
+  });
+
+  it("cookies : liste les clés de stockage local du thème", () => {
+    renderPage(<Cookies />);
+
+    expect(screen.getByRole("cell", { name: "theme-style" })).toBeTruthy();
+    expect(screen.getByRole("cell", { name: "theme-mode" })).toBeTruthy();
+    expect(screen.queryByRole("cell", { name: "theme" })).toBeNull();
+  });
 });

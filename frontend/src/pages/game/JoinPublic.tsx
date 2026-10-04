@@ -50,8 +50,8 @@ const JoinPublic = () => {
   }
 
   return (
-    <div className="flex-1 flex items-center">
-      <div className="container relative mx-auto bg-base-300 flex flex-col justify-between sm:rounded-box p-5 min-h-[40vh]">
+    <div className="flex flex-1 items-center px-4 py-6">
+      <div className="panel relative mx-auto flex w-full max-w-5xl flex-col justify-between p-5 min-h-[40vh]">
         <button
           className="absolute right-0 top-0 btn btn-ghost m-2"
           onClick={() => {

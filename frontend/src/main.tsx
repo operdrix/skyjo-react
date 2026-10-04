@@ -17,7 +17,10 @@ const router = createBrowserRouter([
     element: <AppLayout />,
     children: [
       { path: "/", element: <App /> },
-      { path: "/privacy", lazy: page(() => import("@/pages/privacy/PrivacyPage")) },
+      { path: "/privacy", lazy: page(() => import("@/pages/legal/PrivacyPage")) },
+      { path: "/cgu", lazy: page(() => import("@/pages/legal/Terms")) },
+      { path: "/cookies", lazy: page(() => import("@/pages/legal/Cookies")) },
+      { path: "/mentions-legales", lazy: page(() => import("@/pages/legal/LegalNotice")) },
       { path: "/rules", lazy: page(() => import("@/pages/game/Rules")) },
       { path: "/dashboard", lazy: page(() => import("@/pages/dashboard/Dashboard")) },
     ],

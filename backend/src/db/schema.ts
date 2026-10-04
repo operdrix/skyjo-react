@@ -33,6 +33,8 @@ export const users = mysqlTable("users", {
   emailVerified: boolean().notNull().default(false),
   image: varchar({ length: 255 }),
   bestScore: int(),
+  // Dernière connexion : les comptes inactifs depuis 3 ans sont supprimés (purgeInactiveUsers)
+  lastActiveAt: timestamp({ fsp: 3 }),
   ...timestamps,
 });
 

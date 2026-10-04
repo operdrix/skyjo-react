@@ -33,3 +33,4 @@ Jeu de cartes Skyjo en ligne, pour jouer entre amis / famille. Vue d'ensemble : 
 - `userId` ne doit jamais venir du body : le prendre dans la session (`request.user`, rempli par `app.authenticate`).
 - Pas de valeur par défaut codée en dur pour `BETTER_AUTH_SECRET`.
 - Données personnelles minimales : pseudo et email seulement (pas de nom, prénom ni photo, pas de vérification d'email).
+- Pages légales (`frontend/src/pages/legal/`) : à mettre à jour à chaque nouvelle donnée personnelle, nouveau sous-traitant ou nouveau cookie/stockage local (pas de traceur soumis à consentement sans bandeau).

@@ -131,54 +131,59 @@ const Game = () => {
       {game.gameData.currentStep === "endGame" && <ModalScoreEndGame />}
       <ModalScore />
 
-      <GameMenu />
-      <GameSettings />
-
-      <section className="game-area mx-auto max-w-6xl px-2 py-3">
-        {/* Ligne 1 : joueur d'en face */}
-
-        {/* <div className={game.players.length === 2 ? 'hidden' : ''}></div> */}
-        {/* <div className={game.players.length === 3 ? 'col-span-2' : ''}> */}
-        <div className="game-area-top-center">
-          <PlayerSet playerId={seats.top} smallSet={game.players.length > 2} />
-        </div>
-        {/* <div className={game.players.length <= 3 ? 'hidden' : ''}></div> */}
-
-        {/* Ligne 2 */}
-
-        {/* Joueur à gauche */}
-        <div className="game-area-middle-left">
-          {game.players.length >= 3 ? <PlayerSet playerId={seats.left} smallSet /> : ""}
+      <div className="flex h-dvh flex-col">
+        {/* Barre d'outils : quitter, scores, règles à gauche ; thème et son à droite */}
+        <div className="flex items-center justify-between px-2 pt-2">
+          <GameMenu />
+          <GameSettings />
         </div>
 
-        {/* Zone de pioche et défausse */}
-        <div className="game-area-middle-center flex flex-col items-center justify-center md:gap-4">
-          <Instructions />
-          <div className="flex justify-center items-center gap-3 md:gap-9">
-            {/* Pioche */}
-            <Deck />
-
-            {/* Défausse */}
-            <Discard />
+        <section
+          className={`game-area mx-auto w-full max-w-6xl px-2 pb-2 ${game.players.length === 2 ? "game-area-duel" : ""}`}
+        >
+          {/* Ligne 1 : joueur d'en face */}
+          <div className="game-area-top-center">
+            <PlayerSet playerId={seats.top} smallSet={game.players.length > 2} />
           </div>
-          <p className="text-sm md:text-xl lg:text-2xl text-center text-warning animate-bounce">
-            {game.gameData.lastTurn && "Dernier tour !"}
-          </p>
-        </div>
 
-        {/* Joueur à droite */}
-        <div className="game-area-middle-right">
-          {game.players.length === 4 ? <PlayerSet playerId={seats.right} smallSet /> : <div></div>}
-        </div>
-        {/* Ligne 3 : jour actuel */}
+          {/* Ligne 2 */}
 
-        {/* <div className={game.players.length === 2 ? 'hidden' : ''}></div> */}
-        {/* <div className={game.players.length === 3 ? 'col-span-2' : ''}> */}
-        <div className="game-area-bottom-center">
-          <PlayerSet playerId={userId} isCurrentPlayerSet />
-        </div>
-        {/* <div className={game.players.length <= 3 ? 'hidden' : ''}></div> */}
-      </section>
+          {/* Joueur à gauche */}
+          {game.players.length >= 3 && (
+            <div className="game-area-middle-left">
+              <PlayerSet playerId={seats.left} smallSet />
+            </div>
+          )}
+
+          {/* Zone de pioche et défausse */}
+          <div className="game-area-middle-center flex flex-col items-center justify-center md:gap-4">
+            <Instructions />
+            <div className="flex justify-center items-center gap-3 md:gap-9">
+              {/* Pioche */}
+              <Deck />
+
+              {/* Défausse */}
+              <Discard />
+            </div>
+            {game.gameData.lastTurn && (
+              <p className="text-sm md:text-xl lg:text-2xl text-center font-bold text-warning animate-bounce">
+                Dernier tour !
+              </p>
+            )}
+          </div>
+
+          {/* Joueur à droite */}
+          {game.players.length === 4 && (
+            <div className="game-area-middle-right">
+              <PlayerSet playerId={seats.right} smallSet />
+            </div>
+          )}
+          {/* Ligne 3 : jour actuel */}
+          <div className="game-area-bottom-center">
+            <PlayerSet playerId={userId} isCurrentPlayerSet />
+          </div>
+        </section>
+      </div>
     </>
   );
 };

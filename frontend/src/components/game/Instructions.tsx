@@ -31,7 +31,7 @@ const Instructions = () => {
     return "Au tour de " + game.players.find((player) => player.id === game.gameData.currentPlayer)?.username;
   };
 
-  return <p className="text-center py-4 h-20 overflow-hidden text-ellipsis whitespace-nowrap">{playerMessage()}</p>;
+  return <p className="max-w-full truncate py-1 text-center font-semibold md:py-4">{playerMessage()}</p>;
 };
 
 export default Instructions;

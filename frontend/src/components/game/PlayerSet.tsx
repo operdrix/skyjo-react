@@ -73,10 +73,11 @@ const PlayerSet = ({
 
       <div className={`flex flex-col justify-center items-center ${smallSet ? "small-set" : ""}`}>
         <h2
-          className={`mb-2 flex min-h-8 items-center gap-2 rounded-full px-3 text-lg font-bold ${playerTurn ? "bg-success text-success-content" : ""}`}
+          className={`mb-1 flex min-h-8 max-w-full items-center gap-2 rounded-full px-3 text-lg font-bold md:mb-2 ${playerTurn ? "bg-success text-success-content" : ""}`}
         >
           {playerTurn && <span className="loading loading-dots loading-sm" aria-label="À son tour"></span>}
-          {player?.username} <OnlineStatus status={player?.game_players?.status} />
+          <span className="truncate">{player?.username}</span>
+          <OnlineStatus status={player?.game_players?.status} />
         </h2>
         <div className={`grid gap-[calc(var(--card-w)*0.1)] ${getGridColsClass(playerCards?.length || 0)}`}>
           {playerCards.map((card) => {
@@ -111,7 +112,7 @@ const OnlineStatus = ({ status }: { status: "connected" | "disconnected" | undef
     <span
       role="img"
       aria-label={connected ? "connecté" : "déconnecté"}
-      className={`inline-block size-2.5 rounded-full border-2 border-line ${connected ? "bg-success" : "bg-error"}`}
+      className={`inline-block size-2.5 shrink-0 rounded-full border-2 border-line ${connected ? "bg-success" : "bg-error"}`}
     />
   );
 };

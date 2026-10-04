@@ -1,14 +1,14 @@
 import ToggleTheme from "@/components/nav/ToggleTheme";
 import { useGame } from "@/hooks/Game";
 
-// Boutons de droite de la table : thème et son
+// Boutons de droite de la barre d'outils : thème et son
 export default function GameSettings() {
   const { sound, setSound } = useGame();
 
   return (
-    <div className="flex flex-col gap-4 absolute p-2 mt-8 sm:mt-4 right-0">
-      <ToggleTheme className="btn-circle" />
-      <label className="swap swap-rotate btn btn-circle">
+    <div className="flex gap-2">
+      <ToggleTheme className="btn-circle btn-sm sm:btn-md" />
+      <label className="swap swap-rotate btn btn-circle btn-sm sm:btn-md" aria-label="Son">
         <input type="checkbox" checked={sound} onChange={() => setSound(!sound)} />
         {/* volume on icon */}
         <svg

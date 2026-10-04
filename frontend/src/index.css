@@ -551,43 +551,73 @@
   pour que les 4 joueurs tiennent sans défilement du téléphone au grand écran.
 */
 .game-area {
-  --board-card-w: clamp(36px, min(17vw, 7.2dvh), 96px);
-  --small-card-w: clamp(16px, min(4.6vw, 3.8dvh), 44px);
-  --top-card-w: clamp(28px, min(12vw, 6.5dvh), 72px);
+  /* Mobile : adversaires sur une rangée en haut, pioche au centre, joueur en bas */
+  --board-card-w: clamp(36px, min(20vw, 8dvh), 96px);
+  --small-card-w: clamp(16px, min(calc((100vw - 40px) / 13.5), 4dvh), 44px);
+  --top-card-w: clamp(28px, min(15vw, 5dvh), 72px);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  grid-template-rows: auto 1fr auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: auto auto auto;
+  grid-template-areas:
+    "left top right"
+    "center center center"
+    "bottom bottom bottom";
+  align-content: space-evenly;
   gap: 0.5rem;
-  height: 100dvh;
+  flex: 1;
+  min-height: 0;
+}
+/* À deux joueurs, l'adversaire prend toute la rangée du haut */
+.game-area-duel {
+  grid-template-areas:
+    "top top top"
+    "center center center"
+    "bottom bottom bottom";
+}
+@media (min-width: 768px) {
+  .game-area,
+  .game-area-duel {
+    --board-card-w: clamp(36px, min(17vw, 7.2dvh), 96px);
+    --small-card-w: clamp(16px, min(4.6vw, 3.8dvh), 44px);
+    --top-card-w: clamp(28px, min(12vw, 6.5dvh), 72px);
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+      "top top top"
+      "left center right"
+      "bottom bottom bottom";
+    align-content: stretch;
+  }
 }
 .game-area-top-center {
-  grid-area: 1 / 1 / 2 / 4;
+  grid-area: top;
   @apply flex justify-center items-end;
   --card-w: var(--top-card-w);
 }
 .game-area-middle-left {
-  grid-area: 2 / 1 / 3 / 2;
-  @apply flex justify-end items-center;
+  grid-area: left;
+  @apply flex justify-center items-end md:justify-end md:items-center;
 }
 .game-area-middle-center {
-  grid-area: 2 / 2 / 3 / 3;
+  grid-area: center;
   @apply flex justify-center items-center;
   --card-w: var(--board-card-w);
 }
 .game-area-middle-right {
-  grid-area: 2 / 3 / 3 / 4;
-  @apply flex justify-start items-center;
+  grid-area: right;
+  @apply flex justify-center items-end md:justify-start md:items-center;
 }
 .game-area-bottom-center {
-  grid-area: 3 / 1 / 4 / 4;
+  grid-area: bottom;
   @apply flex justify-center items-start;
   --card-w: var(--board-card-w);
 }
 
 .small-set {
   --card-w: var(--small-card-w);
+  max-width: 100%;
   h2 {
-    @apply text-sm sm:text-base gap-1 sm:gap-2 flex-wrap;
+    @apply min-h-6 max-w-full px-2 text-sm sm:text-base gap-1 sm:gap-2;
   }
 }
 

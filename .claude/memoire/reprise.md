@@ -35,7 +35,8 @@ Fichier versionné pour reprendre le travail sur n'importe quel PC. Chargé par 
 - Étape 1 faite (branche `feat/design-system`) : `src/lib/theme.ts`, `src/game/cards.ts`, `PlayingCard`, thème `tapis` dans `index.css`. Piège : le plugin `daisyui/theme` découpe les valeurs à virgules (polices, dégradés), les définir hors plugin.
 - Étape 2 : plateau adaptatif (`.game-area`, `--card-w`), `GameCard` sur `PlayingCard`, thème Confettis (sans sélecteur avant l'étape 4 : `localStorage.setItem('theme-style','confettis')`).
 - Tester le plateau à 4 joueurs : script de robots (inscription API + `PATCH /api/game/join/:id` + socket `player-joined-game`, puis `initial-turn-card` sur 2 cartes après `start-game`). Espacer les inscriptions (limite de débit sur sign-up : une 2e inscription immédiate est refusée).
-- Chrome headless ne descend pas sous 500 px de large : une capture à 390 px est tronquée, pas un vrai rendu mobile.
+- Vérifier le plateau en vrai format mobile : Chrome headless piloté par CDP (`--remote-debugging-port`, `Emulation.setDeviceMetricsOverride`, `Network.setCookie` avec la session d'un robot), WebSocket natif de Node 22, pas besoin de Puppeteer.
+- Chrome headless ne descend pas sous 500 px (sauf émulation CDP) de large : une capture à 390 px est tronquée, pas un vrai rendu mobile.
 
 ## Reprendre sur un autre PC
 1. `git checkout dev && git pull`, puis `make install && make dev` (Docker requis ; `make env` crée les `.env` depuis les `.env.example`).

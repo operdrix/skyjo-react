@@ -33,6 +33,12 @@ describe("resolveTheme", () => {
     expect(resolveTheme({ style: "tapis", mode: "sombre" }, false)).toBe("tapis-sombre");
   });
 
+  it("garde Soirée néon en sombre quel que soit le mode", () => {
+    expect(resolveTheme({ style: "neon", mode: "clair" }, false)).toBe("neon");
+    expect(resolveTheme({ style: "neon", mode: "sombre" }, false)).toBe("neon");
+    expect(resolveTheme({ style: "neon", mode: "auto" }, true)).toBe("neon");
+  });
+
   it("suit la préférence du système en mode auto", () => {
     expect(resolveTheme({ style: "tapis", mode: "auto" }, true)).toBe("tapis-sombre");
     expect(resolveTheme({ style: "tapis", mode: "auto" }, false)).toBe("tapis");

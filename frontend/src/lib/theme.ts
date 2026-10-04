@@ -1,7 +1,7 @@
 // Préférences d'affichage : thème (style) choisi par le joueur et mode clair/sombre/auto.
 // La copie locale permet d'appliquer le thème avant le rendu React (voir index.html).
 
-export const THEME_STYLES = ["tapis", "confettis"] as const;
+export const THEME_STYLES = ["tapis", "neon", "confettis"] as const;
 export type ThemeStyle = (typeof THEME_STYLES)[number];
 
 export const THEME_MODES = ["clair", "sombre", "auto"] as const;
@@ -20,8 +20,12 @@ const LEGACY_KEY = "theme";
 const isStyle = (value: unknown): value is ThemeStyle => THEME_STYLES.includes(value as ThemeStyle);
 const isMode = (value: unknown): value is ThemeMode => THEME_MODES.includes(value as ThemeMode);
 
+// Thèmes sans variante claire : le mode clair/sombre/auto ne s'applique pas
+export const isDarkOnly = (style: ThemeStyle) => style === "neon";
+
 // Valeur de data-theme sur <html>
 export function resolveTheme(prefs: ThemePrefs, prefersDark: boolean): string {
+  if (isDarkOnly(prefs.style)) return prefs.style;
   const dark = prefs.mode === "sombre" || (prefs.mode === "auto" && prefersDark);
   return dark ? `${prefs.style}-sombre` : prefs.style;
 }

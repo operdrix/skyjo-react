@@ -73,7 +73,7 @@ const PlayerSet = ({
 
       <div className={`flex flex-col justify-center items-center ${smallSet ? "small-set" : ""}`}>
         <h2
-          className={`mb-1 flex min-h-8 max-w-full items-center gap-2 rounded-full px-3 text-lg font-bold md:mb-2 ${playerTurn ? "bg-success text-success-content" : ""}`}
+          className={`mb-1 flex min-h-8 max-w-full items-center gap-2 rounded-full px-3 text-lg font-bold md:mb-2 ${playerTurn ? "player-turn bg-success text-success-content" : ""}`}
         >
           {playerTurn && <span className="loading loading-dots loading-sm" aria-label="À son tour"></span>}
           <span className="truncate">{player?.username}</span>

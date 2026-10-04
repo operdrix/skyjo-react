@@ -1,4 +1,4 @@
-import { applyTheme, nextMode, readThemePrefs, ThemeMode, ThemePrefs, writeThemePrefs } from "@/lib/theme";
+import { applyTheme, isDarkOnly, nextMode, readThemePrefs, ThemeMode, ThemePrefs, writeThemePrefs } from "@/lib/theme";
 import { useEffect, useState } from "react";
 
 const LABELS: Record<ThemeMode, string> = {
@@ -26,6 +26,9 @@ const ToggleTheme = ({ className = "" }: { className?: string }) => {
     writeThemePrefs(localStorage, updated);
     setPrefs(updated);
   };
+
+  // Soirée néon n'existe qu'en sombre : pas de bascule à proposer
+  if (isDarkOnly(prefs.style)) return null;
 
   const label = LABELS[prefs.mode];
 

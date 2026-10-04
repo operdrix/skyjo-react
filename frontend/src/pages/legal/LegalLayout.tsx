@@ -12,7 +12,7 @@ const PAGES = [
 
 // Mise en page commune des pages légales : navigation entre pages + texte à largeur de lecture
 export const LegalLayout = ({ title, children }: Props) => (
-  <div className="mx-auto grid w-full max-w-5xl gap-6 px-4 py-6 md:grid-cols-[200px_1fr]">
+  <div className="mx-auto grid w-full max-w-5xl grid-cols-[minmax(0,1fr)] gap-6 px-4 py-6 md:grid-cols-[200px_minmax(0,1fr)]">
     <nav aria-label="Pages légales" className="flex flex-wrap gap-2 md:sticky md:top-6 md:flex-col md:self-start">
       {PAGES.map(({ to, label }) => (
         <NavLink
@@ -26,7 +26,7 @@ export const LegalLayout = ({ title, children }: Props) => (
         </NavLink>
       ))}
     </nav>
-    <article className="panel max-w-[68ch] space-y-6 p-6 sm:p-8">
+    <article className="panel min-w-0 max-w-[68ch] space-y-6 p-5 sm:p-8">
       <header className="space-y-1">
         <h1 className="text-3xl font-bold sm:text-4xl">{title}</h1>
         <p className="text-sm text-muted">Dernière mise à jour : {LAST_UPDATE}</p>

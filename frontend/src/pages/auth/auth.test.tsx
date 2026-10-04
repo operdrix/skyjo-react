@@ -31,6 +31,7 @@ HTMLDialogElement.prototype.close ??= vi.fn();
 
 beforeEach(() => {
   vi.clearAllMocks();
+  localStorage.clear();
   authClient.signUp.email.mockResolvedValue({ data: {}, error: null });
   authClient.signIn.email.mockResolvedValue({ data: {}, error: null });
   authClient.updateUser.mockResolvedValue({ data: {}, error: null });
@@ -104,7 +105,25 @@ describe("inscription", () => {
         password: "secret-de-test",
         name: "Léa",
         username: "Léa",
+        theme: "tapis",
       }),
+    );
+  });
+
+  it("fait choisir le thème, appliqué tout de suite et enregistré avec le compte", async () => {
+    renderAt(<Register />);
+    fireEvent.click(screen.getByRole("button", { name: /avec un email/i }));
+
+    fireEvent.click(screen.getByRole("radio", { name: /soirée néon/i }));
+    expect(document.documentElement.dataset.theme).toBe("neon");
+
+    fireEvent.change(screen.getByLabelText(/e-mail/i), { target: { value: "lea@test.local" } });
+    fireEvent.change(screen.getByLabelText(/pseudo/i), { target: { value: "Léa" } });
+    fireEvent.change(screen.getByLabelText(/mot de passe/i), { target: { value: "secret-de-test" } });
+    fireEvent.click(screen.getByRole("button", { name: /jouer/i }));
+
+    await waitFor(() =>
+      expect(authClient.signUp.email).toHaveBeenCalledWith(expect.objectContaining({ theme: "neon" })),
     );
   });
 });
@@ -118,7 +137,18 @@ describe("choix du pseudo après Google", () => {
     expect(input.value).toBe("Marie");
     fireEvent.click(screen.getByRole("button", { name: /jouer/i }));
 
-    await waitFor(() => expect(authClient.updateUser).toHaveBeenCalledWith({ username: "Marie" }));
+    await waitFor(() => expect(authClient.updateUser).toHaveBeenCalledWith({ username: "Marie", theme: "tapis" }));
+  });
+
+  it("fait aussi choisir le thème", async () => {
+    user.current = { ...user.current, isAuthentified: false, needsPseudo: true, suggestedPseudo: "Marie" };
+    renderAt(<ChoosePseudo />);
+
+    fireEvent.click(screen.getByRole("radio", { name: /confettis/i }));
+    expect(document.documentElement.dataset.theme).toMatch(/^confettis/);
+    fireEvent.click(screen.getByRole("button", { name: /jouer/i }));
+
+    await waitFor(() => expect(authClient.updateUser).toHaveBeenCalledWith({ username: "Marie", theme: "confettis" }));
   });
 });
 

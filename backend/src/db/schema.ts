@@ -35,6 +35,8 @@ export const users = mysqlTable("users", {
   bestScore: int(),
   // Dernière connexion : les comptes inactifs depuis 3 ans sont supprimés (purgeInactiveUsers)
   lastActiveAt: timestamp({ fsp: 3 }),
+  // Thème d'affichage choisi (tapis, neon, confettis), copié en local par le front
+  theme: varchar({ length: 16 }).notNull().default("tapis"),
   ...timestamps,
 });
 

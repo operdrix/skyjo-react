@@ -29,12 +29,13 @@ Fichier versionné pour reprendre le travail sur n'importe quel PC. Chargé par 
   - Tests back : projets Vitest `unit` (sans base) et `api` (`*.api.test.js`, base `skyjo_test` créée par `test/global-setup.js` avec le compte root, **MySQL et Mailpit requis** : `make db-up`). Helpers dans `backend/test/helpers.js` (`createPlayer`, `findSensitiveFields`).
   - Front : Vitest 2 + Testing Library (`frontend/vitest.config.ts`), à monter avec Vite en phase 2.
 
-## Refonte du design (2026-10-04, étapes 1-2 mergées PR #42-#43, étape 3 Néon sur `feat/design-neon`)
+## Refonte du design (2026-10-04, étapes 1-3 mergées PR #42-#44, étape 4 choix du thème sur `feat/choix-theme`)
 - Référence : `docs/DESIGN.md` (preview jetable `docs/design-preview.html`). 3 thèmes au choix (`tapis` par défaut, `neon`, `confettis`), stockés en `users.theme` + copie locale.
 - Ordre prévu : 1) jetons + thème Tapis sur les pages hors jeu, 2) Confettis + plateau adaptatif, 3) Néon, 4) choix du thème (inscription, `/auth/pseudo`, espace perso) + pages légales.
 - Étape 1 faite (branche `feat/design-system`) : `src/lib/theme.ts`, `src/game/cards.ts`, `PlayingCard`, thème `tapis` dans `index.css`. Piège : le plugin `daisyui/theme` découpe les valeurs à virgules (polices, dégradés), les définir hors plugin.
 - Étape 2 : plateau adaptatif (`.game-area`, `--card-w`), `GameCard` sur `PlayingCard`, thème Confettis (sans sélecteur avant l'étape 4 : `localStorage.setItem('theme-style','confettis')`).
 - Tester le plateau à 4 joueurs : script de robots (inscription API + `PATCH /api/game/join/:id` + socket `player-joined-game`, puis `initial-turn-card` sur 2 cartes après `start-game`). Espacer les inscriptions (limite de débit sur sign-up : une 2e inscription immédiate est refusée).
+- Étape 4 : `users.theme` (migration 0002), `THEMES` + contrôle dans `backend/src/auth.ts`, `setThemeStyle` + événement `themechange` (`src/lib/theme.ts`), `ThemePicker`, `ThemeField` (Formik), `ChangeTheme`, synchro du thème du compte dans `UserProvider`. Après pull : `make db-reset` ou redémarrer le back (migration au démarrage).
 - Script d'émulation réutilisable : 4 robots, parties à 2/3/4 joueurs, captures plateau + accueil/connexion/historique/légal par thème et par appareil, contrôle `scrollWidth`/`scrollHeight` (recréer dans le scratchpad, ne pas versionner).
 - Vérifier le plateau en vrai format mobile : Chrome headless piloté par CDP (`--remote-debugging-port`, `Emulation.setDeviceMetricsOverride`, `Network.setCookie` avec la session d'un robot), WebSocket natif de Node 22, pas besoin de Puppeteer.
 - Chrome headless ne descend pas sous 500 px (sauf émulation CDP) de large : une capture à 390 px est tronquée, pas un vrai rendu mobile.

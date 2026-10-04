@@ -1,11 +1,13 @@
 import FormError from "@/components/auth/FormError";
 import GoogleButton from "@/components/auth/GoogleButton";
 import CustomField from "@/components/forms/CustomField";
+import ThemeField from "@/components/forms/ThemeField";
 import { useUser } from "@/hooks/User";
 import { authClient } from "@/lib/authClient";
 import { authErrorMessage } from "@/lib/authErrors";
 import { safeRedirect, withRedirect } from "@/lib/redirect";
 import { pseudoSchema } from "@/lib/pseudo";
+import { readThemePrefs, type ThemeStyle } from "@/lib/theme";
 import { Field, Form, Formik } from "formik";
 import { useState } from "react";
 import { Link, Navigate, useSearchParams } from "react-router";
@@ -24,10 +26,20 @@ function Register() {
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [withEmail, setWithEmail] = useState<boolean>(false);
 
-  const handleSubmit = async ({ email, username, password }: { email: string; username: string; password: string }) => {
+  const handleSubmit = async ({
+    email,
+    username,
+    password,
+    theme,
+  }: {
+    email: string;
+    username: string;
+    password: string;
+    theme: ThemeStyle;
+  }) => {
     setErrorMessage("");
     const pseudo = username.trim();
-    const { error } = await authClient.signUp.email({ email, password, name: pseudo, username: pseudo });
+    const { error } = await authClient.signUp.email({ email, password, name: pseudo, username: pseudo, theme });
     if (error) {
       setErrorMessage(authErrorMessage(error));
       return;
@@ -51,7 +63,7 @@ function Register() {
 
           {withEmail ? (
             <Formik
-              initialValues={{ email: "", username: "", password: "" }}
+              initialValues={{ email: "", username: "", password: "", theme: readThemePrefs(localStorage).style }}
               validationSchema={validationSchema}
               onSubmit={handleSubmit}
             >
@@ -75,6 +87,7 @@ function Register() {
                   type="password"
                   autoComplete="new-password"
                 />
+                <ThemeField />
                 <button type="submit" className="btn btn-primary w-full">
                   Créer mon compte et jouer
                 </button>

@@ -45,6 +45,11 @@ const PrivacyPage = () => (
               <td>Exécution des conditions d'utilisation (art. 6.1.b)</td>
             </tr>
             <tr>
+              <td>Thème d'affichage choisi (Tapis de jeu, Soirée néon ou Confettis)</td>
+              <td>Retrouver la même ambiance sur tous vos appareils</td>
+              <td>Exécution des conditions d'utilisation (art. 6.1.b)</td>
+            </tr>
+            <tr>
               <td>Session de connexion : adresse IP, navigateur utilisé, dates de connexion</td>
               <td>Vous garder connecté, sécuriser les comptes, supprimer les comptes inactifs</td>
               <td>Intérêt légitime : sécurité du service (art. 6.1.f)</td>

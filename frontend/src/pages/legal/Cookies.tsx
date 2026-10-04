@@ -37,7 +37,7 @@ const Cookies = () => (
             <tr>
               <td>theme-style</td>
               <td>Stockage local du navigateur</td>
-              <td>Mémoriser le thème d'affichage choisi</td>
+              <td>Copie locale du thème d'affichage choisi (évite un affichage dans le mauvais thème au chargement)</td>
               <td>Jusqu'à ce que vous l'effaciez</td>
             </tr>
             <tr>

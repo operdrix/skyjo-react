@@ -17,7 +17,7 @@ const MODE_KEY = "theme-mode";
 // Ancienne clé « light » / « dark » d'avant la refonte
 const LEGACY_KEY = "theme";
 
-const isStyle = (value: unknown): value is ThemeStyle => THEME_STYLES.includes(value as ThemeStyle);
+export const isThemeStyle = (value: unknown): value is ThemeStyle => THEME_STYLES.includes(value as ThemeStyle);
 const isMode = (value: unknown): value is ThemeMode => THEME_MODES.includes(value as ThemeMode);
 
 // Thèmes sans variante claire : le mode clair/sombre/auto ne s'applique pas
@@ -36,7 +36,7 @@ export function readThemePrefs(storage: ThemeStorage): ThemePrefs {
     const legacy = storage.getItem(LEGACY_KEY);
     const mode = storage.getItem(MODE_KEY) ?? { dark: "sombre", light: "clair" }[legacy ?? ""];
     return {
-      style: isStyle(style) ? style : DEFAULT_THEME_PREFS.style,
+      style: isThemeStyle(style) ? style : DEFAULT_THEME_PREFS.style,
       mode: isMode(mode) ? mode : DEFAULT_THEME_PREFS.mode,
     };
   } catch {
@@ -64,4 +64,15 @@ export function applyTheme(prefs: ThemePrefs, root: HTMLElement = document.docum
 
 export function nextMode(mode: ThemeMode): ThemeMode {
   return THEME_MODES[(THEME_MODES.indexOf(mode) + 1) % THEME_MODES.length];
+}
+
+// Événement émis sur window quand le thème change (ToggleTheme se met à jour)
+export const THEME_CHANGE_EVENT = "themechange";
+
+// Change le thème en gardant le mode clair/sombre/auto : copie locale, application, notification
+export function setThemeStyle(style: ThemeStyle): void {
+  const prefs = { ...readThemePrefs(localStorage), style };
+  writeThemePrefs(localStorage, prefs);
+  applyTheme(prefs);
+  window.dispatchEvent(new Event(THEME_CHANGE_EVENT));
 }

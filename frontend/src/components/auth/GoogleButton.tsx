@@ -26,11 +26,7 @@ export default function GoogleButton({ redirect = "/" }: { redirect?: string }) 
   return (
     <>
       <FormError message={errorMessage} />
-      <button
-        type="button"
-        onClick={handleClick}
-        className="btn btn-lg w-full bg-white text-black border-[#e5e5e5] shadow-sm"
-      >
+      <button type="button" onClick={handleClick} className="btn btn-lg w-full bg-white text-[#1f1a33]">
         <svg aria-hidden="true" width="20" height="20" viewBox="0 0 512 512">
           <path fill="#fff" d="M0 0h512v512H0z" />
           <path fill="#34a853" d="M153 292c30 82 118 95 171 60h62v48A192 192 0 0190 341" />

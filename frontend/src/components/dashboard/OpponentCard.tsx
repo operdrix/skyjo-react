@@ -11,18 +11,19 @@ export default function OpponentCard({
   onSelect: () => void;
 }) {
   return (
-    <div
-      className={`shadow-md rounded-lg p-4 glass w-full text-black cursor-pointer ${selected ? "bg-red-400" : "bg-white"}`}
+    <button
+      type="button"
+      aria-pressed={selected}
       onClick={onSelect}
+      className={`panel w-full p-4 text-left transition-colors ${selected ? "bg-primary! text-primary-content" : ""}`}
     >
       <h3 className="text-lg font-bold">{opponent.username}</h3>
-      <p>
-        {`${opponent.games} parties: `}
-        <span className="text-green-600">{opponent.defeats} victoires</span>
-        {opponent.victories > 0 ? ` / ` : ""}
-        {opponent.victories > 0 ? <span className="text-red-600">{opponent.victories} défaites</span> : ""}
+      <p className="tabular-nums">
+        {`${opponent.games} parties : `}
+        <span className="font-bold">{opponent.defeats} victoires</span>
+        {opponent.victories > 0 ? ` / ${opponent.victories} défaites` : ""}
       </p>
-      <p className="text-xs">{opponent.rounds} manches jouées</p>
-    </div>
+      <p className={`text-xs ${selected ? "" : "text-muted"}`}>{opponent.rounds} manches jouées</p>
+    </button>
   );
 }

@@ -37,10 +37,10 @@ function ChoosePseudo() {
   };
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <h1 className="font-bold text-center text-2xl mb-2">Choisissez votre pseudo</h1>
-        <p className="text-center mb-5">C'est le nom que verront les autres joueurs.</p>
+    <div className="flex flex-col items-center justify-center">
+      <div className="w-full max-w-md">
+        <h1 className="font-bold text-3xl mb-2">Choisissez votre pseudo</h1>
+        <p className="text-muted mb-5">C'est le nom que verront les autres joueurs.</p>
 
         <Formik
           initialValues={{ username: suggestedPseudo }}
@@ -48,7 +48,7 @@ function ChoosePseudo() {
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
         >
-          <Form className="bg-base-200 shadow-sm rounded-lg px-5 py-7">
+          <Form className="panel px-5 py-7 sm:px-7">
             <FormError message={errorMessage} />
             <Field
               component={CustomField}

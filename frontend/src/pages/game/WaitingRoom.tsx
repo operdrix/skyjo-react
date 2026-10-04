@@ -187,15 +187,15 @@ const WaitingRoom = () => {
 
   return (
     <div className="flex-1 flex items-center container mx-auto">
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 p-5 min-h-[50vh]">
-        <div className="bg-base-300 col-span-3 lg:col-span-2 flex flex-col space-y-4 rounded-box p-5">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 px-4 py-6 min-h-[50vh]">
+        <div className="panel col-span-3 lg:col-span-2 flex flex-col space-y-4 p-5 sm:p-6">
           <div className="flex justify-between items-start">
-            <h1 className="text-2xl text-title">Salle d'attente</h1>
+            <h1 className="text-3xl font-bold">Salle d'attente</h1>
             <PrivacyBadge isPrivate={game.private} onToggle={handleSwitchPrivate} />
           </div>
           {!isCreator && <p>Salon créé par {game.creatorPlayer.username}</p>}
           <div className="divider"></div>
-          <h3 className="text-xl">Partage cet URL à tes amis</h3>
+          <h3 className="text-xl font-semibold">Partage ce lien à tes amis</h3>
           <ShareLink gameId={game.id} />
           {isCreator && (
             <RoomSettings
@@ -206,16 +206,16 @@ const WaitingRoom = () => {
             />
           )}
         </div>
-        <div className="bg-base-300 col-span-3 lg:col-span-1 flex flex-col space-y-4 rounded-box p-5">
+        <div className="panel col-span-3 lg:col-span-1 flex flex-col space-y-4 p-5 sm:p-6">
           <div className="flex justify-between items-start">
-            <h2 className="text-2xl">
+            <h2 className="text-2xl font-bold tabular-nums">
               Joueurs {game?.players.length}/{game?.maxPlayers}
             </h2>
             <OnlineStatus isConnected={isConnected} />
           </div>
           <div className="divider"></div>
           <div>
-            <p className="mt-4">
+            <p className="text-muted">
               {game.players.length === game.maxPlayers
                 ? "La partie va bientôt commencer..."
                 : "En attente de joueurs..."}

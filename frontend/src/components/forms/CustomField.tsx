@@ -17,17 +17,17 @@ const CustomField: React.FC<CustomFieldProps> = ({
 }) => {
   return (
     <div className="mb-4">
-      <label htmlFor={props.id || props.name} className="font-semibold text-sm text-base-content pb-1 block">
+      <label htmlFor={props.id || props.name} className="font-bold text-sm pb-1 block">
         {label}
       </label>
       <input
         type={type}
         {...field}
         {...props}
-        className={`input px-3 py-2 mt-1 first-letter:text-sm w-full${errors[field.name] && touched[field.name] ? " border-error" : ""}`}
+        className={`input mt-1 w-full${errors[field.name] && touched[field.name] ? " border-error" : ""}`}
       />
       {errors[field.name] && touched[field.name] ? (
-        <div className="text-error text-sm">{errors[field.name]?.toString()}</div>
+        <div className="text-error text-sm font-semibold mt-1">{errors[field.name]?.toString()}</div>
       ) : null}
     </div>
   );

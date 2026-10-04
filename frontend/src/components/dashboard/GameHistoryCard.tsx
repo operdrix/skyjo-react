@@ -14,19 +14,16 @@ export default function GameHistoryCard({
   const navigate = useNavigate();
 
   return (
-    <div
-      className={`${game.winner === userId ? "bg-green-600" : game.winner ? "bg-red-600" : "bg-blue-500"}
-  shadow-md rounded-lg p-4 glass w-full text-black
-  flex justify-between
-  `}
-    >
-      <div className="flex flex-col justify-between">
+    <div className="panel flex w-full justify-between gap-3 p-4">
+      <div className="flex flex-col justify-between gap-2">
         <div>
-          <h2 className="text-lg font-bold">
-            {game.winner === userId ? "🥳 Victoire !" : game.winner ? "😭 Défaite" : "🔄 Partie en cours."}
-          </h2>
-          <p>
-            {`${game.players?.length} joueurs: `}
+          <span
+            className={`badge font-bold ${game.winner === userId ? "badge-success" : game.winner ? "badge-error" : "badge-info"}`}
+          >
+            {game.winner === userId ? "🥳 Victoire !" : game.winner ? "😭 Défaite" : "🔄 En cours"}
+          </span>
+          <p className="mt-2">
+            {`${game.players?.length} joueurs : `}
             {game.players?.map((player, index) => (
               <span key={player.id}>
                 {player.username}
@@ -35,18 +32,16 @@ export default function GameHistoryCard({
             ))}
           </p>
         </div>
-        <p className="text-xs">{new Date(game.createdAt).toLocaleDateString("fr-FR")}</p>
+        <p className="text-xs text-muted">{new Date(game.createdAt).toLocaleDateString("fr-FR")}</p>
       </div>
       <div className="flex flex-col justify-between">
         <p className="text-center">
-          <span className="text-4xl">
-            <strong>{game.roundNumber}</strong>
-          </span>
+          <span className="font-display text-4xl font-bold tabular-nums">{game.roundNumber}</span>
           <br /> manches
         </p>
         <div className="flex space-x-2">
           {game.state != "finished" && game.creator === userId && (
-            <button onClick={() => onDelete(game.id)} className="btn btn-xs btn-error">
+            <button onClick={() => onDelete(game.id)} className="btn btn-xs btn-error" aria-label="Supprimer la partie">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -63,7 +58,7 @@ export default function GameHistoryCard({
               </svg>
             </button>
           )}
-          <button onClick={() => navigate(`/game/${game.id}`)} className="btn btn-xs btn-neutral">
+          <button onClick={() => navigate(`/game/${game.id}`)} className="btn btn-xs">
             Consulter
           </button>
         </div>

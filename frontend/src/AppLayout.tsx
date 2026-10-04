@@ -6,7 +6,7 @@ import RequirePseudo from "@/components/auth/RequirePseudo";
 const AppLayout = () => {
   return (
     <Drawer>
-      <div className="flex flex-col min-h-screen font-kalam">
+      <div className="flex flex-col min-h-screen">
         <Header />
         <RequirePseudo />
         <Footer />

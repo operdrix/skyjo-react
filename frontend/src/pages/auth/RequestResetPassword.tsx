@@ -49,7 +49,7 @@ function RequestResetPassword() {
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
-              className="md:size-96 max-w-sm text-card-green"
+              className="md:size-96 max-w-sm text-success"
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
             </svg>
@@ -57,7 +57,7 @@ function RequestResetPassword() {
             <div>
               <h1 className="text-5xl font-bold">{message.title}</h1>
               <p className="py-6 text-xl">{message.message}</p>
-              <Link to={"/"} className="btn [--btn-color:var(--color-card-green)] [--btn-fg:var(--color-base-100)]">
+              <Link to={"/"} className="btn btn-primary">
                 Retour à l'accueil
               </Link>
             </div>
@@ -89,10 +89,7 @@ function RequestResetPassword() {
             <div>
               <h1 className="text-5xl font-bold">Une erreur est survenue 😕</h1>
               <p className="py-6 text-xl">{errorMessage}</p>
-              <Link
-                to={"/auth/login"}
-                className="btn [--btn-color:var(--color-card-red)] [--btn-fg:var(--color-base-100)]"
-              >
+              <Link to={"/auth/login"} className="btn btn-primary">
                 Retour à la page de login
               </Link>
             </div>
@@ -104,11 +101,11 @@ function RequestResetPassword() {
 
   return (
     <>
-      <div className="container flex-1 flex flex-col items-center justify-center mx-auto">
+      <div className="flex flex-col items-center justify-center">
         <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
           <Form className="w-full max-w-lg">
-            <h1 className="font-bold text-center text-2xl mb-5">Mot de passe perdu ! 🤷‍♂️</h1>
-            <div className="bg-base-200 shadow-sm w-full md:rounded-lg divide-y divide-base-100">
+            <h1 className="font-bold text-3xl mb-5">Mot de passe perdu ! 🤷‍♂️</h1>
+            <div className="panel w-full divide-y">
               <div className="px-5 py-7">
                 <Field component={CustomField} name="email" label="E-mail" type="email" autoComplete="username" />
                 <button

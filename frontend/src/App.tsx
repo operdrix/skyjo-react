@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
+import { withRedirect } from "@/lib/redirect";
 import { useUser } from "./hooks/User";
 import { api } from "./services/apiService";
 
@@ -10,14 +11,13 @@ function App() {
 
   const handleCreateGame = async () => {
     if (!userLoading && !isAuthentified) {
-      navigate("/auth/login", {
+      navigate(withRedirect("/auth/login", window.location.pathname), {
         state: {
           message: {
             type: "info",
             message: "Vous devez être connecté pour créer une partie !",
             title: "Connexion requise",
           },
-          from: window.location.pathname,
         },
       });
       return;

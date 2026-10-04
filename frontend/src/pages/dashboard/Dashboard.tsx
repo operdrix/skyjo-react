@@ -1,3 +1,4 @@
+import ChangePseudo from "@/components/dashboard/ChangePseudo";
 import DeleteAccount from "@/components/dashboard/DeleteAccount";
 import GameHistoryCard from "@/components/dashboard/GameHistoryCard";
 import OpponentCard from "@/components/dashboard/OpponentCard";
@@ -5,6 +6,7 @@ import StatsBar from "@/components/dashboard/StatsBar";
 import ErrorMessage from "@/components/game/messages/ErrorMessage";
 import PageSkeleton from "@/components/PageSkeleton";
 import { opponentStats, playerStats } from "@/game/stats";
+import { withRedirect } from "@/lib/redirect";
 import { useUser } from "@/hooks/User";
 import { api } from "@/services/apiService";
 import { GameType } from "@/types/types";
@@ -22,14 +24,13 @@ const Dashboard = () => {
   // Vérifier si l'utilisateur est connecté au site
   useEffect(() => {
     if (!userLoading && !isAuthentified) {
-      navigate("/auth/login", {
+      navigate(withRedirect("/auth/login", window.location.pathname), {
         state: {
           message: {
             type: "info",
             message: "Vous devez être connecté pour accéder à cette page",
             title: "Connexion requise",
           },
-          from: window.location.pathname,
         },
       });
     }
@@ -134,6 +135,7 @@ const Dashboard = () => {
           </div>
         </>
       )}
+      <ChangePseudo />
       <DeleteAccount />
     </div>
   );

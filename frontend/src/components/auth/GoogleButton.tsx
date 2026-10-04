@@ -1,5 +1,6 @@
 import FormError from "@/components/auth/FormError";
 import { authClient } from "@/lib/authClient";
+import { withRedirect } from "@/lib/redirect";
 import { useState } from "react";
 
 // Connexion ou inscription en un clic ; un nouveau joueur passe ensuite par le choix du pseudo
@@ -12,7 +13,7 @@ export default function GoogleButton({ redirect = "/" }: { redirect?: string }) 
     const { error } = await authClient.signIn.social({
       provider: "google",
       callbackURL: `${origin}${redirect}`,
-      newUserCallbackURL: `${origin}/auth/pseudo`,
+      newUserCallbackURL: `${origin}${withRedirect("/auth/pseudo", redirect)}`,
       errorCallbackURL: `${origin}/auth/login`,
     });
     if (error) {

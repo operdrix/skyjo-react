@@ -4,27 +4,23 @@ import CustomField from "@/components/forms/CustomField";
 import { useUser } from "@/hooks/User";
 import { authClient } from "@/lib/authClient";
 import { authErrorMessage } from "@/lib/authErrors";
-import { PSEUDO_MAX, PSEUDO_MIN, PSEUDO_PATTERN } from "@/lib/pseudo";
+import { safeRedirect, withRedirect } from "@/lib/redirect";
+import { pseudoSchema } from "@/lib/pseudo";
 import { Field, Form, Formik } from "formik";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, Navigate, useSearchParams } from "react-router";
 import * as yup from "yup";
 
 const validationSchema = yup.object().shape({
   email: yup.string().email("Email invalide").required("L'email est requis"),
-  username: yup
-    .string()
-    .trim()
-    .min(PSEUDO_MIN, `${PSEUDO_MIN} caractères minimum`)
-    .max(PSEUDO_MAX, `${PSEUDO_MAX} caractères maximum`)
-    .matches(PSEUDO_PATTERN, "Lettres, chiffres, espace, point ou tiret uniquement")
-    .required("Le pseudo est requis"),
+  username: pseudoSchema,
   password: yup.string().min(8, "8 caractères minimum").required("Le mot de passe est requis"),
 });
 
 function Register() {
-  const navigate = useNavigate();
-  const { refresh } = useUser();
+  const [searchParams] = useSearchParams();
+  const { refresh, isAuthentified } = useUser();
+  const redirect = safeRedirect(searchParams.get("redirect"));
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [withEmail, setWithEmail] = useState<boolean>(false);
 
@@ -36,9 +32,13 @@ function Register() {
       setErrorMessage(authErrorMessage(error));
       return;
     }
+    // La redirection se fait une fois la session rechargée
     refresh();
-    navigate("/");
   };
+
+  if (isAuthentified) {
+    return <Navigate to={redirect} replace />;
+  }
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-4">
@@ -47,7 +47,7 @@ function Register() {
         <p className="text-center mb-5">Un clic et c'est parti !</p>
 
         <div className="bg-base-200 shadow-sm rounded-lg px-5 py-7 flex flex-col gap-4">
-          <GoogleButton />
+          <GoogleButton redirect={redirect} />
 
           {withEmail ? (
             <Formik
@@ -101,7 +101,7 @@ function Register() {
 
         <p className="text-sm text-center mt-5">
           Déjà un compte ?{" "}
-          <Link to="/auth/login" className="link">
+          <Link to={withRedirect("/auth/login", redirect)} className="link">
             Me connecter
           </Link>
         </p>

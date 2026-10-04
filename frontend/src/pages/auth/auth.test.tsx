@@ -3,7 +3,7 @@ import ChoosePseudo from "@/pages/auth/ChoosePseudo";
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const authClient = vi.hoisted(() => ({
@@ -46,6 +46,18 @@ beforeEach(() => {
 });
 
 afterEach(cleanup);
+
+// Page d'authentification ouverte depuis un lien de partie (/join/42)
+const renderWithGame = (path: string, element: React.ReactNode) =>
+  render(
+    <MemoryRouter initialEntries={[path]}>
+      <Routes>
+        <Route path={path.split("?")[0]} element={element} />
+        <Route path="/join/42" element={<p>salle d'attente</p>} />
+        <Route path="/" element={<p>accueil</p>} />
+      </Routes>
+    </MemoryRouter>,
+  );
 
 const renderAt = (element: React.ReactNode) => render(<MemoryRouter>{element}</MemoryRouter>);
 
@@ -125,5 +137,93 @@ describe("garde du pseudo", () => {
     );
 
     expect(screen.getByText("choix du pseudo")).toBeTruthy();
+  });
+});
+
+describe("retour à la partie après connexion", () => {
+  it("connexion par email : ouvre la salle d'attente une fois la session chargée", async () => {
+    const { rerender } = renderWithGame("/auth/login?redirect=%2Fjoin%2F42", <Login />);
+
+    fireEvent.click(screen.getByRole("button", { name: /avec un email/i }));
+    fireEvent.change(screen.getByLabelText(/e-mail/i), { target: { value: "lea@test.local" } });
+    fireEvent.change(screen.getByLabelText(/mot de passe/i), { target: { value: "secret-de-test" } });
+    fireEvent.click(screen.getByRole("button", { name: /me connecter/i }));
+    await waitFor(() => expect(user.current.refresh).toHaveBeenCalled());
+    // Session pas encore rechargée : on reste sur la connexion
+    expect(screen.queryByText("salle d'attente")).toBeNull();
+
+    user.current = { ...user.current, isAuthentified: true, userName: "Léa" };
+    rerender(
+      <MemoryRouter initialEntries={["/auth/login?redirect=%2Fjoin%2F42"]}>
+        <Routes>
+          <Route path="/auth/login" element={<Login />} />
+          <Route path="/join/42" element={<p>salle d'attente</p>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    expect(await screen.findByText("salle d'attente")).toBeTruthy();
+  });
+
+  it("inscription par email : ouvre la salle d'attente une fois connecté", () => {
+    user.current = { ...user.current, isAuthentified: true, userName: "Léa" };
+    renderWithGame("/auth/register?redirect=%2Fjoin%2F42", <Register />);
+
+    expect(screen.getByText("salle d'attente")).toBeTruthy();
+  });
+
+  it("ignore une adresse de retour externe", () => {
+    user.current = { ...user.current, isAuthentified: true, userName: "Léa" };
+    renderWithGame("/auth/login?redirect=https%3A%2F%2Fexemple.test", <Login />);
+
+    expect(screen.getByText("accueil")).toBeTruthy();
+  });
+
+  it("garde la partie en passant de la connexion à l'inscription et inversement", () => {
+    renderWithGame("/auth/login?redirect=%2Fjoin%2F42", <Login />);
+    expect(screen.getByRole("link", { name: /créer un compte/i }).getAttribute("href")).toBe(
+      "/auth/register?redirect=%2Fjoin%2F42",
+    );
+    cleanup();
+
+    renderWithGame("/auth/register?redirect=%2Fjoin%2F42", <Register />);
+    expect(screen.getByRole("link", { name: /me connecter/i }).getAttribute("href")).toBe(
+      "/auth/login?redirect=%2Fjoin%2F42",
+    );
+  });
+
+  it("Google : revient sur la partie, en passant par le choix du pseudo pour un nouveau joueur", () => {
+    renderWithGame("/auth/register?redirect=%2Fjoin%2F42", <Register />);
+
+    fireEvent.click(screen.getByRole("button", { name: /continuer avec google/i }));
+    expect(authClient.signIn.social).toHaveBeenCalledWith(
+      expect.objectContaining({
+        callbackURL: `${window.location.origin}/join/42`,
+        newUserCallbackURL: `${window.location.origin}/auth/pseudo?redirect=%2Fjoin%2F42`,
+      }),
+    );
+  });
+
+  it("choix du pseudo : ouvre la partie une fois le pseudo enregistré", () => {
+    user.current = { ...user.current, isAuthentified: true, userName: "Marie" };
+    renderWithGame("/auth/pseudo?redirect=%2Fjoin%2F42", <ChoosePseudo />);
+
+    expect(screen.getByText("salle d'attente")).toBeTruthy();
+  });
+
+  it("garde du pseudo : transmet la partie au choix du pseudo", () => {
+    user.current = { ...user.current, needsPseudo: true };
+    const ShowSearch = () => <p>{useLocation().search}</p>;
+    render(
+      <MemoryRouter initialEntries={["/join/42"]}>
+        <Routes>
+          <Route element={<RequirePseudo />}>
+            <Route path="/join/42" element={<p>salle d'attente</p>} />
+          </Route>
+          <Route path="/auth/pseudo" element={<ShowSearch />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText("?redirect=%2Fjoin%2F42")).toBeTruthy();
   });
 });

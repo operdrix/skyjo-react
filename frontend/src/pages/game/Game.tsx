@@ -134,7 +134,7 @@ const Game = () => {
       <GameMenu />
       <GameSettings />
 
-      <section className={`game-area container mx-auto h-screen px-2 py-8 sm:py-4`}>
+      <section className="game-area mx-auto max-w-6xl px-2 py-3">
         {/* Ligne 1 : joueur d'en face */}
 
         {/* <div className={game.players.length === 2 ? 'hidden' : ''}></div> */}

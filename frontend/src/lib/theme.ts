@@ -1,7 +1,7 @@
 // Préférences d'affichage : thème (style) choisi par le joueur et mode clair/sombre/auto.
 // La copie locale permet d'appliquer le thème avant le rendu React (voir index.html).
 
-export const THEME_STYLES = ["tapis"] as const;
+export const THEME_STYLES = ["tapis", "confettis"] as const;
 export type ThemeStyle = (typeof THEME_STYLES)[number];
 
 export const THEME_MODES = ["clair", "sombre", "auto"] as const;

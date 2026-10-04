@@ -13,7 +13,7 @@
           var s = localStorage.getItem("theme-style");
           var m =
             localStorage.getItem("theme-mode") || { dark: "sombre", light: "clair" }[localStorage.getItem("theme")];
-          var style = s === "tapis" ? s : "tapis";
+          var style = s === "confettis" ? s : "tapis";
           var dark = m === "sombre" || (m !== "clair" && window.matchMedia("(prefers-color-scheme: dark)").matches);
           document.documentElement.dataset.theme = dark ? style + "-sombre" : style;
           document.documentElement.dataset.style = style;

@@ -54,6 +54,13 @@ describe("readThemePrefs", () => {
     expect(readThemePrefs(memoryStorage({ theme: "light" }))).toEqual({ style: "tapis", mode: "clair" });
   });
 
+  it("accepte le thème Confettis", () => {
+    const storage = memoryStorage({ "theme-style": "confettis", "theme-mode": "sombre" });
+    const prefs = readThemePrefs(storage);
+    expect(prefs).toEqual({ style: "confettis", mode: "sombre" });
+    expect(resolveTheme(prefs, false)).toBe("confettis-sombre");
+  });
+
   it("ignore les valeurs inconnues", () => {
     const storage = memoryStorage({ "theme-style": "cupcake", "theme-mode": "violet" });
     expect(readThemePrefs(storage)).toEqual({ style: "tapis", mode: "auto" });

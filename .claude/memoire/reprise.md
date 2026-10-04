@@ -29,10 +29,12 @@ Fichier versionné pour reprendre le travail sur n'importe quel PC. Chargé par 
   - Tests back : projets Vitest `unit` (sans base) et `api` (`*.api.test.js`, base `skyjo_test` créée par `test/global-setup.js` avec le compte root, **MySQL et Mailpit requis** : `make db-up`). Helpers dans `backend/test/helpers.js` (`createPlayer`, `findSensitiveFields`).
   - Front : Vitest 2 + Testing Library (`frontend/vitest.config.ts`), à monter avec Vite en phase 2.
 
-## Refonte du design (2026-10-04, étape 1 en PR #42)
+## Refonte du design (2026-10-04, étape 1 mergée PR #42, étape 2 sur `feat/design-plateau`)
 - Référence : `docs/DESIGN.md` (preview jetable `docs/design-preview.html`). 3 thèmes au choix (`tapis` par défaut, `neon`, `confettis`), stockés en `users.theme` + copie locale.
 - Ordre prévu : 1) jetons + thème Tapis sur les pages hors jeu, 2) Confettis + plateau adaptatif, 3) Néon, 4) choix du thème (inscription, `/auth/pseudo`, espace perso) + pages légales.
 - Étape 1 faite (branche `feat/design-system`) : `src/lib/theme.ts`, `src/game/cards.ts`, `PlayingCard`, thème `tapis` dans `index.css`. Piège : le plugin `daisyui/theme` découpe les valeurs à virgules (polices, dégradés), les définir hors plugin.
+- Étape 2 : plateau adaptatif (`.game-area`, `--card-w`), `GameCard` sur `PlayingCard`, thème Confettis (sans sélecteur avant l'étape 4 : `localStorage.setItem('theme-style','confettis')`).
+- Tester le plateau à 4 joueurs : script de robots (inscription API + `PATCH /api/game/join/:id` + socket `player-joined-game`, puis `initial-turn-card` sur 2 cartes après `start-game`). Espacer les inscriptions (limite de débit sur sign-up : une 2e inscription immédiate est refusée).
 - Chrome headless ne descend pas sous 500 px de large : une capture à 390 px est tronquée, pas un vrai rendu mobile.
 
 ## Reprendre sur un autre PC

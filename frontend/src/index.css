@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "@fontsource-variable/fredoka/wght.css";
 @import "@fontsource-variable/nunito/wght.css";
+/* Les fichiers de police ne sont téléchargés que si le thème actif les utilise */
+@import "@fontsource-variable/bricolage-grotesque/wght.css";
+@import "@fontsource-variable/dm-sans/wght.css";
 
 /*
   Design system : voir docs/DESIGN.md.
@@ -60,6 +63,10 @@
   --c-low: #ffd45e;
   --c-mid: #ff8a3d;
   --c-high: #8c3b86;
+  --c-neg-ink: #1f1a33;
+  --c-zero-ink: #1f1a33;
+  --c-low-ink: #1f1a33;
+  --c-mid-ink: #1f1a33;
   --c-high-ink: #ffffff;
 }
 
@@ -110,6 +117,112 @@
   --c-low: #ffd45e;
   --c-mid: #ff8a3d;
   --c-high: #8c3b86;
+  --c-neg-ink: #1f1a33;
+  --c-zero-ink: #1f1a33;
+  --c-low-ink: #1f1a33;
+  --c-mid-ink: #1f1a33;
+  --c-high-ink: #ffffff;
+}
+
+/* Confettis (clair) */
+@plugin 'daisyui/theme' {
+  name: "confettis";
+  color-scheme: light;
+  --color-base-100: #ffffff;
+  --color-base-200: #eef0ff;
+  --color-base-300: #e2e4f0;
+  --color-base-content: #16182b;
+  --color-primary: #3d5afe;
+  --color-primary-content: #ffffff;
+  --color-secondary: #ff9f1c;
+  --color-secondary-content: #16182b;
+  --color-accent: #ff4f9a;
+  --color-accent-content: #ffffff;
+  --color-neutral: #16182b;
+  --color-neutral-content: #f4f5fb;
+  --color-info: #228be6;
+  --color-info-content: #ffffff;
+  --color-success: #12b886;
+  --color-success-content: #16182b;
+  --color-warning: #f59f00;
+  --color-warning-content: #16182b;
+  --color-error: #e03131;
+  --color-error-content: #ffffff;
+  --radius-selector: 8px;
+  --radius-field: 12px;
+  --radius-box: 16px;
+  --size-selector: 0.25rem;
+  --size-field: 0.3rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+
+  --bg: #f4f5fb;
+  --muted: #62667f;
+  --line: #e2e4f0;
+  --bw: 1px;
+  --card-face: #ffffff;
+  --card-line: #16182b;
+  --c-neg: #12b886;
+  --c-zero: #ffffff;
+  --c-low: #3d5afe;
+  --c-mid: #ff9f1c;
+  --c-high: #ff4f9a;
+  --c-neg-ink: #16182b;
+  --c-zero-ink: #16182b;
+  --c-low-ink: #ffffff;
+  --c-mid-ink: #16182b;
+  --c-high-ink: #ffffff;
+}
+
+/* Confettis (sombre) */
+@plugin 'daisyui/theme' {
+  name: "confettis-sombre";
+  color-scheme: dark;
+  --color-base-100: #1c1e30;
+  --color-base-200: #262945;
+  --color-base-300: #2e3150;
+  --color-base-content: #eef0ff;
+  --color-primary: #3d5afe;
+  --color-primary-content: #ffffff;
+  --color-secondary: #ff9f1c;
+  --color-secondary-content: #16182b;
+  --color-accent: #ff4f9a;
+  --color-accent-content: #ffffff;
+  --color-neutral: #0b0c15;
+  --color-neutral-content: #eef0ff;
+  --color-info: #4dabf7;
+  --color-info-content: #ffffff;
+  --color-success: #2bd49f;
+  --color-success-content: #16182b;
+  --color-warning: #ffb224;
+  --color-warning-content: #16182b;
+  --color-error: #ff6b6b;
+  --color-error-content: #ffffff;
+  --radius-selector: 8px;
+  --radius-field: 12px;
+  --radius-box: 16px;
+  --size-selector: 0.25rem;
+  --size-field: 0.3rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+
+  --bg: #12131f;
+  --muted: #9ca0bd;
+  --line: #2e3150;
+  --bw: 1px;
+  --card-face: #ffffff;
+  --card-line: #16182b;
+  --c-neg: #12b886;
+  --c-zero: #ffffff;
+  --c-low: #3d5afe;
+  --c-mid: #ff9f1c;
+  --c-high: #ff4f9a;
+  --c-neg-ink: #16182b;
+  --c-zero-ink: #16182b;
+  --c-low-ink: #ffffff;
+  --c-mid-ink: #16182b;
   --c-high-ink: #ffffff;
 }
 
@@ -134,13 +247,29 @@
   --card-back: repeating-linear-gradient(45deg, #0e0b1c 0 7px, #2d2650 7px 14px);
 }
 
-@theme {
-  /* Couleurs des cartes du plateau de jeu (refonte prévue à l'étape 2) */
-  --color-card-negative: #5992e7;
-  --color-card-zero: #a0c4ff;
-  --color-card-green: #7ace7a;
-  --color-card-yellow: #f3e948;
-  --color-card-red: #f56e6e;
+[data-style="confettis"] {
+  --theme-font-display: "Bricolage Grotesque Variable", "DM Sans Variable", sans-serif;
+  --theme-font-body: "DM Sans Variable", system-ui, sans-serif;
+}
+
+[data-theme="confettis"] {
+  --page-bg: #f4f5fb;
+  --shadow: 0 1px 2px #16182b0f, 0 12px 32px #16182b14;
+  --shadow-sm: 0 1px 2px #16182b14, 0 4px 10px #16182b10;
+  --card-back:
+    radial-gradient(circle at 20% 22%, #ffc531 0 3px, transparent 3.5px),
+    radial-gradient(circle at 78% 70%, #ff4f9a 0 3px, transparent 3.5px),
+    radial-gradient(circle at 70% 18%, #12b886 0 2.5px, transparent 3px), #16182b;
+}
+
+[data-theme="confettis-sombre"] {
+  --page-bg: #12131f;
+  --shadow: 0 12px 32px #0008;
+  --shadow-sm: 0 4px 10px #0006;
+  --card-back:
+    radial-gradient(circle at 20% 22%, #ffc531 0 3px, transparent 3.5px),
+    radial-gradient(circle at 78% 70%, #ff4f9a 0 3px, transparent 3.5px),
+    radial-gradient(circle at 70% 18%, #12b886 0 2.5px, transparent 3px), #2a2d4f;
 }
 
 @theme inline {
@@ -201,11 +330,11 @@
     color: var(--muted);
   }
 
-  /* Carte décorative (PlayingCard) */
+  /* Carte décorative (PlayingCard) : base commune, l'habillage dépend du thème (voir plus bas) */
   .playing-card {
     --w: var(--card-w, 72px);
     --cc: var(--c-zero);
-    --ci: #1f1a33;
+    --ci: var(--c-zero-ink);
     position: relative;
     flex: none;
     width: var(--w);
@@ -215,34 +344,26 @@
     place-items: center;
     overflow: hidden;
     user-select: none;
-    background: var(--card-face);
-    border: 2.5px solid var(--card-line);
-    box-shadow: 2px 2px 0 var(--card-line);
-    color: #1f1a33;
   }
   .playing-card[data-tier="neg"] {
     --cc: var(--c-neg);
+    --ci: var(--c-neg-ink);
   }
   .playing-card[data-tier="low"] {
     --cc: var(--c-low);
+    --ci: var(--c-low-ink);
   }
   .playing-card[data-tier="mid"] {
     --cc: var(--c-mid);
+    --ci: var(--c-mid-ink);
   }
   .playing-card[data-tier="high"] {
     --cc: var(--c-high);
     --ci: var(--c-high-ink);
   }
-  .playing-card:not(.playing-card-back)::before {
-    content: "";
-    position: absolute;
-    inset: 0 0 auto 0;
-    height: 28%;
-    background: var(--cc);
-    border-bottom: 2px solid var(--card-line);
-  }
   .playing-card-value {
     position: relative;
+    z-index: 1;
     margin-top: 10%;
     font-family: var(--theme-font-display);
     font-weight: 700;
@@ -251,6 +372,7 @@
   }
   .playing-card-symbol {
     position: absolute;
+    z-index: 1;
     top: 6%;
     left: 8%;
     width: calc(var(--w) * 0.27);
@@ -260,14 +382,13 @@
     place-items: center;
     font-size: calc(var(--w) * 0.15);
     line-height: 1;
-    background: var(--cc);
-    color: var(--ci);
-    border: 1.5px solid var(--card-line);
   }
   .playing-card-back {
     background: var(--card-back);
   }
   .playing-card-mono {
+    position: relative;
+    z-index: 1;
     width: 46%;
     aspect-ratio: 1;
     border-radius: 50%;
@@ -276,9 +397,96 @@
     font-family: var(--theme-font-display);
     font-weight: 700;
     font-size: calc(var(--w) * 0.26);
+  }
+}
+
+/* Cartes Tapis de jeu : face crème, bandeau coloré, contour encre */
+[data-style="tapis"] {
+  .playing-card {
+    background: var(--card-face);
+    border: 2.5px solid var(--card-line);
+    box-shadow: 2px 2px 0 var(--card-line);
+    color: #1f1a33;
+  }
+  .playing-card-back {
+    background: var(--card-back);
+  }
+  .playing-card:not(.playing-card-back)::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 28%;
+    background: var(--cc);
+    border-bottom: 2px solid var(--card-line);
+  }
+  .playing-card-symbol {
+    background: var(--cc);
+    color: var(--ci);
+    border: 1.5px solid var(--card-line);
+  }
+  .playing-card-mono {
     background: var(--color-accent);
     color: #1f1a33;
     border: 2px solid #1f1a33;
+  }
+}
+
+/* Cartes Confettis : aplat de couleur + forme géométrique propre à chaque tranche */
+[data-style="confettis"] {
+  .playing-card {
+    background: var(--cc);
+    color: var(--ci);
+    border: 1px solid #16182b14;
+    box-shadow: 0 3px 8px #16182b22;
+  }
+  .playing-card-back {
+    background: var(--card-back);
+  }
+  .playing-card:not(.playing-card-back)::after {
+    content: "";
+    position: absolute;
+    width: 62%;
+    aspect-ratio: 1;
+    right: -18%;
+    bottom: -14%;
+    border-radius: 50%;
+    background: #ffffff2e;
+  }
+  .playing-card[data-tier="zero"]::after {
+    background: #16182b0c;
+  }
+  .playing-card[data-tier="low"]::after {
+    border-radius: 0;
+    transform: rotate(45deg);
+    right: -24%;
+    bottom: -22%;
+  }
+  .playing-card[data-tier="mid"]::after {
+    border-radius: 0;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  }
+  .playing-card[data-tier="high"]::after {
+    border-radius: 40% 0;
+  }
+  .playing-card-symbol {
+    color: var(--ci);
+  }
+  .playing-card-mono {
+    background: #ffffff;
+    color: #16182b;
+  }
+  .btn-primary {
+    box-shadow: 0 6px 16px color-mix(in oklab, var(--color-primary) 30%, transparent);
+  }
+  .btn:not(.btn-ghost, .btn-link, :disabled):active {
+    transform: scale(0.97);
+  }
+  .input:focus-within,
+  .select:focus-within,
+  .textarea:focus {
+    outline: 4px solid color-mix(in oklab, var(--color-primary) 20%, transparent);
+    outline-offset: 0;
+    border-color: var(--color-primary);
   }
 }
 
@@ -338,16 +546,24 @@
   }
 }
 
+/*
+  Plateau de jeu : la largeur des cartes suit la place disponible (largeur ET hauteur de l'écran),
+  pour que les 4 joueurs tiennent sans défilement du téléphone au grand écran.
+*/
 .game-area {
+  --board-card-w: clamp(36px, min(17vw, 7.2dvh), 96px);
+  --small-card-w: clamp(16px, min(4.6vw, 3.8dvh), 44px);
+  --top-card-w: clamp(28px, min(12vw, 6.5dvh), 72px);
   display: grid;
-  grid-template-columns: 28% 44% 28%;
-  grid-template-rows: repeat(2, 2fr) 3fr;
-  grid-column-gap: 0px;
-  grid-row-gap: 0px;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-rows: auto 1fr auto;
+  gap: 0.5rem;
+  height: 100dvh;
 }
 .game-area-top-center {
   grid-area: 1 / 1 / 2 / 4;
   @apply flex justify-center items-end;
+  --card-w: var(--top-card-w);
 }
 .game-area-middle-left {
   grid-area: 2 / 1 / 3 / 2;
@@ -356,6 +572,7 @@
 .game-area-middle-center {
   grid-area: 2 / 2 / 3 / 3;
   @apply flex justify-center items-center;
+  --card-w: var(--board-card-w);
 }
 .game-area-middle-right {
   grid-area: 2 / 3 / 3 / 4;
@@ -364,40 +581,75 @@
 .game-area-bottom-center {
   grid-area: 3 / 1 / 4 / 4;
   @apply flex justify-center items-start;
-}
-
-.play-card {
-  /* h-8 w-5 md:h-16 md:w-12 md:text-2xl */
-  @apply bg-base-200 rounded-sm flex justify-center items-center select-none h-16 w-12 text-2xl;
+  --card-w: var(--board-card-w);
 }
 
 .small-set {
-  .play-card {
-    @apply h-7 w-5 sm:h-10 sm:w-8 md:h-16 md:w-12 text-xl md:text-2xl;
-  }
+  --card-w: var(--small-card-w);
   h2 {
-    @apply text-base sm:text-lg gap-2 sm:gap-3 flex-wrap;
-    span {
-      @apply loading-xs sm:loading-md;
-    }
+    @apply text-sm sm:text-base gap-1 sm:gap-2 flex-wrap;
   }
 }
 
-.play-card-discard {
-  @apply border-2 border-red-600 border-dashed bg-base-200! rounded-md text-red-600;
+/* Carte du plateau : deux faces, retournement en 3D */
+.game-card {
+  position: relative;
+  display: block;
+  flex: none;
+  width: var(--card-w, 48px);
+  aspect-ratio: 5 / 7;
+  padding: 0;
+  border: 0;
+  background: none;
+  border-radius: calc(var(--card-w, 48px) * 0.16);
+  perspective: 600px;
+  user-select: none;
 }
-
-.perspective {
-  perspective: 1000px;
+.game-card:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
 }
-.transform-style-preserve-3d {
+.game-card-inner {
+  position: absolute;
+  inset: 0;
   transform-style: preserve-3d;
 }
-.rotate-y-180 {
+.game-card-animated {
+  transition: transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.game-card-flipped {
   transform: rotateY(180deg);
 }
-.backface-hidden {
+.game-card-face {
+  position: absolute;
+  inset: 0;
   backface-visibility: hidden;
+}
+.game-card-front {
+  transform: rotateY(180deg);
+}
+.game-card-face .playing-card {
+  width: 100%;
+}
+.game-card-playable .playing-card {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+/* Carte sous la pioche ou la défausse, légèrement décalée */
+.game-card-behind {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+}
+.game-card-behind .playing-card {
+  width: 100%;
+}
+/* Défausse en attente : jeter la carte piochée */
+.game-card-bin {
+  display: grid;
+  place-items: center;
+  border: 2.5px dashed var(--color-error);
+  background: color-mix(in oklab, var(--color-error) 10%, transparent);
 }
 
 @media (min-width: 640px) {

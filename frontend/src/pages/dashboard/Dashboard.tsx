@@ -1,3 +1,4 @@
+import ChangePseudo from "@/components/dashboard/ChangePseudo";
 import DeleteAccount from "@/components/dashboard/DeleteAccount";
 import GameHistoryCard from "@/components/dashboard/GameHistoryCard";
 import OpponentCard from "@/components/dashboard/OpponentCard";
@@ -134,6 +135,7 @@ const Dashboard = () => {
           </div>
         </>
       )}
+      <ChangePseudo />
       <DeleteAccount />
     </div>
   );

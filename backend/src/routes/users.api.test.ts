@@ -107,6 +107,35 @@ describe("pseudo à choisir après une première connexion Google", () => {
   });
 });
 
+describe("changement de pseudo", () => {
+  function updateUsername(cookies: Record<string, string>, username: string) {
+    return app.inject({ method: "POST", url: "/api/auth/update-user", cookies, payload: { username } });
+  }
+
+  it("remplace le pseudo affiché aux autres joueurs", async () => {
+    const oscar = await createPlayer(app, "oscar");
+
+    expect((await updateUsername(oscar.cookies, "Oscar le grand")).statusCode).toBe(200);
+
+    const profile = await app.inject({ method: "GET", url: `/api/users/${oscar.id}`, cookies: oscar.cookies });
+    expect(profile.json()).toMatchObject({ username: "Oscar le grand" });
+  });
+
+  it("refuse un pseudo déjà pris, quelle que soit la casse", async () => {
+    await createPlayer(app, "lilou");
+    const marc = await createPlayer(app, "marc");
+
+    expect((await updateUsername(marc.cookies, "LILOU")).statusCode).toBe(400);
+  });
+
+  it("refuse un pseudo invalide", async () => {
+    const noe = await createPlayer(app, "noe");
+
+    expect((await updateUsername(noe.cookies, "no")).statusCode).toBe(400);
+    expect((await updateUsername(noe.cookies, "<script>")).statusCode).toBe(400);
+  });
+});
+
 describe("mot de passe oublié", () => {
   it("envoie un lien de réinitialisation par mail et accepte le nouveau mot de passe", async () => {
     await createPlayer(app, "jade");

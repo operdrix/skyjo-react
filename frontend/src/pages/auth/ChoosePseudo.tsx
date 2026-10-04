@@ -4,20 +4,14 @@ import { useUser } from "@/hooks/User";
 import { authClient } from "@/lib/authClient";
 import { authErrorMessage } from "@/lib/authErrors";
 import { safeRedirect } from "@/lib/redirect";
-import { PSEUDO_MAX, PSEUDO_MIN, PSEUDO_PATTERN } from "@/lib/pseudo";
+import { pseudoSchema } from "@/lib/pseudo";
 import { Field, Form, Formik } from "formik";
 import { useState } from "react";
 import { Navigate, useSearchParams } from "react-router";
 import * as yup from "yup";
 
 const validationSchema = yup.object().shape({
-  username: yup
-    .string()
-    .trim()
-    .min(PSEUDO_MIN, `${PSEUDO_MIN} caractères minimum`)
-    .max(PSEUDO_MAX, `${PSEUDO_MAX} caractères maximum`)
-    .matches(PSEUDO_PATTERN, "Lettres, chiffres, espace, point ou tiret uniquement")
-    .required("Le pseudo est requis"),
+  username: pseudoSchema,
 });
 
 // Après une première connexion Google : choix du pseudo, pré-rempli avec le prénom

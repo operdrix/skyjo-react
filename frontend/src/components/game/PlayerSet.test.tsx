@@ -31,4 +31,25 @@ describe("PlayerSet", () => {
 
     expect(screen.getByText("bob")).toBeTruthy();
   });
+
+  it("affiche les points de la manche à côté du nom en fin de manche", () => {
+    game.current = {
+      id: "g1",
+      players: [
+        { id: "ALICE", username: "alice", game_players: { score: 30, scoreByRound: [18, 12] } },
+        { id: "BOB", username: "bob", game_players: { score: 10, scoreByRound: [12, -2] } },
+      ],
+      gameData: {
+        currentStep: "endGame",
+        currentPlayer: null,
+        playersCards: { ALICE: [], BOB: [] },
+        discardPile: [],
+        deckCards: [],
+      },
+    };
+
+    render(<PlayerSet playerId="BOB" />);
+
+    expect(screen.getByLabelText("−2 points cette manche")).toBeTruthy();
+  });
 });

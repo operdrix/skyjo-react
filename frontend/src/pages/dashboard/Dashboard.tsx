@@ -7,7 +7,8 @@ import StatsBar from "@/components/dashboard/StatsBar";
 import ErrorMessage from "@/components/game/messages/ErrorMessage";
 import PageSkeleton from "@/components/PageSkeleton";
 import { opponentStats, playerStats } from "@/game/stats";
-import { withRedirect } from "@/lib/redirect";
+import { goToLogin } from "@/lib/redirect";
+import { toast } from "@/lib/toast";
 import { useUser } from "@/hooks/User";
 import { api } from "@/services/apiService";
 import { GameType } from "@/types/types";
@@ -25,15 +26,7 @@ const Dashboard = () => {
   // Vérifier si l'utilisateur est connecté au site
   useEffect(() => {
     if (!userLoading && !isAuthentified) {
-      navigate(withRedirect("/auth/login", window.location.pathname), {
-        state: {
-          message: {
-            type: "info",
-            message: "Vous devez être connecté pour accéder à cette page",
-            title: "Connexion requise",
-          },
-        },
-      });
+      goToLogin(navigate, window.location.pathname, "Connecte-toi pour accéder à ton espace.");
     }
   }, [isAuthentified, navigate, userLoading]);
 
@@ -62,15 +55,14 @@ const Dashboard = () => {
   }, [userId, error]);
 
   const handleDeleteGame = async (gameId: string) => {
-    // Demande de confirmation
-    if (!window.confirm("Voulez-vous vraiment supprimer cette partie ?")) return;
-
+    // La confirmation est demandée dans la carte de la partie
     const response = await api.delete(`game/${gameId}`);
 
     if (response.error) {
       setError(response.error);
     } else {
       setGames(games.filter((game) => game.id !== gameId));
+      toast({ type: "success", message: "Partie supprimée." });
     }
   };
 

@@ -133,6 +133,8 @@ Couleur **et** symbole par tranche de valeur (lisible en daltonisme), avec des t
 | 2026-10-04 | Outfit au lieu d'Inter (Néon), bouton primaire en aplat | Éviter les choix trop génériques |
 | 2026-10-04 | Polices auto-hébergées | Pas de transfert d'IP vers Google Fonts (RGPD) |
 | 2026-10-04 | Valeurs à virgules hors du plugin `daisyui/theme` | Le plugin découpe les listes (polices, dégradés, ombres multiples) et ne garde que le dernier élément |
+| 2026-10-05 | Messages éphémères (`src/lib/toast.ts` + `Toaster` monté hors du routeur) à la place des fenêtres DaisyUI ; confirmations dans la page plutôt que `window.confirm` | Moins intrusif, survit aux changements de page, aux couleurs du thème |
+| 2026-10-05 | Fin de manche : résultats au centre de la table (`RoundResults`) au lieu d'une fenêtre ; points de la manche à côté des noms ; tableau des scores (`ScoreTable`) partagé avec la fenêtre « Scores » | Toutes les cartes restent visibles, même sur mobile |
 | 2026-10-04 | Choix du thème : `users.theme` (Better Auth `additionalFields`, valeurs vérifiées dans le hook `before`), `ThemePicker` à l'inscription, sur `/auth/pseudo` et dans l'espace perso ; le thème du compte remplace la copie locale à la connexion | Le thème suit le joueur d'un appareil à l'autre ; aperçu réel dans chaque vignette (`data-theme` local) |
 | 2026-10-04 | Soirée néon : `data-theme="neon"` quel que soit le mode, bouton clair/sombre masqué | Thème sombre par nature ; `isDarkOnly` dans `src/lib/theme.ts` |
 | 2026-10-04 | Plateau : cartes cliquables en `<button>`, tranche calculée depuis la valeur | Jouable au clavier ; plus de dépendance au code couleur du jeu original |

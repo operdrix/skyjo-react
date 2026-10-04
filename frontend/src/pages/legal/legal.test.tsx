@@ -69,6 +69,12 @@ describe("pages légales", () => {
     expect(screen.getByRole("cell", { name: /thème d'affichage/i })).toBeTruthy();
   });
 
+  it("renvoie vers « Mon espace » pour supprimer son compte", () => {
+    renderPage(<PrivacyPage />);
+    expect(text()).toContain("Mon espace");
+    expect(text()).not.toContain("tableau de bord");
+  });
+
   it("cookies : liste les clés de stockage local du thème", () => {
     renderPage(<Cookies />);
 

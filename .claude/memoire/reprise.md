@@ -30,6 +30,7 @@ Fichier versionné pour reprendre le travail sur n'importe quel PC. Chargé par 
   - Front : Vitest 2 + Testing Library (`frontend/vitest.config.ts`), à monter avec Vite en phase 2.
 
 ## Refonte du design (terminée, en prod v3.2.0 le 2026-10-04, PR #42 à #46)
+- Branche `feat/messages-et-scores` (2026-10-05) : messages éphémères (`toast()` dans `src/lib/toast.ts`, `goToLogin` dans `src/lib/redirect.ts`), « Mon espace », résultats de manche au centre de la table (`RoundResults`, `ScoreTable`, `src/game/scores.ts`). Simuler une fin de manche pour les captures : `UPDATE games SET game_data = JSON_SET(REGEXP_REPLACE(game_data, '"revealed":\\s*false', '"revealed":true'), '$.currentStep', 'endGame')` (colonnes en snake_case).
 - Planches d'origine des 3 thèmes : `docs/design-system/` (écarts avec la version finale dans son README).
 - Référence : `docs/DESIGN.md` (preview jetable `docs/design-preview.html`). 3 thèmes au choix (`tapis` par défaut, `neon`, `confettis`), stockés en `users.theme` + copie locale.
 - Ordre prévu : 1) jetons + thème Tapis sur les pages hors jeu, 2) Confettis + plateau adaptatif, 3) Néon, 4) choix du thème (inscription, `/auth/pseudo`, espace perso) + pages légales.

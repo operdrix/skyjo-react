@@ -27,10 +27,13 @@ const fake = vi.hoisted(() => {
   return { socket, emitWithAck };
 });
 
-vi.mock("socket.io-client", () => ({ io: () => fake.socket }));
+const io = vi.hoisted(() => vi.fn());
+// Comme socket.io : un nouvel objet socket à chaque appel
+vi.mock("socket.io-client", () => ({ io: (...args: unknown[]) => (io(...args), { ...fake.socket }) }));
 
 const refresh = vi.hoisted(() => vi.fn());
-vi.mock("@/hooks/User", () => ({ useUser: () => ({ refresh }) }));
+const user = vi.hoisted(() => ({ userId: "LYNX" }));
+vi.mock("@/hooks/User", () => ({ useUser: () => ({ refresh, userId: user.userId }) }));
 
 afterEach(() => {
   cleanup();
@@ -96,5 +99,24 @@ describe("envoi d'un événement avec accusé de réception", () => {
 
     expect(response).toMatchObject({ ok: false });
     expect(getToasts()).toMatchObject([{ type: "error", message: "Le serveur ne répond pas, réessaie" }]);
+  });
+});
+
+describe("changement de joueur", () => {
+  it("ouvre une nouvelle connexion quand l'invité devient un compte", () => {
+    user.userId = "LYNX";
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <MemoryRouter>
+        <WebSocketProvider url="http://test">{children}</WebSocketProvider>
+      </MemoryRouter>
+    );
+    const { rerender } = renderHook(() => useWebSocket(), { wrapper });
+    expect(io).toHaveBeenCalledTimes(1);
+
+    user.userId = "NEW";
+    rerender();
+
+    expect(io).toHaveBeenCalledTimes(2);
+    expect(fake.socket.disconnect).toHaveBeenCalled();
   });
 });

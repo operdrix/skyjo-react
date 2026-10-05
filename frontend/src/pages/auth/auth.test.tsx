@@ -134,6 +134,16 @@ describe("inscription d'un invité", () => {
 
     expect(screen.getByRole("heading", { name: "Créer un compte" })).toBeTruthy();
   });
+
+  it("propose à l'invité de garder son pseudo, sans lien vers la connexion", () => {
+    user.current = { ...user.current, isAuthentified: true, isGuest: true, userName: "Lynx 42" };
+    renderAt(<Register />);
+
+    fireEvent.click(screen.getByRole("button", { name: /avec un email/i }));
+
+    expect((screen.getByLabelText(/pseudo/i) as HTMLInputElement).value).toBe("Lynx 42");
+    expect(screen.queryByRole("link", { name: /me connecter/i })).toBeNull();
+  });
 });
 
 describe("bouton Google", () => {

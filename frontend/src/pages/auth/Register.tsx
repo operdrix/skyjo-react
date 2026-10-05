@@ -21,7 +21,7 @@ const validationSchema = yup.object().shape({
 
 function Register() {
   const [searchParams] = useSearchParams();
-  const { refresh, isAuthentified, isGuest } = useUser();
+  const { refresh, isAuthentified, isGuest, userName } = useUser();
   const redirect = safeRedirect(searchParams.get("redirect"));
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [withEmail, setWithEmail] = useState<boolean>(false);
@@ -64,7 +64,13 @@ function Register() {
 
           {withEmail ? (
             <Formik
-              initialValues={{ email: "", username: "", password: "", theme: readThemePrefs(localStorage).style }}
+              // Un invité garde son pseudo par défaut
+              initialValues={{
+                email: "",
+                username: isGuest ? (userName ?? "") : "",
+                password: "",
+                theme: readThemePrefs(localStorage).style,
+              }}
               validationSchema={validationSchema}
               onSubmit={handleSubmit}
             >
@@ -113,12 +119,15 @@ function Register() {
           </p>
         </div>
 
-        <p className="text-sm text-center mt-5">
-          Déjà un compte ?{" "}
-          <Link to={withRedirect("/auth/login", redirect)} className="link">
-            Me connecter
-          </Link>
-        </p>
+        {/* Un invité ne se connecte pas à un compte existant (pas de fusion des parties) */}
+        {!isGuest && (
+          <p className="text-sm text-center mt-5">
+            Déjà un compte ?{" "}
+            <Link to={withRedirect("/auth/login", redirect)} className="link">
+              Me connecter
+            </Link>
+          </p>
+        )}
       </div>
     </div>
   );

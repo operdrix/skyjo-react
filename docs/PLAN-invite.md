@@ -73,11 +73,11 @@ Depuis « Créer mon compte », l'invité s'inscrit par email et mot de passe ou
 
 ### Critères d'acceptation
 
-- [ ] Test d'API : un invité qui s'inscrit par email garde son pseudo et retrouve ses parties dans son historique ; le compte invité n'existe plus.
-- [ ] Test d'API : même chose pour un compte créé par Google (simulé).
-- [ ] Test d'API : un invité en pleine partie qui s'inscrit peut continuer à jouer.
-- [ ] Contrôle manuel dans le navigateur : conversion par email en fin de partie, historique visible.
-- [ ] `make check` vert.
+- [x] Test d'API : un invité qui s'inscrit par email garde son pseudo et retrouve ses parties dans son historique ; le compte invité n'existe plus.
+- [x] Test d'API : même chose pour un compte créé par Google (simulé en appelant directement le transfert, avec un compte sans pseudo).
+- [x] Test d'API : un invité en pleine partie qui s'inscrit peut continuer à jouer.
+- [x] Contrôle manuel dans le navigateur : conversion par email en fin de partie, historique visible.
+- [x] `make check` vert.
 
 ## Bloquée par
 

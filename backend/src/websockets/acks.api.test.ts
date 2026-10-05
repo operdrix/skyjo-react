@@ -53,8 +53,8 @@ describe("accusés de réception des événements", () => {
   it.each([
     ["player-joined-game", { room: { $ne: "" } }],
     ["player-joined-game", "partie"],
-    ["initial-turn-card", { room: "partie", cardId: 3 }],
-    ["play-move", { room: "partie", gameData: "{}" }],
+    ["play-move", { room: "partie", move: "voler" }],
+    ["play-move", { room: "partie", move: "flip", cardIndex: "2" }],
     ["play-move", { room: "partie" }],
   ])("refuse « %s » avec des données mal formées %j", async (event, data) => {
     const socket = await connect(alice);
@@ -65,12 +65,12 @@ describe("accusés de réception des événements", () => {
   it("renvoie un accusé d'échec quand le traitement plante", async () => {
     const gameId = await aliceAndBobGame({ start: true });
     const { gameData } = (await app.inject({ method: "GET", url: `/api/game/${gameId}` })).json<GameType>();
-    const turn: GameData = { ...gameData, currentStep: "draw", currentPlayer: alice.id };
+    // Partie corrompue en base : la pioche est vide, piocher plante
+    const turn: GameData = { ...gameData, currentStep: "draw", currentPlayer: alice.id, deckCards: [] };
     await db.update(games).set({ gameData: turn }).where(eq(games.id, gameId));
     const socket = await connect(alice);
 
-    // État incomplet : le calcul de fin de tour plante faute de cartes
-    const response = await socket.emitWithAck("play-move", { room: gameId, gameData: { currentStep: "endTurn" } });
+    const response = await socket.emitWithAck("play-move", { room: gameId, move: "draw" });
 
     expect(response).toMatchObject({ ok: false, message: expect.any(String) });
   });

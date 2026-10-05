@@ -1,13 +1,12 @@
 import { fromNodeHeaders } from "better-auth/node";
 import type { FastifyInstance } from "fastify";
 import type { Socket } from "socket.io";
-import type { Ack, ClientEvent, ClientPayloads, GameType } from "../../../shared/types.ts";
+import type { Ack, ClientEvent, ClientPayloads, GameType, MoveType } from "../../../shared/types.ts";
 import {
   addPlayerPlayAgain,
   getGame,
   playMove as savePlayMove,
   restartGame as createNextGame,
-  revealInitialCard,
   updateGame,
 } from "../controllers/games.ts";
 import { logger } from "../utils/logger.ts";
@@ -21,16 +20,20 @@ const CREATOR_ONLY = "Seul le créateur de la partie peut faire cela";
 const NOT_A_PLAYER = "Tu ne fais pas partie de cette partie";
 const GAME_NOT_FOUND = "La partie n'existe pas.";
 
-// Forme attendue des champs de chaque événement client
-type FieldType = "string" | "object";
-const CLIENT_FIELDS: { [E in ClientEvent]: Record<keyof ClientPayloads[E], FieldType> } = {
-  "player-joined-game": { room: "string" },
-  "update-game-params": { room: "string" },
-  "start-game": { room: "string" },
-  "restart-game": { room: "string" },
-  "player-play-again": { room: "string" },
-  "initial-turn-card": { room: "string", cardId: "string" },
-  "play-move": { room: "string", gameData: "object" },
+// Contrôle de chaque champ attendu des événements client
+type Check = (value: unknown) => boolean;
+const MOVES: MoveType[] = ["draw", "take-discard", "discard-drawn", "replace", "flip", "reveal"];
+const text: Check = (value) => typeof value === "string" && value !== "";
+const move: Check = (value) => MOVES.includes(value as MoveType);
+const optionalIndex: Check = (value) => value === undefined || Number.isInteger(value);
+
+const CLIENT_FIELDS: { [E in ClientEvent]: Record<keyof ClientPayloads[E], Check> } = {
+  "player-joined-game": { room: text },
+  "update-game-params": { room: text },
+  "start-game": { room: text },
+  "restart-game": { room: text },
+  "player-play-again": { room: text },
+  "play-move": { room: text, move, cardIndex: optionalIndex },
 };
 
 // Résultat d'un handler : rien si l'action est acceptée, sinon le motif du refus
@@ -43,15 +46,11 @@ async function sessionPlayer(socket: Socket, app: FastifyInstance) {
   return session && username ? { id: session.user.id, username } : null;
 }
 
-// Vérifie le type de chaque champ attendu (chaîne non vide, ou objet)
+// Vérifie chaque champ attendu (les champs en trop sont ignorés : seuls les champs contrôlés sont lus)
 function isValid<E extends ClientEvent>(event: E, data: unknown): data is ClientPayloads[E] {
   if (!data || typeof data !== "object" || Array.isArray(data)) return false;
-  return Object.entries(CLIENT_FIELDS[event]).every(([field, type]) => {
-    const value = (data as Record<string, unknown>)[field];
-    return type === "string"
-      ? typeof value === "string" && value !== ""
-      : Boolean(value) && typeof value === "object" && !Array.isArray(value);
-  });
+  const checks: Record<string, Check> = CLIENT_FIELDS[event];
+  return Object.entries(checks).every(([field, check]) => check((data as Record<string, unknown>)[field]));
 }
 
 // Enregistre un handler : validation des données et de la session, puis accusé de réception
@@ -159,16 +158,9 @@ export async function websockets(app: FastifyInstance) {
       io.to(gameId).emit("start-game", started as GameType);
     });
 
-    // Révélation d'une de ses cartes pendant la phase initiale
-    on(socket, app, "initial-turn-card", async ({ room, cardId }) => {
-      const game = await revealInitialCard(room, userId, cardId);
-      if (!game) return MOVE_REFUSED;
-      io.to(game.id).emit("play-move", game);
-    });
-
-    // Un coup est joué par le joueur dont c'est le tour
-    on(socket, app, "play-move", async ({ room, gameData }) => {
-      const game = await savePlayMove(room, gameData, userId);
+    // Un joueur annonce son coup ; le serveur le calcule sur l'état enregistré
+    on(socket, app, "play-move", async ({ room, move, cardIndex }) => {
+      const game = await savePlayMove(room, { move, cardIndex }, userId);
       if (!game) return MOVE_REFUSED;
       io.to(game.id).emit("play-move", game);
     });

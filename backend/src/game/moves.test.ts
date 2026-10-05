@@ -1,4 +1,5 @@
 import {
+  applyIntent,
   discardDrawnCard,
   drawFromDeck,
   flipCard,
@@ -6,8 +7,8 @@ import {
   replaceWithDrawn,
   revealInitialCard,
   takeDiscard,
-} from "@/game/moves";
-import type { Card, GameData } from "@/types/types";
+} from "./moves.ts";
+import type { Card, GameData } from "../../../shared/types.ts";
 import { describe, expect, it } from "vitest";
 
 const card = (id: string, value: number, revealed = false): Card => ({
@@ -125,5 +126,78 @@ describe("coups du joueur", () => {
     expect(third.playersCards.ALICE[2].revealed).toBe(false);
     expect(twice.currentStep).toBe("initialReveal");
     expectUntouched(before, data);
+  });
+});
+
+describe("coup joué par intention", () => {
+  const hidden = (step: GameData["currentStep"]) => gameData(step);
+
+  it.each([
+    ["draw", "draw", "decide-deck"],
+    ["take-discard", "draw", "replace-discard"],
+    ["discard-drawn", "decide-deck", "flip-deck"],
+  ] as const)("applique « %s » pendant l'étape %s", (move, step, next) => {
+    expect(applyIntent(hidden(step), "ALICE", { move })?.currentStep).toBe(next);
+  });
+
+  it("échange avec la défausse ou avec la carte piochée selon l'étape", () => {
+    const fromDiscard = applyIntent(hidden("replace-discard"), "ALICE", { move: "replace", cardIndex: 1 })!;
+    expect(fromDiscard.playersCards.ALICE[1].id).toBe("x2");
+
+    const fromDeck = applyIntent(hidden("decide-deck"), "ALICE", { move: "replace", cardIndex: 1 })!;
+    expect(fromDeck.playersCards.ALICE[1].id).toBe("d1");
+  });
+
+  it("retourne une carte cachée après avoir défaussé la carte piochée", () => {
+    expect(
+      applyIntent(hidden("flip-deck"), "ALICE", { move: "flip", cardIndex: 0 })!.playersCards.ALICE[0].revealed,
+    ).toBe(true);
+  });
+
+  it.each([
+    ["draw", "decide-deck", undefined],
+    ["take-discard", "flip-deck", undefined],
+    ["discard-drawn", "draw", undefined],
+    ["replace", "draw", 0],
+    ["replace", "flip-deck", 0],
+    ["flip", "decide-deck", 0],
+    ["reveal", "draw", 0],
+  ] as const)("refuse « %s » pendant l'étape %s", (move, step, cardIndex) => {
+    expect(applyIntent(hidden(step), "ALICE", { move, cardIndex })).toBeNull();
+  });
+
+  it("refuse un coup hors de son tour", () => {
+    expect(applyIntent(hidden("draw"), "BOB", { move: "draw" })).toBeNull();
+  });
+
+  it.each([undefined, -1, 2, 1.5])("refuse un index de carte invalide (%s)", (cardIndex) => {
+    expect(applyIntent(hidden("replace-discard"), "ALICE", { move: "replace", cardIndex })).toBeNull();
+  });
+
+  it("refuse de retourner une carte déjà visible", () => {
+    const data = hidden("flip-deck");
+    data.playersCards.ALICE[0].revealed = true;
+    expect(applyIntent(data, "ALICE", { move: "flip", cardIndex: 0 })).toBeNull();
+  });
+
+  it("révèle une carte initiale sans attendre son tour, deux au maximum", () => {
+    const data = { ...hidden("initialReveal"), currentPlayer: null };
+    data.playersCards.ALICE.push(card("a3", 4));
+
+    const once = applyIntent(data, "BOB", { move: "reveal", cardIndex: 0 })!;
+    expect(once.playersCards.BOB[0].revealed).toBe(true);
+
+    const twice = applyIntent(applyIntent(data, "ALICE", { move: "reveal", cardIndex: 0 })!, "ALICE", {
+      move: "reveal",
+      cardIndex: 1,
+    })!;
+    expect(applyIntent(twice, "ALICE", { move: "reveal", cardIndex: 2 })).toBeNull();
+    expect(applyIntent(twice, "ALICE", { move: "reveal", cardIndex: 0 })).toBeNull();
+  });
+
+  it("ne modifie pas la partie reçue", () => {
+    const data = hidden("draw");
+    applyIntent(data, "ALICE", { move: "draw" });
+    expect(data).toEqual(hidden("draw"));
   });
 });

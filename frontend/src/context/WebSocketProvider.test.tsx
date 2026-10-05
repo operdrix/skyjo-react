@@ -60,7 +60,7 @@ describe("envoi d'un événement avec accusé de réception", () => {
     fake.emitWithAck.mockResolvedValue({ ok: false, message: "Coup refusé" });
     const send = renderProvider();
 
-    const response = await act(() => send("play-move", { room: "g1", gameData: {} as never }));
+    const response = await act(() => send("play-move", { room: "g1", move: "draw" }));
 
     expect(response).toEqual({ ok: false, message: "Coup refusé" });
     expect(getToasts()).toMatchObject([{ type: "error", message: "Coup refusé" }]);

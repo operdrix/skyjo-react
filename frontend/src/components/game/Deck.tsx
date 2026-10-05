@@ -1,5 +1,4 @@
 import GameCard from "@/components/game/GameCard";
-import { drawFromDeck } from "@/game/moves";
 import { useGame } from "@/hooks/Game";
 import { useUser } from "@/hooks/User";
 import { useGameAction } from "@/hooks/useGameAction";
@@ -25,7 +24,7 @@ const Deck = () => {
     if (!game || !userId) return;
     if (!isDeckSelectable()) return;
     notify("turnCard", !sound);
-    sendMessage("play-move", { room: game.id, gameData: drawFromDeck(game.gameData) });
+    sendMessage("play-move", { room: game.id, move: "draw" });
   };
 
   if (!game || !userId) return null;

@@ -1,6 +1,5 @@
 import { formatPoints, formatScore } from "@/game/scores";
 import GameCard from "@/components/game/GameCard";
-import { flipCard, replaceWithDiscard, replaceWithDrawn, revealInitialCard } from "@/game/moves";
 import { useGame } from "@/hooks/Game";
 import { useUser } from "@/hooks/User";
 import { useGameAction } from "@/hooks/useGameAction";
@@ -16,7 +15,7 @@ const PlayerSet = ({
   isCurrentPlayerSet?: boolean;
   smallSet?: boolean;
 }) => {
-  const { game, setGame, sound } = useGame();
+  const { game, sound } = useGame();
   const { userId } = useUser();
   const sendMessage = useGameAction();
   const [loading, setLoading] = useState(false);
@@ -43,10 +42,9 @@ const PlayerSet = ({
       setLoading(true);
       if (revealedCards() <= 1) {
         notify("turnCard", !sound);
-        // Affichage immédiat, le serveur renvoie ensuite la partie à jour
-        setGame({ ...game, gameData: revealInitialCard(game.gameData, userId, cardIndex) });
       }
-      sendMessage("initial-turn-card", { room: game.id, cardId });
+      // La carte se retourne quand le serveur renvoie la partie à jour
+      sendMessage("play-move", { room: game.id, move: "reveal", cardIndex });
       // petite tempo pour pas cliquer trop vite et bloquer le jeu
       setTimeout(() => {
         setLoading(false);
@@ -54,13 +52,13 @@ const PlayerSet = ({
       return;
     }
 
-    // Échange avec la défausse, échange avec la carte piochée, ou carte retournée
-    const move = { "replace-discard": replaceWithDiscard, "decide-deck": replaceWithDrawn, "flip-deck": flipCard }[
-      step as string
+    // Échange avec la défausse ou la carte piochée, ou carte retournée : le serveur calcule le coup
+    const move = ({ "replace-discard": "replace", "decide-deck": "replace", "flip-deck": "flip" } as const)[
+      step as "replace-discard" | "decide-deck" | "flip-deck"
     ];
     if (move) {
       notify("turnCard", !sound);
-      sendMessage("play-move", { room: game.id, gameData: move(game.gameData, userId, cardIndex) });
+      sendMessage("play-move", { room: game.id, move, cardIndex });
     }
   };
 

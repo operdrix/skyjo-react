@@ -1,5 +1,4 @@
 import GameCard from "@/components/game/GameCard";
-import { discardDrawnCard, takeDiscard } from "@/game/moves";
 import { useGame } from "@/hooks/Game";
 import { useUser } from "@/hooks/User";
 import { useGameAction } from "@/hooks/useGameAction";
@@ -28,11 +27,11 @@ const Discard = () => {
     if (game.gameData.currentStep === "decide-deck") {
       // on déplace la carte en main de la pioche vers la défausse
       notify("turnCard", !sound);
-      sendMessage("play-move", { room: game.id, gameData: discardDrawnCard(game.gameData) });
+      sendMessage("play-move", { room: game.id, move: "discard-drawn" });
       return;
     }
     notify("turnCard", !sound);
-    sendMessage("play-move", { room: game.id, gameData: takeDiscard(game.gameData) });
+    sendMessage("play-move", { room: game.id, move: "take-discard" });
   };
 
   if (!game || !userId) return null;

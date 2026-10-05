@@ -74,6 +74,10 @@ export type Ack = { ok: true } | { ok: false; message: string; reason?: "session
 
 export type RoomPayload = { room: string };
 
+// Coup joué : le client indique son intention, le serveur calcule la partie suivante
+export type MoveType = "draw" | "take-discard" | "discard-drawn" | "replace" | "flip" | "reveal";
+export type Intent = { move: MoveType; cardIndex?: number };
+
 // Événements envoyés par le client (toujours avec un accusé de réception)
 export type ClientPayloads = {
   "player-joined-game": RoomPayload;
@@ -81,8 +85,7 @@ export type ClientPayloads = {
   "start-game": RoomPayload;
   "restart-game": RoomPayload;
   "player-play-again": RoomPayload;
-  "initial-turn-card": RoomPayload & { cardId: string };
-  "play-move": RoomPayload & { gameData: GameData };
+  "play-move": RoomPayload & Intent;
 };
 export type ClientEvent = keyof ClientPayloads;
 

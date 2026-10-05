@@ -12,7 +12,7 @@ Fichier versionné pour reprendre le travail sur n'importe quel PC. Chargé par 
   - Passage MySQL → MariaDB en local : `docker compose --env-file backend/.env --profile full down --remove-orphans`, `docker volume rm skyjo_mysql_data`, puis `make db-up` (service et volume renommés `db` / `skyjo_db_data`).
   - MariaDB refuse `LEFT JOIN LATERAL` : jamais d'API relationnelle Drizzle avec `with`.
 - Phases 1 à 5 mergées (PR #24 à #28). **Phase 6 (ménage) terminée** sur `feat/menage` : le plan de remise en route est terminé.
-  - Front : coups dans `src/game/moves.ts` (jamais de mutation de `game.gameData`), logique pure dans `src/game/`, routes paresseuses dans `main.tsx`.
+  - Front : jamais de mutation de `game.gameData`, logique pure dans `src/game/`, routes paresseuses dans `main.tsx`. Les coups sont calculés par le serveur (`backend/src/game/moves.ts`).
   - Style : Prettier, `make format` ; `make lint` échoue si un fichier n'est pas formaté.
   - Auth : `backend/src/auth.ts` (Better Auth), routes `/api/auth/*` montées dans `app.ts`. Front : `frontend/src/lib/authClient.ts`, `UserContext` basé sur `authClient.useSession()`, garde `RequirePseudo`.
   - Tests : `createPlayer` inscrit via `/api/auth/sign-up/email` ; sockets avec `cookieHeader(player)`. Simuler un compte Google sans pseudo : `update users set username=null`.
@@ -36,7 +36,7 @@ Fichier versionné pour reprendre le travail sur n'importe quel PC. Chargé par 
 - Ordre prévu : 1) jetons + thème Tapis sur les pages hors jeu, 2) Confettis + plateau adaptatif, 3) Néon, 4) choix du thème (inscription, `/auth/pseudo`, espace perso) + pages légales.
 - Étape 1 faite (branche `feat/design-system`) : `src/lib/theme.ts`, `src/game/cards.ts`, `PlayingCard`, thème `tapis` dans `index.css`. Piège : le plugin `daisyui/theme` découpe les valeurs à virgules (polices, dégradés), les définir hors plugin.
 - Étape 2 : plateau adaptatif (`.game-area`, `--card-w`), `GameCard` sur `PlayingCard`, thème Confettis (sans sélecteur avant l'étape 4 : `localStorage.setItem('theme-style','confettis')`).
-- Tester le plateau à 4 joueurs : script de robots (inscription API + `PATCH /api/game/join/:id` + socket `player-joined-game`, puis `initial-turn-card` sur 2 cartes après `start-game`). Espacer les inscriptions (limite de débit sur sign-up : une 2e inscription immédiate est refusée).
+- Tester le plateau à 4 joueurs : script de robots (inscription API + `PATCH /api/game/join/:id` + socket `player-joined-game`, puis `play-move { move: "reveal", cardIndex }` sur 2 cartes après `start-game`). Espacer les inscriptions (limite de débit sur sign-up : une 2e inscription immédiate est refusée).
 - Étape 4 : `users.theme` (migration 0002), `THEMES` + contrôle dans `backend/src/auth.ts`, `setThemeStyle` + événement `themechange` (`src/lib/theme.ts`), `ThemePicker`, `ThemeField` (Formik), `ChangeTheme`, synchro du thème du compte dans `UserProvider`. Après pull : `make db-reset` ou redémarrer le back (migration au démarrage).
 - Script d'émulation réutilisable : 4 robots, parties à 2/3/4 joueurs, captures plateau + accueil/connexion/historique/légal par thème et par appareil, contrôle `scrollWidth`/`scrollHeight` (recréer dans le scratchpad, ne pas versionner).
 - Vérifier le plateau en vrai format mobile : Chrome headless piloté par CDP (`--remote-debugging-port`, `Emulation.setDeviceMetricsOverride`, `Network.setCookie` avec la session d'un robot), WebSocket natif de Node 22, pas besoin de Puppeteer.
@@ -66,13 +66,13 @@ Restent :
 5. (testé le 2026-10-03) Fin de partie, manche suivante, reconnexion : OK.
 6. (corrigé) Retour dans la salle d'attente : la cause était le CORS qui bloquait le PATCH de `join`.
 7. `restartGame` ajoute toujours le créateur à la nouvelle partie, même s'il n'a pas demandé à rejouer (comportement d'origine conservé).
-8. Le contenu du `gameData` de `play-move` reste de confiance (choix assumé) : seuls l'appartenance et le tour sont vérifiés.
+8. (corrigé, refonte websocket phase 3) `play-move` n'accepte plus de `gameData` : le serveur calcule le coup à partir de l'intention.
 
 ## Astuces de test manuel
 - Comparer avant/après un changement visuel : `git worktree add <scratch>/old dev`, `npm ci`, Vite ancien sur :4173 et nouveau sur un autre port, avec `FRONTEND_HOST=http://localhost:5173,http://localhost:4173` pour le back. Les cookies `localhost` sont partagés entre ports : une connexion sert aux deux.
 - Deux joueurs dans le même Chrome : joueur 1 sur `localhost:5173`, joueur 2 sur un 2e Vite `VITE_BACKEND_HOST=http://127.0.0.1:3000 VITE_BACKEND_WS=http://127.0.0.1:3000 npx vite --host 127.0.0.1 --port 5174`, back lancé avec `FRONTEND_HOST=http://localhost:5173,http://127.0.0.1:5174` (cookies séparés par hôte). Chrome in Chrome : sur `127.0.0.1`, les actions groupées (`browser_batch`) sont refusées, faire des appels unitaires.
-- Alternative pour un 2e joueur : utiliser un script Node avec `socket.io-client` (dans `frontend/node_modules`) et le cookie de session `better-auth.session_token` obtenu via `POST /api/auth/sign-in/email` (`curl -c`, en-tête `Origin: http://localhost:5173`). Les coups à envoyer (`play-move`) sont ceux de `frontend/src/game/moves.ts`. Après `navigate` dans Chrome, le premier clic peut tomber avant le chargement de la page : recliquer.
-- Événements socket : `player-joined-game`, `start-game`, `initial-turn-card {room, playerId, cardId}`, `play-move {room, gameData}`. Pendant `initialReveal`, `currentPlayer` vaut `null` : chaque joueur révèle 2 cartes sans attendre son tour.
+- Alternative pour un 2e joueur : utiliser un script Node avec `socket.io-client` (dans `frontend/node_modules`) et le cookie de session `better-auth.session_token` obtenu via `POST /api/auth/sign-in/email` (`curl -c`, en-tête `Origin: http://localhost:5173`). Les coups à envoyer sont des intentions `play-move { room, move, cardIndex? }` (`move` : `draw`, `take-discard`, `discard-drawn`, `replace`, `flip`, `reveal`), avec accusé (`emitWithAck`). Après `navigate` dans Chrome, le premier clic peut tomber avant le chargement de la page : recliquer.
+- Événements socket (catalogue dans `shared/types.ts`) : `player-joined-game`, `start-game`, `play-move {room, move, cardIndex?}`, tous avec accusé. Pendant `initialReveal`, `currentPlayer` vaut `null` : chaque joueur révèle 2 cartes sans attendre son tour.
 - Tester l'image de prod en local : `make full` (front :8081, back :3000), puis `docker compose --env-file backend/.env --profile full rm -sf backend frontend` pour libérer :3000.
 - Routes front : `/auth/register`, `/auth/login`, `/create`, `/join/:id` (salle d'attente), `/game/:id`.
 - Dans un shell, ne pas faire `pkill -f nom` avec le nom visible dans la commande elle-même (le shell se tue). Utiliser `pkill -f "motif[x]"`.

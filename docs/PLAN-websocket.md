@@ -75,11 +75,11 @@ Les fonctions pures des coups deviennent partagées. Le client n'envoie plus que
 
 ### Critères d'acceptation
 
-- [ ] Tests unitaires : pour chaque étape, les coups permis et refusés.
-- [ ] Test d'API : une manche complète jouée uniquement par intentions jusqu'à `endGame`, scores enregistrés.
-- [ ] Test : un `play-move` portant un `gameData` est refusé (schéma) ; un coup hors étape (`flip` pendant `draw`) est refusé.
-- [ ] Le front (pioche, défausse, plateau, révélation initiale) envoie des intentions ; partie à 2 joueurs vérifiée dans le navigateur.
-- [ ] `make check` vert.
+- [x] Tests unitaires : pour chaque étape, les coups permis et refusés.
+- [x] Test d'API : une manche complète jouée uniquement par intentions jusqu'à `endGame`, scores enregistrés.
+- [x] Test : un `play-move` portant un `gameData` est refusé (schéma) ; un coup hors étape (`flip` pendant `draw`) est refusé.
+- [x] Le front (pioche, défausse, plateau, révélation initiale) envoie des intentions (tests de composants ; partie complète jouée par intentions en test d'API). Vérification manuelle dans le navigateur à faire.
+- [x] `make check` vert.
 
 ## Bloquée par
 

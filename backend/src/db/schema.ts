@@ -37,6 +37,8 @@ export const users = mysqlTable("users", {
   lastActiveAt: timestamp({ fsp: 3 }),
   // Thème d'affichage choisi (tapis, neon, confettis), copié en local par le front
   theme: varchar({ length: 16 }).notNull().default("tapis"),
+  // Invité (jouer sans compte, plugin anonymous de Better Auth) : pas d'historique, oublié après 7 jours
+  isAnonymous: boolean().notNull().default(false),
   ...timestamps,
 });
 
@@ -96,6 +98,8 @@ export const games = mysqlTable("games", {
     .$type<string[]>()
     .notNull()
     .$defaultFn(() => []),
+  // Partie créée par « Rejouer » : une seule par partie terminée
+  nextGameId: varchar({ length: 16 }),
   // Objet vide tant que la partie n'a pas démarré
   gameData: json()
     .$type<GameData>()

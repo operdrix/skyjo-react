@@ -73,13 +73,13 @@ const Game = () => {
     }
   }, [game, navigate, gameId]);
 
-  // Avertir les autres joueurs de la connexion du joueur
+  // Avertir les autres joueurs de la connexion du joueur (à chaque connexion du socket)
   useEffect(() => {
-    if (!gameId || !userId || error) return;
+    if (!gameId || !userId || error || !isConnected) return;
     sendMessage("player-joined-game", { room: gameId });
-  }, [gameId, userId, sendMessage, error]);
+  }, [gameId, userId, sendMessage, error, isConnected]);
 
-  useGameEvents(setWaitingDeal, !error);
+  useGameEvents(gameId, setWaitingDeal, !error);
 
   // Notification de l'utilisateur si c'est son tour
   const notifyPlayerTurn = useCallback(() => {

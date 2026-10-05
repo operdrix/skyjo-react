@@ -3,10 +3,11 @@ import { useUser } from "@/hooks/User";
 import { useWebSocket } from "@/hooks/WebSocket";
 import { api } from "@/services/apiService";
 import { useCallback, useEffect, useState } from "react";
+import { goToRegister } from "@/lib/redirect";
 import { useNavigate } from "react-router";
 
 const Create = () => {
-  const { loading: userLoading } = useUser();
+  const { loading: userLoading, isGuest } = useUser();
   const { socket, isConnected, loading: wbLoading } = useWebSocket();
   const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
@@ -33,10 +34,15 @@ const Create = () => {
     const createGame = async () => {
       await handleCreateGame(true);
     };
+    // Seuls les joueurs avec compte créent des parties
+    if (isGuest) {
+      goToRegister(navigate, "Crée un compte pour créer une partie.");
+      return;
+    }
     if (socket && isConnected) {
       createGame();
     }
-  }, [handleCreateGame, isConnected, socket]);
+  }, [handleCreateGame, isConnected, socket, isGuest, navigate]);
 
   if (userLoading || wbLoading) {
     // Optionnel : Afficher un loader pendant la vérification de l'authentification

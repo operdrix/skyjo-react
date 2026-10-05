@@ -1,14 +1,14 @@
 import Deck from "@/components/game/Deck";
 import Discard from "@/components/game/Discard";
 import PlayerSet from "@/components/game/PlayerSet";
-import { cleanup, fireEvent, render } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const state = vi.hoisted(() => ({ game: null as unknown, sendMessage: vi.fn(), setGame: vi.fn() }));
 
 vi.mock("@/hooks/Game", () => ({ useGame: () => ({ game: state.game, setGame: state.setGame, sound: false }) }));
 vi.mock("@/hooks/User", () => ({ useUser: () => ({ userId: "ALICE" }) }));
-vi.mock("@/hooks/WebSocket", () => ({ useWebSocket: () => ({ sendMessage: state.sendMessage }) }));
+vi.mock("@/hooks/useGameAction", () => ({ useGameAction: () => state.sendMessage }));
 vi.mock("@/utils/notify", () => ({ default: vi.fn() }));
 
 const card = (id: string, value: number, revealed = false) => ({ id, value, color: "green", revealed, onHand: false });
@@ -50,28 +50,53 @@ function playAndCheck(step: string, click: () => void) {
 }
 
 describe("coups envoyés par les composants", () => {
-  it("pioche sans modifier la partie affichée", () => {
-    const [event, payload] = playAndCheck("draw", () => {
-      clickFirstCard(render(<Deck />).container);
-    });
-
-    expect(event).toBe("play-move");
-    expect(payload.gameData.currentStep).toBe("decide-deck");
+  it("pioche", () => {
+    expect(
+      playAndCheck("draw", () => {
+        clickFirstCard(render(<Deck />).container);
+      }),
+    ).toEqual(["play-move", { room: "g1", move: "draw" }]);
   });
 
-  it("prend la défausse sans modifier la partie affichée", () => {
-    const [, payload] = playAndCheck("draw", () => {
-      clickFirstCard(render(<Discard />).container);
-    });
-
-    expect(payload.gameData.currentStep).toBe("replace-discard");
+  it("prend la défausse", () => {
+    expect(
+      playAndCheck("draw", () => {
+        clickFirstCard(render(<Discard />).container);
+      }),
+    ).toEqual(["play-move", { room: "g1", move: "take-discard" }]);
   });
 
-  it("retourne une carte de son jeu sans modifier la partie affichée", () => {
-    const [, payload] = playAndCheck("flip-deck", () => {
-      clickFirstCard(render(<PlayerSet playerId="ALICE" isCurrentPlayerSet />).container);
-    });
+  it("défausse la carte piochée", () => {
+    expect(
+      playAndCheck("decide-deck", () => {
+        render(<Discard />);
+        fireEvent.click(screen.getByRole("button", { name: "Défausser la carte piochée" }));
+      }),
+    ).toEqual(["play-move", { room: "g1", move: "discard-drawn" }]);
+  });
 
-    expect(payload.gameData.playersCards.ALICE[0].revealed).toBe(true);
+  it.each([
+    ["replace-discard", "replace"],
+    ["decide-deck", "replace"],
+    ["flip-deck", "flip"],
+  ])("pendant l'étape %s, joue « %s » sur la carte cliquée", (step, move) => {
+    expect(
+      playAndCheck(step, () => {
+        clickFirstCard(render(<PlayerSet playerId="ALICE" isCurrentPlayerSet />).container);
+      }),
+    ).toEqual(["play-move", { room: "g1", move, cardIndex: 0 }]);
+  });
+
+  it("révèle une carte initiale sans modifier la partie affichée", () => {
+    const game = makeGame("initialReveal");
+    game.gameData.currentPlayer = null as never;
+    const before = structuredClone(game);
+    state.game = game;
+
+    clickFirstCard(render(<PlayerSet playerId="ALICE" isCurrentPlayerSet />).container);
+
+    expect(state.sendMessage.mock.calls[0]).toEqual(["play-move", { room: "g1", move: "reveal", cardIndex: 0 }]);
+    expect(state.setGame).not.toHaveBeenCalled();
+    expect(game).toEqual(before);
   });
 });

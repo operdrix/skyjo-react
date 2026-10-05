@@ -1,5 +1,6 @@
 import RequirePseudo from "@/components/auth/RequirePseudo";
 import ChoosePseudo from "@/pages/auth/ChoosePseudo";
+import Guest from "@/pages/auth/Guest";
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
@@ -7,13 +8,14 @@ import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const authClient = vi.hoisted(() => ({
-  signIn: { social: vi.fn(), email: vi.fn() },
+  signIn: { social: vi.fn(), email: vi.fn(), anonymous: vi.fn() },
   signUp: { email: vi.fn() },
   updateUser: vi.fn(),
 }));
 const user = vi.hoisted(() => ({
   current: {
     isAuthentified: false,
+    isGuest: false,
     needsPseudo: false,
     userName: null as string | null,
     suggestedPseudo: "",
@@ -36,8 +38,10 @@ beforeEach(() => {
   authClient.signIn.email.mockResolvedValue({ data: {}, error: null });
   authClient.updateUser.mockResolvedValue({ data: {}, error: null });
   authClient.signIn.social.mockResolvedValue({ data: {}, error: null });
+  authClient.signIn.anonymous.mockResolvedValue({ data: {}, error: null });
   user.current = {
     isAuthentified: false,
+    isGuest: false,
     needsPseudo: false,
     userName: null,
     suggestedPseudo: "",
@@ -72,6 +76,73 @@ describe("connexion", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /avec un email/i }));
     expect(screen.getByLabelText(/mot de passe/i)).toBeTruthy();
+  });
+});
+
+describe("jouer sans compte", () => {
+  it("propose de rejoindre sans compte depuis la connexion, en gardant la partie visée", () => {
+    renderWithGame("/auth/login?redirect=%2Fjoin%2F42", <Login />);
+
+    const link = screen.getByRole("link", { name: /rejoindre sans compte/i });
+    expect(link.getAttribute("href")).toBe("/auth/invite?redirect=%2Fjoin%2F42");
+  });
+
+  it("prévient l'invité de ce qu'il perd et lui propose un pseudo modifiable", () => {
+    renderWithGame("/auth/invite?redirect=%2Fjoin%2F42", <Guest />);
+
+    expect(screen.getByText(/historique/i)).toBeTruthy();
+    expect(screen.getByText(/navigateur/i)).toBeTruthy();
+    expect(screen.getByText(/7 jours/i)).toBeTruthy();
+    const pseudo = screen.getByLabelText(/pseudo/i) as HTMLInputElement;
+    expect(pseudo.value.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("crée la session invité avec le pseudo choisi", async () => {
+    renderWithGame("/auth/invite?redirect=%2Fjoin%2F42", <Guest />);
+
+    fireEvent.change(screen.getByLabelText(/pseudo/i), { target: { value: "Léa" } });
+    fireEvent.click(screen.getByRole("button", { name: /jouer/i }));
+
+    await waitFor(() => expect(user.current.refresh).toHaveBeenCalled());
+    expect(authClient.signIn.anonymous).toHaveBeenCalled();
+    expect(authClient.updateUser).toHaveBeenCalledWith({ username: "Léa" });
+  });
+
+  it("garde la session invité déjà ouverte quand le pseudo était refusé", async () => {
+    user.current = { ...user.current, needsPseudo: true };
+    authClient.updateUser.mockResolvedValueOnce({ data: null, error: { code: "USERNAME_IS_ALREADY_TAKEN" } });
+    renderWithGame("/auth/invite?redirect=%2Fjoin%2F42", <Guest />);
+
+    fireEvent.click(screen.getByRole("button", { name: /jouer/i }));
+
+    expect(await screen.findByRole("alert")).toBeTruthy();
+    expect(authClient.signIn.anonymous).not.toHaveBeenCalled();
+  });
+
+  it("renvoie vers la partie visée une fois le pseudo choisi", () => {
+    user.current = { ...user.current, isAuthentified: true, userName: "Léa" };
+    renderWithGame("/auth/invite?redirect=%2Fjoin%2F42", <Guest />);
+
+    expect(screen.getByText("salle d'attente")).toBeTruthy();
+  });
+});
+
+describe("inscription d'un invité", () => {
+  it("laisse un invité ouvrir la page d'inscription", () => {
+    user.current = { ...user.current, isAuthentified: true, isGuest: true, userName: "Lynx 42" };
+    renderAt(<Register />);
+
+    expect(screen.getByRole("heading", { name: "Créer un compte" })).toBeTruthy();
+  });
+
+  it("propose à l'invité de garder son pseudo, sans lien vers la connexion", () => {
+    user.current = { ...user.current, isAuthentified: true, isGuest: true, userName: "Lynx 42" };
+    renderAt(<Register />);
+
+    fireEvent.click(screen.getByRole("button", { name: /avec un email/i }));
+
+    expect((screen.getByLabelText(/pseudo/i) as HTMLInputElement).value).toBe("Lynx 42");
+    expect(screen.queryByRole("link", { name: /me connecter/i })).toBeNull();
   });
 });
 

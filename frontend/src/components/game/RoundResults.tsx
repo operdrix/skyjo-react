@@ -2,6 +2,7 @@ import ScoreTable from "@/components/game/ScoreTable";
 import { useGame } from "@/hooks/Game";
 import { useUser } from "@/hooks/User";
 import { useWebSocket } from "@/hooks/WebSocket";
+import { useGameAction } from "@/hooks/useGameAction";
 import { GameType } from "@/types/types";
 import { useEffect, useId, useState } from "react";
 import { Link } from "react-router";
@@ -10,8 +11,9 @@ import { Link } from "react-router";
 // pour que toutes les cartes restent visibles autour (rien n'est recouvert, même sur mobile)
 const RoundResults = () => {
   const { game, setGame } = useGame();
-  const { sendMessage, subscribeToEvent, unsubscribeFromEvent } = useWebSocket();
-  const { userId } = useUser();
+  const { subscribeToEvent, unsubscribeFromEvent } = useWebSocket();
+  const sendMessage = useGameAction();
+  const { userId, isGuest } = useUser();
   const [loading, setLoading] = useState<boolean>(false);
   const titleId = useId();
 
@@ -32,9 +34,11 @@ const RoundResults = () => {
   const playersPlayAgain = game.playersPlayAgain || [];
   const wantsToPlayAgain = playersPlayAgain.includes(userId);
 
-  const handleNextRound = () => {
+  const handleNextRound = async () => {
     setLoading(true);
-    sendMessage(finished ? "restart-game" : "start-game", { room: game.id });
+    const response = await sendMessage(finished ? "restart-game" : "start-game", { room: game.id });
+    // Refus déjà signalé : le bouton redevient utilisable
+    if (!response.ok) setLoading(false);
   };
 
   // Le serveur ajoute l'émetteur à la liste des joueurs qui veulent rejouer
@@ -79,6 +83,11 @@ const RoundResults = () => {
           <Link to="/" className="btn btn-ghost btn-sm">
             Quitter
           </Link>
+          {isGuest && (
+            <Link to="/auth/register" className="btn btn-outline btn-sm w-full">
+              Créer mon compte pour garder mes parties
+            </Link>
+          )}
         </div>
       ) : (
         <div className="flex justify-end">

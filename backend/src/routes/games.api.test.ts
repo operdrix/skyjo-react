@@ -140,7 +140,9 @@ describe("démarrage de partie", () => {
       const game = (await app.inject({ method: "GET", url: `/api/game/${gameId}` })).json<GameType>();
       const players = game.players.map((player) => player.id).sort();
       const dealtTo = Object.keys(game.gameData.playersCards ?? {}).sort();
-      expect(dealtTo, `tentative ${attempt}`).toEqual(players);
+      // Départ traité avant le démarrage : il ne reste qu'un joueur, le démarrage est refusé
+      const expected = game.state === "pending" ? [] : players;
+      expect(dealtTo, `tentative ${attempt}`).toEqual(expected);
     }
   });
 });

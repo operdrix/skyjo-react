@@ -1,7 +1,7 @@
 import { useGame } from "@/hooks/Game";
 import { useUser } from "@/hooks/User";
 import PlayingCard from "@/components/PlayingCard";
-import { Card } from "@/types/types";
+import { ShownCard } from "@/types/types";
 import { useEffect, useRef, useState } from "react";
 
 const GameCard = ({
@@ -11,7 +11,7 @@ const GameCard = ({
   onClick = () => {},
   disabled = false,
 }: {
-  card: Card;
+  card: ShownCard;
   isDiscard?: boolean;
   isDeck?: boolean;
   onClick?: (cardId: string) => void;
@@ -50,7 +50,7 @@ const GameCard = ({
   }
 };
 
-function FlipCard({ card, onClick, disabled }: { card: Card; onClick?: () => void; disabled?: boolean }) {
+function FlipCard({ card, onClick, disabled }: { card: ShownCard; onClick?: () => void; disabled?: boolean }) {
   const [shouldAnimate, setShouldAnimate] = useState(false);
   const prevRevealedRef = useRef(card.revealed);
 
@@ -120,7 +120,7 @@ function DiscardBin() {
 }
 
 // Carte normale
-function NormalCard({ card, onClick, disabled }: { card: Card; onClick?: () => void; disabled?: boolean }) {
+function NormalCard({ card, onClick, disabled }: { card: ShownCard; onClick?: () => void; disabled?: boolean }) {
   return <FlipCard card={card} onClick={onClick} disabled={disabled} />;
 }
 
@@ -131,7 +131,7 @@ function DeckCard({
   disabled,
   showBehind,
 }: {
-  card: Card;
+  card: ShownCard;
   onClick?: () => void;
   disabled?: boolean;
   showBehind: boolean;
@@ -170,7 +170,7 @@ function DiscardCard({
   showBehind,
   showBin,
 }: {
-  card: Card;
+  card: ShownCard;
   onClick?: () => void;
   disabled?: boolean;
   showBehind: boolean;

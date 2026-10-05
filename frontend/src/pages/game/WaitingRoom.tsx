@@ -13,7 +13,7 @@ import { api } from "@/services/apiService";
 import type { ErrorType, GameType } from "@/types/types";
 import notify from "@/utils/notify";
 import { toast } from "@/lib/toast";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 
 const WaitingRoom = () => {
@@ -68,39 +68,43 @@ const WaitingRoom = () => {
     if (!error) getGame();
   }, [gameId, userId, error, setGame, game?.state, navigate]);
 
-  // Cas de l'utilisateur qui rejoint la partie
+  // Partie dont l'arrivée a été annoncée sur la connexion en cours (une annonce par partie)
+  const announced = useRef<string | null>(null);
+  useEffect(() => {
+    if (!isConnected) announced.current = null;
+  }, [isConnected]);
+
+  // Annonce l'arrivée du joueur, après l'avoir inscrit dans la partie s'il n'en fait pas encore partie
   useEffect(() => {
     if (loading || userLoading || wsLoading || !gameId || !game || error || !isConnected) return;
+    if (announced.current === gameId) return;
+    announced.current = gameId;
 
-    const player = game.players.find((player) => player.id === userId);
-    if (!player) {
-      if (game.players.length >= game.maxPlayers) {
-        toast({ type: "error", message: "La partie est pleine." });
-        navigate("/");
-        return;
-      }
-
-      const addPlayer = async () => {
-        await api.patch(`game/join/${gameId}`, {});
-      };
-      addPlayer();
-      sendMessage("player-joined-game", { room: gameId });
+    const isPlayer = game.players.some((player) => player.id === userId);
+    if (!isPlayer && game.players.length >= game.maxPlayers) {
+      toast({ type: "error", message: "La partie est pleine." });
+      navigate("/");
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [game, gameId, userId, userLoading, wsLoading, loading, navigate, error, isConnected]); // sendMessage retiré pour éviter les boucles infinies
 
-  // Avertir les autres joueurs de la connexion du joueur
-  useEffect(() => {
-    if (!gameId || !userId || error || !isConnected) return;
-    sendMessage("player-joined-game", { room: gameId });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameId, userId, error, isConnected]); // sendMessage retiré pour éviter les boucles infinies
+    const announce = async () => {
+      if (!isPlayer) {
+        await api.patch(`game/join/${gameId}`, {});
+      }
+      sendMessage("player-joined-game", { room: gameId });
+    };
+    announce();
+  }, [game, gameId, userId, userLoading, wsLoading, loading, navigate, error, isConnected, sendMessage]);
 
   // Ecouter les événements de connexion/déconnexion du socket
   useEffect(() => {
     if (!socket || !isConnected || error) return;
 
+    // Les mises à jour d'une autre partie (ancienne room encore en vol) sont ignorées
+    const isOtherGame = (updatedGame: GameType) => updatedGame.id !== gameId;
+
     const handlePlayerJoined = async (updatedGame: GameType) => {
+      if (isOtherGame(updatedGame)) return;
       notify("join");
       setGame(updatedGame);
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -112,23 +116,28 @@ const WaitingRoom = () => {
         navigate("/");
         return;
       }
-      setGame(updatedGame);
+      if (!isOtherGame(updatedGame)) setGame(updatedGame);
+    };
+
+    const handleUpdate = (updatedGame: GameType) => {
+      if (!isOtherGame(updatedGame)) setGame(updatedGame);
     };
 
     const handleStartGame = (updatedGame: GameType) => {
+      if (isOtherGame(updatedGame)) return;
       setGame(updatedGame);
       navigate(`/game/${gameId}`);
     };
 
     subscribeToEvent("player-joined-game", handlePlayerJoined);
     subscribeToEvent("player-left-game", handlePlayerLeft);
-    subscribeToEvent("update-game-params", setGame);
+    subscribeToEvent("update-game-params", handleUpdate);
     subscribeToEvent("start-game", handleStartGame);
 
     return () => {
       unsubscribeFromEvent("player-joined-game", handlePlayerJoined);
       unsubscribeFromEvent("player-left-game", handlePlayerLeft);
-      unsubscribeFromEvent("update-game-params", setGame);
+      unsubscribeFromEvent("update-game-params", handleUpdate);
       unsubscribeFromEvent("start-game", handleStartGame);
     };
   }, [socket, isConnected, subscribeToEvent, unsubscribeFromEvent, navigate, error, gameId, setGame]);
@@ -140,7 +149,7 @@ const WaitingRoom = () => {
     await api.patch(`game/${gameId}`, { private: !game.private });
 
     // avertir les autres joueurs du changement
-    sendMessage("update-game-params", { room: gameId });
+    sendMessage("update-game-params", { room: game.id });
   };
 
   // Mettre à jour le nombre de joueurs max
@@ -150,18 +159,15 @@ const WaitingRoom = () => {
     // Mettre à jour le nombre de joueurs max dans la base de données
     await api.patch(`game/${gameId}`, { maxPlayers: value });
     // avertir les autres joueurs du changement
-    sendMessage("update-game-params", { room: gameId });
+    sendMessage("update-game-params", { room: game.id });
   };
 
-  const handleStartGame = () => {
-    setCreationLoading(true);
+  const handleStartGame = async () => {
     if (!isCreator || !game) return;
-    sendMessage("start-game", { room: gameId });
-
-    // cas où le start-game échoue coté serveur
-    setTimeout(() => {
-      setCreationLoading(false);
-    }, 5000);
+    setCreationLoading(true);
+    const response = await sendMessage("start-game", { room: game.id });
+    // Refus déjà signalé : le bouton redevient utilisable
+    if (!response.ok) setCreationLoading(false);
   };
 
   if (error) {

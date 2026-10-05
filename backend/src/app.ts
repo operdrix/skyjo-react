@@ -13,7 +13,9 @@ import { frontendOrigins } from "./utils/origins.ts";
 import { gamesRoutes } from "./routes/games.ts";
 import { usersRoutes } from "./routes/users.ts";
 //websockets
-import { websockets } from "./websockets/websockets.ts";
+import { cancelPendingLeaves, websockets } from "./websockets/websockets.ts";
+import type { SocketData } from "./websockets/types.ts";
+import type { ClientToServerEvents, ServerToClientEvents } from "../../shared/types.ts";
 
 // Secret lu dans l'environnement, sans valeur par défaut
 function requireSecret(name: "BETTER_AUTH_SECRET") {
@@ -38,7 +40,7 @@ export async function buildApp() {
   // Socket.io branché sur le serveur HTTP de Fastify (remplace fastify-socket.io, abandonné)
   app.decorate(
     "io",
-    new SocketServer(app.server, {
+    new SocketServer<ClientToServerEvents, ServerToClientEvents, Record<string, never>, SocketData>(app.server, {
       cors: {
         origin: frontendOrigins(process.env.FRONTEND_HOST),
         credentials: true,
@@ -50,6 +52,7 @@ export async function buildApp() {
   });
   app.addHook("onClose", async () => {
     await app.io.close();
+    cancelPendingLeaves();
   });
   await app
     .register(helmet, {
@@ -199,7 +202,11 @@ export async function buildApp() {
     if (!session.user.username) {
       return reply.status(403).send({ error: USERNAME_REQUIRED });
     }
-    request.user = { id: session.user.id, username: session.user.username };
+    request.user = {
+      id: session.user.id,
+      username: session.user.username,
+      isAnonymous: Boolean(session.user.isAnonymous),
+    };
   });
   //gestion utilisateur
   usersRoutes(app);

@@ -25,11 +25,12 @@ Jeu de cartes Skyjo en ligne, pour jouer entre amis / famille. Vue d'ensemble : 
 - Commits conventionnels en français (`feat(scope): …`, `fix(scope): …`). Code, commentaires et messages utilisateur en français.
 - `/verifie` avant de déclarer une tâche terminée.
 - Pas de `console.*` (règle `no-console` en erreur) : utiliser `backend/src/utils/logger` côté back.
-- Front : ne jamais muter l'état React (`game.gameData` compris) ; passer par une copie (`src/game/moves.ts`). Règles React Compiler en erreur.
+- Front : ne jamais muter l'état React (`game.gameData` compris). Règles React Compiler en erreur.
 
 ## Pièges connus
 - MariaDB : pas de `LEFT JOIN LATERAL`, donc pas d'API relationnelle Drizzle avec `with` (`db.query.x.findMany({ with })`). Faire des `select` + `innerJoin` (voir `findGames` dans `controllers/games.ts`).
-- Le serveur fait confiance au `gameData` envoyé par le client (`play-move`). Choix assumé : garde-fous légers (membre de la room, tour du joueur), pas de serveur autoritaire complet.
+- Temps réel : le client envoie une intention (`play-move { room, move, cardIndex? }`), le serveur calcule le coup sur l'état enregistré (`backend/src/game/moves.ts`, `applyIntent`) et refuse un coup impossible. Les cartes non révélées (joueurs et pioche) sont masquées dans toute réponse et diffusion (`backend/src/game/view.ts`, `hideCards`, appliqué en sortie du contrôleur) : la partie complète ne sort jamais du serveur ; en test, la lire en base (`storedGameData`). Un joueur déconnecté n'est retiré (salon) ou marqué `disconnected` (partie) qu'après un délai de grâce (`PRESENCE_GRACE_MS`, 10 s), s'il n'a plus aucun socket dans la room. Chaque événement client reçoit un accusé `{ ok }` ou `{ ok: false, message }` ; catalogue typé dans `shared/types.ts`. Plan en cours : `docs/PLAN-websocket.md`.
+- Invités (jouer sans compte, `docs/PLAN-invite.md`) : plugin `anonymous` de Better Auth, `users.is_anonymous`. Création de partie et historique refusés ; un invité oublié (7 jours) garde son pseudo dans `name` pour l'historique des autres.
 - `userId` ne doit jamais venir du body : le prendre dans la session (`request.user`, rempli par `app.authenticate`).
 - Pas de valeur par défaut codée en dur pour `BETTER_AUTH_SECRET`.
 - Données personnelles minimales : pseudo et email seulement (pas de nom, prénom ni photo, pas de vérification d'email).

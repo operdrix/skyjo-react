@@ -42,6 +42,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         userName,
         userEmail: user?.email ?? null,
         isAuthentified: Boolean(user && userName),
+        isGuest: Boolean(user?.isAnonymous),
         needsPseudo: Boolean(user && !userName),
         suggestedPseudo: suggestPseudo(user?.name),
         loading: isPending,

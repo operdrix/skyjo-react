@@ -1,8 +1,10 @@
-import { and, asc, eq, getTableColumns, inArray, type SQL } from "drizzle-orm";
-import type { ErrorType, GameData, GameType } from "../../../shared/types.ts";
+import { and, asc, eq, getTableColumns, inArray, sql, type SQL } from "drizzle-orm";
+import type { ErrorType, GameData, GameType, Intent, NextGame, StoredGame } from "../../../shared/types.ts";
 import { db, type Db, type Tx } from "../db/index.ts";
 import { gamePlayers, games, users } from "../db/schema.ts";
+import { applyIntent } from "../game/moves.ts";
 import * as rules from "../game/rules.ts";
+import { hideCards } from "../game/view.ts";
 import { logger } from "../utils/logger.ts";
 
 type Executor = Db | Tx;
@@ -14,12 +16,22 @@ const CREATOR_ONLY = { error: "Seul le créateur de la partie peut faire cela.",
 
 const isError = <T extends object>(value: T | ErrorType): value is ErrorType => "error" in value;
 
+// Partie telle qu'envoyée aux joueurs : les cartes non révélées sont masquées
+function toPublic({ nextGameId: _, ...game }: StoredGame): GameType {
+  return game.gameData ? { ...game, gameData: hideCards(game.gameData) } : (game as unknown as GameType);
+}
+
 // Seuls attributs de joueur exposés dans les réponses de partie
-const PUBLIC_USER = { id: users.id, username: users.username };
+// (invité oublié : son pseudo libéré reste affiché, gardé dans name)
+const PUBLIC_USER = {
+  id: users.id,
+  username: sql<string>`coalesce(${users.username}, ${users.name})`,
+  isAnonymous: users.isAnonymous,
+};
 
 // Partie avec ses joueurs et son créateur, au format attendu par le front.
 // Requêtes simples plutôt que l'API relationnelle de Drizzle : ses LEFT JOIN LATERAL ne passent pas sur MariaDB.
-async function findGames(executor: Executor, where?: SQL, withGameData = true): Promise<GameType[]> {
+async function findGames(executor: Executor, where?: SQL, withGameData = true): Promise<StoredGame[]> {
   const { gameData, ...summaryColumns } = getTableColumns(games);
   const rows = await executor
     .select(withGameData ? { ...summaryColumns, gameData } : summaryColumns)
@@ -49,11 +61,11 @@ async function findGames(executor: Executor, where?: SQL, withGameData = true): 
         players: players
           .filter(({ gamePlayer }) => gamePlayer.gameId === game.id)
           .map(({ user, gamePlayer }) => ({ ...user, game_players: gamePlayer })),
-      }) as unknown as GameType,
+      }) as unknown as StoredGame,
   );
 }
 
-async function loadGame(gameId: string, executor: Executor = db): Promise<GameType | null> {
+async function loadGame(gameId: string, executor: Executor = db): Promise<StoredGame | null> {
   const [game] = await findGames(executor, eq(games.id, gameId));
   return game ?? null;
 }
@@ -75,20 +87,23 @@ export async function getGames(query: GamesQuery) {
     conditions.push(inArray(games.id, memberGames));
   }
 
-  return findGames(db, conditions.length ? and(...conditions) : undefined);
+  return (await findGames(db, conditions.length ? and(...conditions) : undefined)).map(toPublic);
 }
 
 // Liste des parties d'un joueur, sans les données de jeu
 export async function getUserGames(userId: string) {
   const user = await db.query.users.findFirst({
     where: (users, { eq }) => eq(users.id, userId),
-    columns: { id: true },
+    columns: { id: true, isAnonymous: true },
   });
   if (!user) {
     return { error: "L'utilisateur n'existe pas.", code: 404 };
   }
+  if (user.isAnonymous) {
+    return { error: "Les invités n'ont pas d'historique.", code: 403 };
+  }
   const memberGames = db.select({ id: gamePlayers.gameId }).from(gamePlayers).where(eq(gamePlayers.userId, userId));
-  return findGames(db, inArray(games.id, memberGames), false);
+  return (await findGames(db, inArray(games.id, memberGames), false)).map(toPublic);
 }
 
 // Supprimer une partie
@@ -110,7 +125,7 @@ export async function deleteGame(gameId: string, userId: string) {
 // Consulter une partie
 export async function getGame(gameId: string): Promise<GameType | ErrorType> {
   const game = await loadGame(gameId);
-  return game ?? { error: "La partie n'existe pas.", code: 404 };
+  return game ? toPublic(game) : { error: "La partie n'existe pas.", code: 404 };
 }
 
 // Créer une nouvelle partie, le créateur en est le premier joueur
@@ -150,7 +165,7 @@ export async function updateGame(request: { params: { action: string; gameId: st
       return { error: "La partie n'existe pas.", code: 404 };
     }
     const result = await applyGameAction(tx, game, action, body);
-    return result ?? (await loadGame(gameId, tx))!;
+    return result ?? toPublic((await loadGame(gameId, tx))!);
   });
 }
 
@@ -160,7 +175,7 @@ async function lockGame(tx: Tx, gameId: string) {
 }
 
 // Applique l'action ; renvoie une erreur, ou rien si la partie a été mise à jour
-async function applyGameAction(tx: Tx, game: GameType, action: string, body: NonNullable<GameActionBody>) {
+async function applyGameAction(tx: Tx, game: StoredGame, action: string, body: NonNullable<GameActionBody>) {
   if (game.state === "finished") {
     return { error: "Cette partie est déjà terminée !", code: 400 };
   }
@@ -197,6 +212,12 @@ async function applyGameAction(tx: Tx, game: GameType, action: string, body: Non
       return;
 
     case "start":
+      if (game.state === "playing" && game.gameData.currentStep !== "endGame") {
+        return { error: "Une manche est déjà en cours.", code: 400 };
+      }
+      if (game.players.length < 2) {
+        return { error: "Il faut au moins 2 joueurs pour lancer la partie.", code: 400 };
+      }
       await tx
         .update(games)
         .set({
@@ -245,21 +266,21 @@ export async function updateGameSettings(
 
   const { maxPlayers, private: privateRoom } = settings;
   await db.update(games).set({ maxPlayers, private: privateRoom }).where(eq(games.id, gameId));
-  return (await loadGame(gameId))!;
+  return toPublic((await loadGame(gameId))!);
 }
 
-// Enregistre un coup du joueur dont c'est le tour : fait avancer la partie ; en fin de manche,
-// enregistre les scores et termine la partie si un joueur atteint le score maximum
-export async function playMove(gameId: string, gameData: GameData, userId: string) {
+// Joue le coup voulu par un joueur de la partie, calculé sur l'état enregistré : fait avancer la partie ;
+// en fin de manche, enregistre les scores et termine la partie si un joueur atteint le score maximum
+export async function playMove(gameId: string, intent: Intent, userId: string) {
   return applyMove(gameId, (current, game) => {
     const isPlayer = game.players.some((player) => player.id === userId);
-    return isPlayer && current.currentPlayer === userId ? gameData : null;
+    return isPlayer ? applyIntent(current, userId, intent) : null;
   });
 }
 
 // Applique un coup calculé à partir des données courantes, lues sous verrou
 // (null : coup invalide, rien n'est enregistré)
-async function applyMove(gameId: string, move: (current: GameData, game: GameType) => GameData | null) {
+async function applyMove(gameId: string, move: (current: GameData, game: StoredGame) => GameData | null) {
   return db.transaction(async (tx) => {
     const game = await lockGame(tx, gameId);
     const gameData = game && move(game.gameData, game);
@@ -279,12 +300,12 @@ async function applyMove(gameId: string, move: (current: GameData, game: GameTyp
     }
 
     await tx.update(games).set(update).where(eq(games.id, gameId));
-    return (await loadGame(gameId, tx))!;
+    return toPublic((await loadGame(gameId, tx))!);
   });
 }
 
 // Ajoute les scores de la manche aux joueurs, renvoie les totaux
-async function saveScores(tx: Tx, game: GameType, gameData: GameData) {
+async function saveScores(tx: Tx, game: StoredGame, gameData: GameData) {
   const roundScores = rules.computeRoundScores(gameData);
   const totals: rules.Scores = {};
 
@@ -297,18 +318,6 @@ async function saveScores(tx: Tx, game: GameType, gameData: GameData) {
       .where(and(eq(gamePlayers.gameId, game.id), eq(gamePlayers.userId, id)));
   }
   return totals;
-}
-
-// Révèle une carte pendant la phase de révélation initiale
-export async function revealInitialCard(gameId: string, playerId: string, cardId: string) {
-  return applyMove(gameId, (gameData) => {
-    const card = gameData.playersCards?.[playerId]?.find((candidate) => candidate.id === cardId);
-    if (!card) {
-      return null;
-    }
-    card.revealed = true;
-    return gameData;
-  });
 }
 
 // Ajoute un joueur de la partie à ceux qui veulent rejouer (null s'il n'en fait pas partie)
@@ -324,29 +333,40 @@ export async function addPlayerPlayAgain(gameId: string, userId: string) {
         .set({ playersPlayAgain: [...game.playersPlayAgain, userId] })
         .where(eq(games.id, gameId));
     }
-    return (await loadGame(gameId, tx))!;
+    return toPublic((await loadGame(gameId, tx))!);
   });
 }
 
-// Nouvelle partie privée, démarrée, avec le créateur et les joueurs qui ont demandé à rejouer
-export async function restartGame(gameId: string) {
-  const game = await loadGame(gameId);
-  if (!game) {
-    return null;
-  }
+// Nouvelle partie privée, démarrée, avec le créateur et les joueurs qui ont demandé à rejouer.
+// Une seule par partie terminée : une nouvelle demande renvoie celle déjà créée.
+export async function restartGame(gameId: string): Promise<NextGame | ErrorType> {
+  return db.transaction(async (tx) => {
+    const game = await lockGame(tx, gameId);
+    if (!game) {
+      return { error: "La partie n'existe pas.", code: 404 };
+    }
+    const players = game.playersPlayAgain;
+    if (game.nextGameId) {
+      return { gameId: game.nextGameId, players };
+    }
+    if (game.state !== "finished") {
+      return { error: "La partie n'est pas terminée.", code: 400 };
+    }
+    const others = players.filter((playerId) => playerId !== game.creator);
+    if (!others.length) {
+      return { error: "Il faut au moins un autre joueur qui veut rejouer.", code: 400 };
+    }
 
-  const newGameId = await db.transaction(async (tx) => {
     const created = await createGame(game.creator, true, tx);
     if (isError(created)) {
-      throw new Error(created.error);
+      return created;
     }
-    const others = game.playersPlayAgain.filter((playerId) => playerId !== game.creator);
-    if (others.length) {
-      await tx.insert(gamePlayers).values(others.map((userId) => ({ gameId: created.gameId, userId })));
-    }
-    return created.gameId;
+    await tx.insert(gamePlayers).values(others.map((userId) => ({ gameId: created.gameId, userId })));
+    await tx
+      .update(games)
+      .set({ state: "playing", roundNumber: 1, gameData: rules.dealCards([game.creator, ...others]) })
+      .where(eq(games.id, created.gameId));
+    await tx.update(games).set({ nextGameId: created.gameId }).where(eq(games.id, game.id));
+    return { gameId: created.gameId, players };
   });
-
-  await updateGame({ params: { action: "start", gameId: newGameId } });
-  return { gameId: newGameId, players: game.playersPlayAgain };
 }

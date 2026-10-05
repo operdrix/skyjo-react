@@ -40,6 +40,11 @@ const PrivacyPage = () => (
               <td>Exécution des conditions d'utilisation (art. 6.1.b)</td>
             </tr>
             <tr>
+              <td>Pour jouer sans compte (invité) : pseudo uniquement, sans email ni mot de passe</td>
+              <td>Rejoindre une partie et y jouer sans créer de compte</td>
+              <td>Exécution des conditions d'utilisation (art. 6.1.b)</td>
+            </tr>
+            <tr>
               <td>Parties jouées, scores, meilleur score</td>
               <td>Faire fonctionner le jeu, afficher votre historique et vos statistiques</td>
               <td>Exécution des conditions d'utilisation (art. 6.1.b)</td>
@@ -87,6 +92,11 @@ const PrivacyPage = () => (
         <li>
           Session de connexion (adresse IP, navigateur) : 7 jours après votre dernière visite, puis suppression
           automatique.
+        </li>
+        <li>
+          Invité (jouer sans compte) : 7 jours après sa dernière visite, sa session est supprimée et son pseudo est
+          libéré. Ce pseudo reste affiché dans l'historique des autres joueurs, pour les parties jouées ensemble. Un
+          invité qui n'a joué aucune partie est supprimé entièrement.
         </li>
         <li>Lien de réinitialisation de mot de passe : 1 heure.</li>
         <li>

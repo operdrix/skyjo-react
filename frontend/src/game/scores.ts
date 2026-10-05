@@ -2,20 +2,27 @@
 export type RankedPlayer = {
   id: string;
   username: string;
+  isAnonymous?: boolean;
   rank: number;
   total: number;
   lastRound: number | null;
   rounds: number[];
 };
 
-type ScoredPlayer = { id: string; username: string; game_players: { score: number; scoreByRound: number[] } };
+type ScoredPlayer = {
+  id: string;
+  username: string;
+  isAnonymous?: boolean;
+  game_players: { score: number; scoreByRound: number[] };
+};
 
 // Classement : le plus petit total gagne, les ex aequo partagent le même rang
 export function rankPlayers(players: ScoredPlayer[]): RankedPlayer[] {
   const sorted = players
-    .map(({ id, username, game_players: { score, scoreByRound } }) => ({
+    .map(({ id, username, isAnonymous, game_players: { score, scoreByRound } }) => ({
       id,
       username,
+      isAnonymous,
       total: score,
       rounds: scoreByRound,
       lastRound: scoreByRound.length > 0 ? scoreByRound[scoreByRound.length - 1] : null,

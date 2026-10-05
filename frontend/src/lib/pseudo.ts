@@ -23,3 +23,23 @@ export function suggestPseudo(name: string | null | undefined): string {
     .slice(0, PSEUDO_MAX);
   return pseudo.length >= PSEUDO_MIN ? pseudo : "";
 }
+
+const GUEST_ANIMALS = [
+  "Lynx",
+  "Renard",
+  "Hibou",
+  "Loutre",
+  "Panda",
+  "Koala",
+  "Castor",
+  "Faucon",
+  "Dauphin",
+  "Écureuil",
+];
+
+// Pseudo proposé à un invité : un animal et un nombre (ex. « Lynx 42 »), `random` injectable pour les tests
+export function guestPseudo(random = Math.random): string {
+  const animal = GUEST_ANIMALS[Math.floor(random() * GUEST_ANIMALS.length)];
+  const number = 1 + Math.floor(random() * 99);
+  return `${animal} ${number}`;
+}

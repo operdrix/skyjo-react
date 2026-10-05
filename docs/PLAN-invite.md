@@ -95,10 +95,11 @@ La purge quotidienne oublie les invités sans visite depuis 7 jours : sessions s
 
 ### Critères d'acceptation
 
-- [ ] Test : un invité inactif depuis plus de 7 jours est oublié (plus de session, pseudo libre) ; un invité actif ne l'est pas ; un compte normal jamais.
-- [ ] Test d'API : après l'oubli, l'historique d'un joueur avec compte affiche toujours le pseudo de l'invité.
-- [ ] Test d'API : le pseudo libéré peut être repris par un nouvel invité ou un compte.
-- [ ] `make check` vert.
+- [x] Test : un invité inactif depuis plus de 7 jours est oublié (plus de session, pseudo libre) ; un invité actif ne l'est pas ; un compte normal jamais.
+- [x] Test d'API : après l'oubli, l'historique d'un joueur avec compte affiche toujours le pseudo de l'invité.
+- [x] Test d'API : le pseudo libéré peut être repris par un nouvel invité ou un compte.
+- [x] Invité absent sans aucune partie (ou sans pseudo) : supprimé entièrement. Invité oublié : exclu de la purge des comptes inactifs depuis 3 ans.
+- [x] `make check` vert.
 
 ## Bloquée par
 

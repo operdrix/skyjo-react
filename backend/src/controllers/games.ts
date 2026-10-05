@@ -1,4 +1,4 @@
-import { and, asc, eq, getTableColumns, inArray, type SQL } from "drizzle-orm";
+import { and, asc, eq, getTableColumns, inArray, sql, type SQL } from "drizzle-orm";
 import type { ErrorType, GameData, GameType, Intent, NextGame, StoredGame } from "../../../shared/types.ts";
 import { db, type Db, type Tx } from "../db/index.ts";
 import { gamePlayers, games, users } from "../db/schema.ts";
@@ -22,7 +22,12 @@ function toPublic({ nextGameId: _, ...game }: StoredGame): GameType {
 }
 
 // Seuls attributs de joueur exposés dans les réponses de partie
-const PUBLIC_USER = { id: users.id, username: users.username, isAnonymous: users.isAnonymous };
+// (invité oublié : son pseudo libéré reste affiché, gardé dans name)
+const PUBLIC_USER = {
+  id: users.id,
+  username: sql<string>`coalesce(${users.username}, ${users.name})`,
+  isAnonymous: users.isAnonymous,
+};
 
 // Partie avec ses joueurs et son créateur, au format attendu par le front.
 // Requêtes simples plutôt que l'API relationnelle de Drizzle : ses LEFT JOIN LATERAL ne passent pas sur MariaDB.

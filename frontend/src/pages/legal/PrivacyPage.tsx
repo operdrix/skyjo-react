@@ -95,7 +95,8 @@ const PrivacyPage = () => (
         </li>
         <li>
           Invité (jouer sans compte) : 7 jours après sa dernière visite, sa session est supprimée et son pseudo est
-          libéré. Ce pseudo reste affiché dans l'historique des autres joueurs, pour les parties jouées ensemble.
+          libéré. Ce pseudo reste affiché dans l'historique des autres joueurs, pour les parties jouées ensemble. Un
+          invité qui n'a joué aucune partie est supprimé entièrement.
         </li>
         <li>Lien de réinitialisation de mot de passe : 1 heure.</li>
         <li>

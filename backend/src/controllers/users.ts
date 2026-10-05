@@ -1,4 +1,4 @@
-import { and, eq, inArray, lt, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, isNotNull, isNull, lt, notExists, sql } from "drizzle-orm";
 import { db } from "../db/index.ts";
 import { gamePlayers, games, sessions, users } from "../db/schema.ts";
 import { renamePlayer } from "../game/players.ts";
@@ -25,10 +25,49 @@ export const INACTIVITY_DAYS = 3 * 365;
 
 // Supprime les comptes sans connexion depuis INACTIVITY_DAYS (date d'inscription à défaut).
 // Les sessions, moyens de connexion, parties créées et participations suivent par cascade.
+// Les invités ne sont pas concernés : ils sont oubliés bien avant (forgetInactiveGuests), et leur pseudo
+// reste affiché dans l'historique des autres joueurs.
 export async function purgeInactiveUsers(now = new Date()) {
   const limit = new Date(now.getTime() - INACTIVITY_DAYS * 24 * 3600 * 1000);
-  const [result] = await db.delete(users).where(sql`coalesce(${users.lastActiveAt}, ${users.createdAt}) < ${limit}`);
+  const [result] = await db
+    .delete(users)
+    .where(and(eq(users.isAnonymous, false), sql`coalesce(${users.lastActiveAt}, ${users.createdAt}) < ${limit}`));
   return result.affectedRows;
+}
+
+// Invités sans session valide (session de 7 jours, prolongée à chaque visite) : ceux qui ont joué sont oubliés
+// (sessions supprimées, pseudo libéré mais gardé en nom affiché dans l'historique des autres), les autres supprimés.
+// Renvoie le nombre d'invités oubliés ou supprimés.
+export async function forgetInactiveGuests(now = new Date()) {
+  const validSession = db
+    .select({ id: sessions.id })
+    .from(sessions)
+    .where(and(eq(sessions.userId, users.id), gt(sessions.expiresAt, now)));
+  const played = db.select({ id: gamePlayers.userId }).from(gamePlayers).where(eq(gamePlayers.userId, users.id));
+  const inactive = await db
+    .select({ id: users.id, played: sql<number>`exists(${played})` })
+    .from(users)
+    .where(and(eq(users.isAnonymous, true), isNotNull(users.username), notExists(validSession)));
+  const withoutSession = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(and(eq(users.isAnonymous, true), isNull(users.username), notExists(validSession), notExists(played)));
+
+  const toForget = inactive.filter((guest) => guest.played).map((guest) => guest.id);
+  const toDelete = [...inactive.filter((guest) => !guest.played), ...withoutSession].map((guest) => guest.id);
+  if (toForget.length) {
+    await db.transaction(async (tx) => {
+      await tx.delete(sessions).where(inArray(sessions.userId, toForget));
+      await tx
+        .update(users)
+        .set({ name: sql`${users.username}`, username: null })
+        .where(inArray(users.id, toForget));
+    });
+  }
+  if (toDelete.length) {
+    await db.delete(users).where(inArray(users.id, toDelete));
+  }
+  return toForget.length + toDelete.length;
 }
 
 // Supprime les sessions expirées (Better Auth les garde, avec l'adresse IP et le navigateur)

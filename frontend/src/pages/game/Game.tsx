@@ -79,7 +79,7 @@ const Game = () => {
     sendMessage("player-joined-game", { room: gameId });
   }, [gameId, userId, sendMessage, error]);
 
-  useGameEvents(setWaitingDeal, !error);
+  useGameEvents(gameId, setWaitingDeal, !error);
 
   // Notification de l'utilisateur si c'est son tour
   const notifyPlayerTurn = useCallback(() => {

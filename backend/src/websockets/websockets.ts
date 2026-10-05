@@ -20,6 +20,7 @@ type Payload = Record<string, unknown>;
 const SESSION_EXPIRED = { message: "Session expirée, veuillez vous reconnecter" };
 const MOVE_REFUSED = { message: "Coup refusé" };
 const CREATOR_ONLY = { message: "Seul le créateur de la partie peut faire cela" };
+const NOT_A_PLAYER = { message: "Tu ne fais pas partie de cette partie" };
 
 // Joueur de la session portée par les cookies du handshake (null sans session ou sans pseudo)
 async function sessionPlayer(socket: Socket, app: FastifyInstance) {
@@ -90,8 +91,6 @@ async function creatorGame(socket: GameSocket, room: string): Promise<GameType |
   return game;
 }
 
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 export async function websockets(app: FastifyInstance) {
   await app.ready();
   const io: Server = app.io;
@@ -118,14 +117,18 @@ export async function websockets(app: FastifyInstance) {
     const { userId, username } = socket.data;
     logger.info(`Joueur connecté : ${username} (${userId}) - socket: ${socket.id}`);
 
-    // Un joueur rejoint une partie (après un délai pour éviter les problèmes de concurrence)
+    // Un joueur entre dans la room d'une partie dont il est joueur
     on(socket, app, "player-joined-game", ["room"], async ({ room }) => {
       const gameId = room as string;
-      await wait(1000);
 
       let game = await getGame(gameId);
       if ("error" in game) {
         logger.error("Game not found for room:", gameId);
+        return;
+      }
+      // Seuls les joueurs de la partie en suivent les mises à jour
+      if (!game.players.some((player) => player.id === userId)) {
+        refuse(socket, NOT_A_PLAYER);
         return;
       }
       if (game.state !== "pending") {
@@ -133,6 +136,11 @@ export async function websockets(app: FastifyInstance) {
         game = await getGame(gameId);
       }
 
+      // Une seule room de partie par socket : on quitte la précédente
+      const previous = socket.data.room;
+      if (previous && previous !== gameId) {
+        socket.leave(previous);
+      }
       socket.join(gameId);
       socket.data.room = gameId;
       io.to(gameId).emit("player-joined-game", game);
@@ -154,7 +162,6 @@ export async function websockets(app: FastifyInstance) {
       await updateGame({ params: { action: "start", gameId }, body: { userId } });
       const game = await getGame(gameId);
       if ("error" in game) return;
-      await wait(3000);
       io.to(gameId).emit("start-game", game);
     });
 
@@ -195,7 +202,6 @@ export async function websockets(app: FastifyInstance) {
       io.to(gameId).emit("waiting-deal");
       const next = await createNextGame(gameId);
       if (!next) return;
-      await wait(1000);
       io.to(gameId).emit("go-to-new-game", next);
     });
 

@@ -14,7 +14,7 @@ Décisions durables qui s'appliquent à toutes les phases :
 - **Rooms** : une room par partie, identifiée par l'id de la partie. Un socket est dans au plus une room de partie. Entrer dans une room exige d'être joueur de la partie.
 - **Présence** : un joueur est présent dans une partie tant qu'au moins un de ses sockets est dans la room. Délai de grâce de 10 s avant de le retirer (salle d'attente) ou de le marquer `disconnected` (partie en cours).
 - **Routes HTTP** inchangées (`PATCH /api/game/join/:id` reste l'entrée dans un salon).
-- **Schéma** : inchangé. Base jetable : pas de migration des parties en cours, les parties en production au moment du déploiement peuvent être perdues.
+- **Schéma** : inchangé, sauf une colonne `games.next_game_id` (phase 5) : la partie créée par « Rejouer », pour qu'un second clic renvoie la même. Base jetable : pas de migration des parties en cours, les parties en production au moment du déploiement peuvent être perdues.
 - **Session** : toujours vérifiée au handshake et à chaque événement (pas de cache, hors périmètre).
 
 ---
@@ -117,16 +117,16 @@ Les ids de cartes sont tirés au hasard à la distribution. Chaque diffusion (é
 
 ### Ce qu'on livre
 
-Le serveur refuse, avec un message, les actions incohérentes avec l'état de la partie : distribuer alors qu'une manche est en cours (seulement au lancement ou en fin de manche), lancer avec moins de 2 joueurs, révéler une 3e carte ou révéler hors de la phase initiale, relancer une partie qui n'est pas terminée. « Rejouer » est idempotent : un second clic du créateur renvoie la nouvelle partie déjà créée au lieu d'en créer une autre.
+Le serveur refuse, avec un message, les actions incohérentes avec l'état de la partie : distribuer alors qu'une manche est en cours (seulement au lancement ou en fin de manche), lancer avec moins de 2 joueurs, révéler une 3e carte ou révéler hors de la phase initiale, relancer une partie qui n'est pas terminée. « Rejouer » est idempotent : un second clic du créateur renvoie la nouvelle partie déjà créée au lieu d'en créer une autre. Relancer exige au moins un autre joueur qui veut rejouer (sinon la nouvelle partie serait injouable, comme un lancement seul). L'événement `waiting-deal` n'est diffusé qu'une fois la distribution acceptée.
 
 ### Critères d'acceptation
 
-- [ ] Test : `start-game` pendant une manche en cours est refusé, partie inchangée.
-- [ ] Test : `start-game` avec un seul joueur est refusé.
-- [ ] Test : une 3e révélation initiale, ou une révélation pendant `draw`, est refusée.
-- [ ] Test : `restart-game` sur une partie non terminée est refusé.
-- [ ] Test : deux `restart-game` successifs ne créent qu'une seule nouvelle partie et renvoient le même id.
-- [ ] `make check` vert.
+- [x] Test : `start-game` pendant une manche en cours est refusé, partie inchangée.
+- [x] Test : `start-game` avec un seul joueur est refusé.
+- [x] Test : une 3e révélation initiale, ou une révélation pendant `draw`, est refusée.
+- [x] Test : `restart-game` sur une partie non terminée est refusé.
+- [x] Test : deux `restart-game` successifs ne créent qu'une seule nouvelle partie et renvoient le même id.
+- [x] `make check` vert.
 
 ## Bloquée par
 

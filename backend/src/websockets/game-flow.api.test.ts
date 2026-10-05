@@ -159,6 +159,7 @@ describe("déroulé d'une partie par websocket", () => {
     const bobAgain = nextEvent(socket, "play-again");
     bobSocket.emit("player-play-again", { room: gameId });
     expect((await bobAgain).playersPlayAgain).toEqual([alice.id, bob.id]);
+    await db.update(games).set({ state: "finished" }).where(eq(games.id, gameId));
 
     const newGameEvent = nextEvent<{ gameId: string; players: string[] }>(socket, "go-to-new-game");
     socket.emit("restart-game", { room: gameId });

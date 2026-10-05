@@ -1,7 +1,7 @@
 import { fromNodeHeaders } from "better-auth/node";
 import type { FastifyInstance } from "fastify";
 import type { Socket } from "socket.io";
-import type { Ack, ClientEvent, ClientPayloads, GameType, MoveType } from "../../../shared/types.ts";
+import type { Ack, ClientEvent, ClientPayloads, GameType, MoveType, NextGame } from "../../../shared/types.ts";
 import {
   addPlayerPlayAgain,
   getGame,
@@ -151,10 +151,11 @@ export async function websockets(app: FastifyInstance) {
     // Démarrer une partie
     on(socket, app, "start-game", async ({ room: gameId }) => {
       if (!(await creatorGame(socket, gameId))) return CREATOR_ONLY;
-      io.to(gameId).emit("waiting-deal");
       const started = await updateGame({ params: { action: "start", gameId }, body: { userId } });
       const refusal = errorOf(started);
       if (refusal) return refusal;
+      // Le front joue l'animation de distribution à partir de waiting-deal
+      io.to(gameId).emit("waiting-deal");
       io.to(gameId).emit("start-game", started as GameType);
     });
 
@@ -175,10 +176,11 @@ export async function websockets(app: FastifyInstance) {
     // Nouvelle partie avec les joueurs qui ont demandé à rejouer
     on(socket, app, "restart-game", async ({ room: gameId }) => {
       if (!(await creatorGame(socket, gameId))) return CREATOR_ONLY;
-      io.to(gameId).emit("waiting-deal");
       const next = await createNextGame(gameId);
-      if (!next) return GAME_NOT_FOUND;
-      io.to(gameId).emit("go-to-new-game", next);
+      const refusal = errorOf(next);
+      if (refusal) return refusal;
+      io.to(gameId).emit("waiting-deal");
+      io.to(gameId).emit("go-to-new-game", next as NextGame);
     });
 
     // Un joueur qui se déconnecte quitte la partie

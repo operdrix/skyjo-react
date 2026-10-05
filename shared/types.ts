@@ -76,7 +76,8 @@ type GameFields<D> = {
   gameData: D;
   playersPlayAgain: string[];
 };
-export type StoredGame = GameFields<GameData>;
+// nextGameId : partie créée par « Rejouer », jamais diffusée (la nouvelle partie est privée)
+export type StoredGame = GameFields<GameData> & { nextGameId: string | null };
 
 // Partie telle que renvoyée par l'API et diffusée par les websockets
 export type GameType = GameFields<PublicGameData>;

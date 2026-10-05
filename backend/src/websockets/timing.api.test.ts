@@ -1,6 +1,9 @@
 import type { Socket } from "socket.io-client";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { FastifyInstance } from "fastify";
+import { eq } from "drizzle-orm";
+import { db } from "../db/index.ts";
+import { games } from "../db/schema.ts";
 import { closeApp, connectPlayer, type TestPlayer, createPlayer, nextEvent, setupApp } from "../../test/helpers.ts";
 
 let app: FastifyInstance;
@@ -69,6 +72,10 @@ describe("diffusions sans attente artificielle", () => {
 
   it("diffuse la nouvelle partie immédiatement", async () => {
     const gameId = await aliceAndBobGame();
+    await db
+      .update(games)
+      .set({ state: "finished", playersPlayAgain: [alice.id, bob.id] })
+      .where(eq(games.id, gameId));
     const socket = await connect(alice);
     const joined = nextEvent(socket, "player-joined-game");
     socket.emit("player-joined-game", { room: gameId });

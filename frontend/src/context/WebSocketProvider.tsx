@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { io } from "socket.io-client";
-import { useLocation, useNavigate } from "react-router";
 import { type GameClientSocket, WebSocketContext } from "@/context/WebSocketContext";
-import { goToLogin } from "@/lib/redirect";
+import { useUser } from "@/hooks/User";
 import { toast } from "@/lib/toast";
 import type { Ack, ClientEvent, ClientPayloads, ServerEvent, ServerToClientEvents } from "../../../shared/types";
 
@@ -31,8 +30,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, 
   );
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
-  const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { refresh } = useUser();
 
   useEffect(() => {
     if (!socket) {
@@ -66,23 +64,27 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, 
       let response: Ack;
       try {
         if (!socket || !isConnected) throw new Error("Socket déconnecté");
-        // Émission non typée : le catalogue garantit déjà la forme de event et data
-        const emitWithAck = socket.timeout(ACK_TIMEOUT_MS).emitWithAck as (e: string, d: unknown) => Promise<Ack>;
-        response = await emitWithAck(event, data);
+        // Émission non typée : le catalogue garantit déjà la forme de event et data.
+        // La méthode est appelée sur son objet (emitWithAck s'appuie sur this).
+        const withTimeout = socket.timeout(ACK_TIMEOUT_MS) as unknown as {
+          emitWithAck: (e: string, d: unknown) => Promise<Ack>;
+        };
+        response = await withTimeout.emitWithAck(event, data);
       } catch {
         response = { ok: false, message: UNREACHABLE };
       }
 
       if (!response.ok) {
         if (response.reason === "session-expired") {
-          goToLogin(navigate, pathname, response.message);
+          // Session rechargée : la page, voyant le joueur déconnecté, l'envoie vers la connexion
+          refresh();
         } else {
           toast({ type: "error", message: response.message });
         }
       }
       return response;
     },
-    [socket, isConnected, navigate, pathname],
+    [socket, isConnected, refresh],
   );
 
   const subscribeToEvent = useCallback(

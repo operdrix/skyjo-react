@@ -1,0 +1,1 @@
+ALTER TABLE `games` ADD `next_game_id` varchar(16);

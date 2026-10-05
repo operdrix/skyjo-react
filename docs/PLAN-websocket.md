@@ -14,7 +14,7 @@ Décisions durables qui s'appliquent à toutes les phases :
 - **Rooms** : une room par partie, identifiée par l'id de la partie. Un socket est dans au plus une room de partie. Entrer dans une room exige d'être joueur de la partie.
 - **Présence** : un joueur est présent dans une partie tant qu'au moins un de ses sockets est dans la room. Délai de grâce de 10 s avant de le retirer (salle d'attente) ou de le marquer `disconnected` (partie en cours).
 - **Routes HTTP** inchangées (`PATCH /api/game/join/:id` reste l'entrée dans un salon).
-- **Schéma** : inchangé. Base jetable : pas de migration des parties en cours, les parties en production au moment du déploiement peuvent être perdues.
+- **Schéma** : inchangé, sauf une colonne `games.next_game_id` (phase 5) : la partie créée par « Rejouer », pour qu'un second clic renvoie la même. Base jetable : pas de migration des parties en cours, les parties en production au moment du déploiement peuvent être perdues.
 - **Session** : toujours vérifiée au handshake et à chaque événement (pas de cache, hors périmètre).
 
 ---
@@ -78,7 +78,7 @@ Les fonctions pures des coups deviennent partagées. Le client n'envoie plus que
 - [x] Tests unitaires : pour chaque étape, les coups permis et refusés.
 - [x] Test d'API : une manche complète jouée uniquement par intentions jusqu'à `endGame`, scores enregistrés.
 - [x] Test : un `play-move` portant un `gameData` est refusé (schéma) ; un coup hors étape (`flip` pendant `draw`) est refusé.
-- [x] Le front (pioche, défausse, plateau, révélation initiale) envoie des intentions (tests de composants ; partie complète jouée par intentions en test d'API). Vérification manuelle dans le navigateur à faire.
+- [x] Le front (pioche, défausse, plateau, révélation initiale) envoie des intentions (tests de composants ; partie complète jouée par intentions en test d'API). Vérifié dans le navigateur le 2026-10-05.
 - [x] `make check` vert.
 
 ## Bloquée par
@@ -101,7 +101,7 @@ Les ids de cartes sont tirés au hasard à la distribution. Chaque diffusion (é
 - [x] Test : la pioche diffusée ne contient que des cartes masquées, de la bonne longueur.
 - [x] Test : en `endGame`, toutes les cartes des joueurs portent leur valeur.
 - [x] Test : deux distributions donnent des ids sans lien avec la valeur (pas de `card_N`).
-- [ ] Contrôle manuel dans le navigateur : l'onglet réseau ne montre aucune valeur cachée pendant une manche (à faire).
+- [x] Contrôle manuel dans le navigateur : aucune valeur cachée dans les réponses HTTP ni dans les événements reçus pendant une manche (vérifié le 2026-10-05).
 - [x] `CLAUDE.md` et `.claude/memoire/reprise.md` à jour.
 - [x] `make check` vert.
 
@@ -117,16 +117,16 @@ Les ids de cartes sont tirés au hasard à la distribution. Chaque diffusion (é
 
 ### Ce qu'on livre
 
-Le serveur refuse, avec un message, les actions incohérentes avec l'état de la partie : distribuer alors qu'une manche est en cours (seulement au lancement ou en fin de manche), lancer avec moins de 2 joueurs, révéler une 3e carte ou révéler hors de la phase initiale, relancer une partie qui n'est pas terminée. « Rejouer » est idempotent : un second clic du créateur renvoie la nouvelle partie déjà créée au lieu d'en créer une autre.
+Le serveur refuse, avec un message, les actions incohérentes avec l'état de la partie : distribuer alors qu'une manche est en cours (seulement au lancement ou en fin de manche), lancer avec moins de 2 joueurs, révéler une 3e carte ou révéler hors de la phase initiale, relancer une partie qui n'est pas terminée. « Rejouer » est idempotent : un second clic du créateur renvoie la nouvelle partie déjà créée au lieu d'en créer une autre. Relancer exige au moins un autre joueur qui veut rejouer (sinon la nouvelle partie serait injouable, comme un lancement seul). L'événement `waiting-deal` n'est diffusé qu'une fois la distribution acceptée.
 
 ### Critères d'acceptation
 
-- [ ] Test : `start-game` pendant une manche en cours est refusé, partie inchangée.
-- [ ] Test : `start-game` avec un seul joueur est refusé.
-- [ ] Test : une 3e révélation initiale, ou une révélation pendant `draw`, est refusée.
-- [ ] Test : `restart-game` sur une partie non terminée est refusé.
-- [ ] Test : deux `restart-game` successifs ne créent qu'une seule nouvelle partie et renvoient le même id.
-- [ ] `make check` vert.
+- [x] Test : `start-game` pendant une manche en cours est refusé, partie inchangée.
+- [x] Test : `start-game` avec un seul joueur est refusé.
+- [x] Test : une 3e révélation initiale, ou une révélation pendant `draw`, est refusée.
+- [x] Test : `restart-game` sur une partie non terminée est refusé.
+- [x] Test : deux `restart-game` successifs ne créent qu'une seule nouvelle partie et renvoient le même id.
+- [x] `make check` vert.
 
 ## Bloquée par
 

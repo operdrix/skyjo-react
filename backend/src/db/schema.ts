@@ -96,6 +96,8 @@ export const games = mysqlTable("games", {
     .$type<string[]>()
     .notNull()
     .$defaultFn(() => []),
+  // Partie créée par « Rejouer » : une seule par partie terminée
+  nextGameId: varchar({ length: 16 }),
   // Objet vide tant que la partie n'a pas démarré
   gameData: json()
     .$type<GameData>()

@@ -1,5 +1,5 @@
 import { and, asc, eq, getTableColumns, inArray, type SQL } from "drizzle-orm";
-import type { ErrorType, GameData, GameType, Intent, StoredGame } from "../../../shared/types.ts";
+import type { ErrorType, GameData, GameType, Intent, NextGame, StoredGame } from "../../../shared/types.ts";
 import { db, type Db, type Tx } from "../db/index.ts";
 import { gamePlayers, games, users } from "../db/schema.ts";
 import { applyIntent } from "../game/moves.ts";
@@ -17,7 +17,7 @@ const CREATOR_ONLY = { error: "Seul le créateur de la partie peut faire cela.",
 const isError = <T extends object>(value: T | ErrorType): value is ErrorType => "error" in value;
 
 // Partie telle qu'envoyée aux joueurs : les cartes non révélées sont masquées
-function toPublic(game: StoredGame): GameType {
+function toPublic({ nextGameId: _, ...game }: StoredGame): GameType {
   return game.gameData ? { ...game, gameData: hideCards(game.gameData) } : (game as unknown as GameType);
 }
 
@@ -204,6 +204,12 @@ async function applyGameAction(tx: Tx, game: StoredGame, action: string, body: N
       return;
 
     case "start":
+      if (game.state === "playing" && game.gameData.currentStep !== "endGame") {
+        return { error: "Une manche est déjà en cours.", code: 400 };
+      }
+      if (game.players.length < 2) {
+        return { error: "Il faut au moins 2 joueurs pour lancer la partie.", code: 400 };
+      }
       await tx
         .update(games)
         .set({
@@ -323,25 +329,36 @@ export async function addPlayerPlayAgain(gameId: string, userId: string) {
   });
 }
 
-// Nouvelle partie privée, démarrée, avec le créateur et les joueurs qui ont demandé à rejouer
-export async function restartGame(gameId: string) {
-  const game = await loadGame(gameId);
-  if (!game) {
-    return null;
-  }
+// Nouvelle partie privée, démarrée, avec le créateur et les joueurs qui ont demandé à rejouer.
+// Une seule par partie terminée : une nouvelle demande renvoie celle déjà créée.
+export async function restartGame(gameId: string): Promise<NextGame | ErrorType> {
+  return db.transaction(async (tx) => {
+    const game = await lockGame(tx, gameId);
+    if (!game) {
+      return { error: "La partie n'existe pas.", code: 404 };
+    }
+    const players = game.playersPlayAgain;
+    if (game.nextGameId) {
+      return { gameId: game.nextGameId, players };
+    }
+    if (game.state !== "finished") {
+      return { error: "La partie n'est pas terminée.", code: 400 };
+    }
+    const others = players.filter((playerId) => playerId !== game.creator);
+    if (!others.length) {
+      return { error: "Il faut au moins un autre joueur qui veut rejouer.", code: 400 };
+    }
 
-  const newGameId = await db.transaction(async (tx) => {
     const created = await createGame(game.creator, true, tx);
     if (isError(created)) {
-      throw new Error(created.error);
+      return created;
     }
-    const others = game.playersPlayAgain.filter((playerId) => playerId !== game.creator);
-    if (others.length) {
-      await tx.insert(gamePlayers).values(others.map((userId) => ({ gameId: created.gameId, userId })));
-    }
-    return created.gameId;
+    await tx.insert(gamePlayers).values(others.map((userId) => ({ gameId: created.gameId, userId })));
+    await tx
+      .update(games)
+      .set({ state: "playing", roundNumber: 1, gameData: rules.dealCards([game.creator, ...others]) })
+      .where(eq(games.id, created.gameId));
+    await tx.update(games).set({ nextGameId: created.gameId }).where(eq(games.id, game.id));
+    return { gameId: created.gameId, players };
   });
-
-  await updateGame({ params: { action: "start", gameId: newGameId } });
-  return { gameId: newGameId, players: game.playersPlayAgain };
 }

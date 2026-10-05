@@ -43,8 +43,10 @@ Fichier versionné pour reprendre le travail sur n'importe quel PC. Chargé par 
 - Chrome headless ne descend pas sous 500 px (sauf émulation CDP) de large : une capture à 390 px est tronquée, pas un vrai rendu mobile.
 
 ## Refonte websocket (en cours, `docs/PRD-websocket.md` et `docs/PLAN-websocket.md`)
-- Phases 1 et 6 (PR #50), 2 et 3 (PR #51) mergées ; phase 4 (cartes cachées) sur `feat/websocket-cartes-cachees`. Restent : 5 (contrôles d'état) et 7 (présence avec délai de grâce).
-- Test manuel à 2 joueurs dans Chrome à refaire avant release (protocole changé : intentions, accusés, cartes masquées).
+- Phases 1 et 6 (PR #50), 2 et 3 (PR #51), 4 (PR #52) mergées ; phase 5 (contrôles d'état, migration 0003 `next_game_id`) sur `feat/websocket-controles-etat`. Reste : 7 (présence avec délai de grâce).
+- Contrôles d'état : pas de distribution pendant une manche (seulement au lancement ou en `endGame`), 2 joueurs minimum, relance seulement d'une partie terminée avec au moins un autre joueur, relance idempotente. Après pull : `make db-reset` ou redémarrer le back.
+- Test manuel des phases 1 à 6 fait le 2026-10-05 (Chrome + robot Node) : rooms, refus avec toast et resynchro, coups par intention, cartes masquées (0 fuite en HTTP et en socket), manche suivante avec animation, fin de partie, « Rejouer » (double-clic : une seule partie), reconnexion, session expirée (côté robot). Trois bugs trouvés et corrigés : `emitWithAck` appelé hors de son objet (tous les envois échouaient dans le navigateur), annonce de la page de jeu avant la connexion du socket, et session expirée qui ne menait pas à la connexion (la page de connexion, voyant encore la session en cache, renvoyait vers la partie : le provider recharge maintenant la session et `GameLayout` redirige).
+- Robot de test pilotable : petit serveur HTTP local (Node + `socket.io-client`) qui garde le socket ouvert, journalise les événements reçus et compte les cartes cachées qui fuient. Un robot qui se déconnecte quitte la salle d'attente (avant la phase 7) : il doit rester connecté. Pour aller vite en fin de manche : révéler en base toutes les cartes sauf la dernière de chaque joueur.
 
 ## Reprendre sur un autre PC
 1. `git checkout dev && git pull`, puis `make install && make dev` (Docker requis ; `make env` crée les `.env` depuis les `.env.example`).
@@ -69,7 +71,7 @@ Restent :
 4. (corrigé) Le front n'envoie plus `userId`.
 5. (testé le 2026-10-03) Fin de partie, manche suivante, reconnexion : OK.
 6. (corrigé) Retour dans la salle d'attente : la cause était le CORS qui bloquait le PATCH de `join`.
-7. `restartGame` ajoute toujours le créateur à la nouvelle partie, même s'il n'a pas demandé à rejouer (comportement d'origine conservé).
+7. `restartGame` ajoute toujours le créateur à la nouvelle partie, même s'il n'a pas demandé à rejouer (comportement d'origine conservé). Depuis la phase 5, il faut au moins un autre joueur qui veut rejouer.
 8. (corrigé, refonte websocket phase 3) `play-move` n'accepte plus de `gameData` : le serveur calcule le coup à partir de l'intention.
 9. (corrigé, refonte websocket phase 4) Les cartes cachées ne quittent plus le serveur (valeurs masquées dans l'API et les sockets, ids de cartes aléatoires au lieu de `card_N`).
 

@@ -7,7 +7,7 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-field px-3 py-2 font-semibold transition-colors hover:bg-base-200 ${isActive ? "bg-base-200" : ""}`;
 
 const Header = () => {
-  const { isAuthentified, logout, loading, userName } = useUser();
+  const { isAuthentified, isGuest, logout, loading, userName } = useUser();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -32,11 +32,16 @@ const Header = () => {
         <NavLink to="/public-rooms" className={navLinkClass}>
           Parties publiques
         </NavLink>
-        {isAuthentified && (
-          <NavLink to="/dashboard" className={navLinkClass}>
-            Mon espace
-          </NavLink>
-        )}
+        {isAuthentified &&
+          (isGuest ? (
+            <NavLink to="/auth/register" className={navLinkClass}>
+              Créer mon compte
+            </NavLink>
+          ) : (
+            <NavLink to="/dashboard" className={navLinkClass}>
+              Mon espace
+            </NavLink>
+          ))}
       </nav>
       <div className="flex items-center gap-2">
         {loading ? (

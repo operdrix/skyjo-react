@@ -13,7 +13,7 @@ const RoundResults = () => {
   const { game, setGame } = useGame();
   const { subscribeToEvent, unsubscribeFromEvent } = useWebSocket();
   const sendMessage = useGameAction();
-  const { userId } = useUser();
+  const { userId, isGuest } = useUser();
   const [loading, setLoading] = useState<boolean>(false);
   const titleId = useId();
 
@@ -83,6 +83,11 @@ const RoundResults = () => {
           <Link to="/" className="btn btn-ghost btn-sm">
             Quitter
           </Link>
+          {isGuest && (
+            <Link to="/auth/register" className="btn btn-outline btn-sm w-full">
+              Créer mon compte pour garder mes parties
+            </Link>
+          )}
         </div>
       ) : (
         <div className="flex justify-end">

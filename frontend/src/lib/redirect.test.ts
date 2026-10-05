@@ -1,4 +1,4 @@
-import { goToLogin, safeRedirect, withRedirect } from "@/lib/redirect";
+import { goToLogin, goToRegister, safeRedirect, withRedirect } from "@/lib/redirect";
 import { dismissToast, getToasts } from "@/lib/toast";
 import { describe, expect, it, vi } from "vitest";
 
@@ -35,6 +35,18 @@ describe("goToLogin", () => {
     expect(getToasts()).toMatchObject([
       { type: "info", title: "Connexion requise", message: "Connecte-toi pour rejoindre la partie" },
     ]);
+    getToasts().forEach((t) => dismissToast(t.id));
+  });
+});
+
+describe("goToRegister", () => {
+  it("affiche un message éphémère et ouvre l'inscription", () => {
+    const navigate = vi.fn();
+
+    goToRegister(navigate, "Crée un compte pour créer une partie.");
+
+    expect(navigate).toHaveBeenCalledWith("/auth/register");
+    expect(getToasts()).toMatchObject([{ message: "Crée un compte pour créer une partie." }]);
     getToasts().forEach((t) => dismissToast(t.id));
   });
 });

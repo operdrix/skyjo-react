@@ -1,3 +1,4 @@
+import GuestTag from "@/components/GuestTag";
 import type { GameType } from "@/types/types";
 
 // Couleurs d'avatar tirées du thème, attribuées dans l'ordre d'arrivée
@@ -22,7 +23,10 @@ export default function PlayerList({ game }: { game: GameType }) {
             {player?.username.charAt(0).toUpperCase()}
           </span>
           <div className="flex-1">
-            <p className="font-bold">{player?.username}</p>
+            <p className="font-bold">
+              {player?.username}
+              <GuestTag player={player} />
+            </p>
             {player.id === game.creatorPlayer.id && <p className="text-sm text-muted">Créateur de la partie</p>}
           </div>
         </li>

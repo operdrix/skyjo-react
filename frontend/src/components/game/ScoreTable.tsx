@@ -1,6 +1,12 @@
+import GuestTag from "@/components/GuestTag";
 import { formatPoints, formatScore, rankPlayers } from "@/game/scores";
 
-type Player = { id: string; username: string; game_players: { score: number; scoreByRound: number[] } };
+type Player = {
+  id: string;
+  username: string;
+  isAnonymous?: boolean;
+  game_players: { score: number; scoreByRound: number[] };
+};
 
 // Tableau des scores : « full » détaille chaque manche, « round » résume la dernière manche
 export default function ScoreTable({
@@ -56,6 +62,7 @@ export default function ScoreTable({
                   </span>
                 )}
                 {player.username}
+                <GuestTag player={player} />
                 {isMe && <span className="ml-1 text-xs font-normal text-muted">(toi)</span>}
               </td>
               {variant === "full" ? (

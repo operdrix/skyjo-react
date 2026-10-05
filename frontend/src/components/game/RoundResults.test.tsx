@@ -4,10 +4,10 @@ import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const sendMessage = vi.hoisted(() => vi.fn());
-const state = vi.hoisted(() => ({ game: null as unknown, userId: "BOB" }));
+const state = vi.hoisted(() => ({ game: null as unknown, userId: "BOB", isGuest: false }));
 
 vi.mock("@/hooks/Game", () => ({ useGame: () => ({ game: state.game, setGame: vi.fn() }) }));
-vi.mock("@/hooks/User", () => ({ useUser: () => ({ userId: state.userId }) }));
+vi.mock("@/hooks/User", () => ({ useUser: () => ({ userId: state.userId, isGuest: state.isGuest }) }));
 vi.mock("@/hooks/WebSocket", () => ({
   useWebSocket: () => ({ subscribeToEvent: vi.fn(), unsubscribeFromEvent: vi.fn() }),
 }));
@@ -37,8 +37,24 @@ beforeEach(() => {
   vi.clearAllMocks();
   sendMessage.mockResolvedValue({ ok: true });
   state.userId = "BOB";
+  state.isGuest = false;
 });
 afterEach(cleanup);
+
+describe("invité en fin de partie", () => {
+  it("lui propose de créer son compte", () => {
+    state.game = makeGame("finished");
+    state.isGuest = true;
+    renderResults();
+    expect(screen.getByRole("link", { name: /créer mon compte/i }).getAttribute("href")).toBe("/auth/register");
+  });
+
+  it("ne le propose pas à un joueur avec compte", () => {
+    state.game = makeGame("finished");
+    renderResults();
+    expect(screen.queryByRole("link", { name: /créer mon compte/i })).toBeNull();
+  });
+});
 
 describe("résultats de manche au centre de la table", () => {
   it("s'affiche dans la page, sans fenêtre qui recouvre les cartes", () => {

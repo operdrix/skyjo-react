@@ -1,7 +1,7 @@
 import CardFan from "@/components/brand/CardFan";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { goToLogin } from "@/lib/redirect";
+import { goToLogin, goToRegister } from "@/lib/redirect";
 import { useUser } from "./hooks/User";
 import { api } from "./services/apiService";
 
@@ -12,13 +12,17 @@ const FEATURES = [
 ];
 
 function App() {
-  const { loading: userLoading, isAuthentified } = useUser();
+  const { loading: userLoading, isAuthentified, isGuest } = useUser();
   const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
 
   const handleCreateGame = async () => {
     if (!userLoading && !isAuthentified) {
       goToLogin(navigate, window.location.pathname, "Connecte-toi pour créer une partie.");
+      return;
+    }
+    if (isGuest) {
+      goToRegister(navigate, "Crée un compte pour créer une partie.");
       return;
     }
 

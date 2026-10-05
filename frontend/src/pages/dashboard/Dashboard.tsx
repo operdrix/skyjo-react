@@ -7,7 +7,7 @@ import StatsBar from "@/components/dashboard/StatsBar";
 import ErrorMessage from "@/components/game/messages/ErrorMessage";
 import PageSkeleton from "@/components/PageSkeleton";
 import { opponentStats, playerStats } from "@/game/stats";
-import { goToLogin } from "@/lib/redirect";
+import { goToLogin, goToRegister } from "@/lib/redirect";
 import { toast } from "@/lib/toast";
 import { useUser } from "@/hooks/User";
 import { api } from "@/services/apiService";
@@ -16,7 +16,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 
 const Dashboard = () => {
-  const { userId, userName, loading: userLoading, isAuthentified } = useUser();
+  const { userId, userName, loading: userLoading, isAuthentified, isGuest } = useUser();
   const navigate = useNavigate();
   const [games, setGames] = useState<GameType[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -27,11 +27,13 @@ const Dashboard = () => {
   useEffect(() => {
     if (!userLoading && !isAuthentified) {
       goToLogin(navigate, window.location.pathname, "Connecte-toi pour accéder à ton espace.");
+    } else if (isGuest) {
+      goToRegister(navigate, "Crée un compte pour retrouver tes parties.");
     }
-  }, [isAuthentified, navigate, userLoading]);
+  }, [isAuthentified, isGuest, navigate, userLoading]);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || isGuest) return;
 
     const getGames = async () => {
       setLoading(true);
@@ -52,7 +54,7 @@ const Dashboard = () => {
     };
 
     if (!error) getGames();
-  }, [userId, error]);
+  }, [userId, isGuest, error]);
 
   const handleDeleteGame = async (gameId: string) => {
     // La confirmation est demandée dans la carte de la partie

@@ -52,10 +52,10 @@ Un invité qui tente de créer une partie ou d'ouvrir « Mon espace » voit un m
 
 ### Critères d'acceptation
 
-- [ ] Test de composant : un invité qui va sur la création de partie ou « Mon espace » est renvoyé vers l'inscription avec un message.
-- [ ] Test de composant : en-tête et fin de partie proposent « Créer mon compte » à un invité, pas à un joueur avec compte.
-- [ ] Test : la partie diffusée indique les joueurs invités ; la mention « invité » s'affiche en salle d'attente, à la table, dans les résultats et l'historique.
-- [ ] `make check` vert.
+- [x] Test de composant : un invité qui va sur la création de partie ou « Mon espace » est renvoyé vers l'inscription avec un message.
+- [x] Test de composant : en-tête et fin de partie proposent « Créer mon compte » à un invité, pas à un joueur avec compte.
+- [x] Test : la partie diffusée indique les joueurs invités ; la mention « invité » s'affiche en salle d'attente, à la table, dans les résultats et l'historique.
+- [x] `make check` vert.
 
 ## Bloquée par
 

@@ -21,7 +21,7 @@ const validationSchema = yup.object().shape({
 
 function Register() {
   const [searchParams] = useSearchParams();
-  const { refresh, isAuthentified } = useUser();
+  const { refresh, isAuthentified, isGuest } = useUser();
   const redirect = safeRedirect(searchParams.get("redirect"));
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [withEmail, setWithEmail] = useState<boolean>(false);
@@ -48,7 +48,8 @@ function Register() {
     refresh();
   };
 
-  if (isAuthentified) {
+  // Un invité peut créer son compte depuis sa session invité
+  if (isAuthentified && !isGuest) {
     return <Navigate to={redirect} replace />;
   }
 

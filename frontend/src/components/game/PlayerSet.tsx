@@ -1,3 +1,4 @@
+import GuestTag from "@/components/GuestTag";
 import { formatPoints, formatScore } from "@/game/scores";
 import GameCard from "@/components/game/GameCard";
 import { useGame } from "@/hooks/Game";
@@ -133,6 +134,7 @@ const PlayerSet = ({
         <span className="flex min-w-0 items-center gap-1">
           {playerTurn && <span className="loading loading-dots loading-xs shrink-0" aria-label="À son tour"></span>}
           <span className="truncate">{player?.username}</span>
+          <GuestTag player={player} />
           <OnlineStatus status={player?.game_players?.status} />
         </span>
         {/* En fin de manche, les points de la manche remplacent le total (affiché dans les résultats) */}

@@ -25,6 +25,8 @@ export default defineConfig({
             GOOGLE_CLIENT_SECRET: "",
             SMTP_HOST: "localhost",
             SMTP_PORT: "1025",
+            // Délai de grâce avant de retirer un joueur déconnecté (10 s en vrai)
+            PRESENCE_GRACE_MS: "300",
           },
         },
       },

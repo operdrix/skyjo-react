@@ -166,11 +166,12 @@ Une déconnexion ne retire plus le joueur immédiatement. Le serveur attend 10 s
 
 ### Critères d'acceptation
 
-- [ ] Test : déconnexion puis reconnexion en moins de 10 s → aucun `player-left-game`, joueur toujours membre.
-- [ ] Test : déconnexion sans retour → après 10 s, retrait (salle d'attente) ou statut `disconnected` (partie), diffusé aux autres.
-- [ ] Test : deux sockets du même joueur, un seul se déconnecte → aucun changement.
-- [ ] Délai de grâce réglable en test (pas d'attente réelle de 10 s dans la suite).
-- [ ] `make check` vert.
+- [x] Test : déconnexion puis reconnexion en moins de 10 s → aucun `player-left-game`, joueur toujours membre.
+- [x] Test : déconnexion sans retour → après 10 s, retrait (salle d'attente) ou statut `disconnected` (partie), diffusé aux autres.
+- [x] Test : deux sockets du même joueur, un seul se déconnecte → aucun changement.
+- [x] Délai de grâce réglable en test (pas d'attente réelle de 10 s dans la suite) : `PRESENCE_GRACE_MS`, 300 ms dans les tests.
+- [x] Vérifié dans le navigateur (2026-10-05) : rafraîchissement sans départ, onglet en double fermé sans changement, départ environ 10 s après la fermeture du dernier onglet.
+- [x] `make check` vert.
 
 ## Bloquée par
 

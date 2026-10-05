@@ -20,6 +20,18 @@ const CREATOR_ONLY = "Seul le créateur de la partie peut faire cela";
 const NOT_A_PLAYER = "Tu ne fais pas partie de cette partie";
 const GAME_NOT_FOUND = "La partie n'existe pas.";
 
+// Délai avant de retirer un joueur déconnecté : un rafraîchissement ou une coupure courte passe inaperçu
+const PRESENCE_GRACE_MS = Number(process.env.PRESENCE_GRACE_MS ?? 10_000);
+
+// Départs en attente du délai de grâce
+const pendingLeaves = new Set<NodeJS.Timeout>();
+
+// À l'arrêt du serveur, les départs en attente sont abandonnés (la base est fermée)
+export function cancelPendingLeaves() {
+  pendingLeaves.forEach(clearTimeout);
+  pendingLeaves.clear();
+}
+
 // Contrôle de chaque champ attendu des événements client
 type Check = (value: unknown) => boolean;
 const MOVES: MoveType[] = ["draw", "take-discard", "discard-drawn", "replace", "flip", "reveal"];
@@ -183,16 +195,27 @@ export async function websockets(app: FastifyInstance) {
       io.to(gameId).emit("go-to-new-game", next as NextGame);
     });
 
-    // Un joueur qui se déconnecte quitte la partie
-    socket.on("disconnect", async () => {
+    // Un joueur déconnecté quitte la partie après le délai de grâce,
+    // sauf s'il y est revenu entre-temps ou s'il y a encore un autre onglet
+    socket.on("disconnect", () => {
       logger.info(`Joueur déconnecté : ${username} (${userId}) - socket: ${socket.id}`);
       const room = socket.data.room;
       if (!room) return;
-      await updateGame({ params: { action: "leave", gameId: room }, body: { userId } });
-      const game = await getGame(room);
-      if (!("error" in game)) {
-        io.to(room).emit("player-left-game", game);
-      }
+      const timer = setTimeout(async () => {
+        pendingLeaves.delete(timer);
+        try {
+          const sockets = await io.in(room).fetchSockets();
+          if (sockets.some((other) => other.data.userId === userId)) return;
+          await updateGame({ params: { action: "leave", gameId: room }, body: { userId } });
+          const game = await getGame(room);
+          if (!("error" in game)) {
+            io.to(room).emit("player-left-game", game);
+          }
+        } catch (error) {
+          logger.error("[disconnect]", error);
+        }
+      }, PRESENCE_GRACE_MS);
+      pendingLeaves.add(timer);
     });
   });
 }

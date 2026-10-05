@@ -1,8 +1,9 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { APIError, createAuthMiddleware } from "better-auth/api";
+import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { anonymous, username } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
+import { freeGuestUsername, linkGuestAccount, restoreGuestUsername } from "./controllers/users.ts";
 import { db } from "./db/index.ts";
 import * as schema from "./db/schema.ts";
 import { logger } from "./utils/logger.ts";
@@ -81,8 +82,11 @@ export function createAuth(secret: string) {
         usernameNormalization: false,
         displayUsername: false,
       }),
-      // Invités : session sans compte, le pseudo est choisi juste après (update-user)
-      anonymous(),
+      // Invités : session sans compte, le pseudo est choisi juste après (update-user).
+      // Un invité qui crée son compte (ou se connecte) garde ses parties
+      anonymous({
+        onLinkAccount: ({ anonymousUser, newUser }) => linkGuestAccount(anonymousUser.user.id, newUser.user.id),
+      }),
     ],
     databaseHooks: {
       session: {
@@ -100,6 +104,11 @@ export function createAuth(secret: string) {
         if (ctx.path === "/sign-up/email" && !ctx.body?.username) {
           throw new APIError("BAD_REQUEST", { message: "Le pseudo est obligatoire" });
         }
+        // Un invité qui s'inscrit peut garder son pseudo : il est libéré le temps de l'inscription
+        if (ctx.path === "/sign-up/email") {
+          const session = await getSessionFromCtx(ctx, { disableRefresh: true });
+          if (session?.user.isAnonymous) await freeGuestUsername(session.user.id, ctx.body.username);
+        }
         const theme = ctx.body?.theme;
         if (
           (ctx.path === "/sign-up/email" || ctx.path === "/update-user") &&
@@ -107,6 +116,13 @@ export function createAuth(secret: string) {
           !THEMES.includes(theme)
         ) {
           throw new APIError("BAD_REQUEST", { message: "Thème inconnu" });
+        }
+      }),
+      after: createAuthMiddleware(async (ctx) => {
+        if (ctx.path === "/sign-up/email") {
+          const session = await getSessionFromCtx(ctx, { disableRefresh: true });
+          const guestId = session?.user.isAnonymous ? session.user.id : null;
+          if (guestId) await restoreGuestUsername(guestId, Boolean(ctx.context.newSession));
         }
       }),
     },

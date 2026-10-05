@@ -16,7 +16,9 @@ interface WebSocketProviderProps {
 }
 
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, url, enabled = true }) => {
-  // Socket créé sans se connecter (la connexion est ouverte dans l'effet ci-dessous)
+  const { refresh, userId } = useUser();
+  // Socket créé sans se connecter (la connexion est ouverte dans l'effet ci-dessous).
+  // Un nouveau joueur (invité devenu compte) a sa propre connexion, authentifiée par sa nouvelle session
   const socket = useMemo<GameClientSocket | null>(
     () =>
       enabled
@@ -26,11 +28,11 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, 
             withCredentials: true, // Envoie automatiquement les cookies httpOnly
           })
         : null,
-    [url, enabled],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- userId : nouvelle connexion à chaque changement de joueur
+    [url, enabled, userId],
   );
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
-  const { refresh } = useUser();
 
   useEffect(() => {
     if (!socket) {

@@ -87,6 +87,11 @@ function Login() {
         </div>
 
         <p className="text-sm text-center mt-5">
+          <Link to={withRedirect("/auth/invite", redirect)} className="link">
+            Rejoindre sans compte
+          </Link>
+        </p>
+        <p className="text-sm text-center mt-2">
           Pas encore de compte ?{" "}
           <Link to={withRedirect("/auth/register", redirect)} className="link">
             Créer un compte

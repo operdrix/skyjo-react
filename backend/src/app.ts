@@ -202,7 +202,11 @@ export async function buildApp() {
     if (!session.user.username) {
       return reply.status(403).send({ error: USERNAME_REQUIRED });
     }
-    request.user = { id: session.user.id, username: session.user.username };
+    request.user = {
+      id: session.user.id,
+      username: session.user.username,
+      isAnonymous: Boolean(session.user.isAnonymous),
+    };
   });
   //gestion utilisateur
   usersRoutes(app);

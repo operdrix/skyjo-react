@@ -89,10 +89,13 @@ export async function getGames(query: GamesQuery) {
 export async function getUserGames(userId: string) {
   const user = await db.query.users.findFirst({
     where: (users, { eq }) => eq(users.id, userId),
-    columns: { id: true },
+    columns: { id: true, isAnonymous: true },
   });
   if (!user) {
     return { error: "L'utilisateur n'existe pas.", code: 404 };
+  }
+  if (user.isAnonymous) {
+    return { error: "Les invités n'ont pas d'historique.", code: 403 };
   }
   const memberGames = db.select({ id: gamePlayers.gameId }).from(gamePlayers).where(eq(gamePlayers.userId, userId));
   return (await findGames(db, inArray(games.id, memberGames), false)).map(toPublic);

@@ -37,6 +37,8 @@ export const users = mysqlTable("users", {
   lastActiveAt: timestamp({ fsp: 3 }),
   // Thème d'affichage choisi (tapis, neon, confettis), copié en local par le front
   theme: varchar({ length: 16 }).notNull().default("tapis"),
+  // Invité (jouer sans compte, plugin anonymous de Better Auth) : pas d'historique, oublié après 7 jours
+  isAnonymous: boolean().notNull().default(false),
   ...timestamps,
 });
 

@@ -48,6 +48,11 @@ Fichier versionné pour reprendre le travail sur n'importe quel PC. Chargé par 
 - Test manuel des phases 1 à 6 fait le 2026-10-05 (Chrome + robot Node) : rooms, refus avec toast et resynchro, coups par intention, cartes masquées (0 fuite en HTTP et en socket), manche suivante avec animation, fin de partie, « Rejouer » (double-clic : une seule partie), reconnexion, session expirée (côté robot). Trois bugs trouvés et corrigés : `emitWithAck` appelé hors de son objet (tous les envois échouaient dans le navigateur), annonce de la page de jeu avant la connexion du socket, et session expirée qui ne menait pas à la connexion (la page de connexion, voyant encore la session en cache, renvoyait vers la partie : le provider recharge maintenant la session et `GameLayout` redirige).
 - Robot de test pilotable : petit serveur HTTP local (Node + `socket.io-client`) qui garde le socket ouvert, journalise les événements reçus et compte les cartes cachées qui fuient. Depuis la phase 7, un robot déconnecté n'est retiré qu'après 10 s. Pour aller vite en fin de manche : révéler en base toutes les cartes sauf la dernière de chaque joueur.
 
+## Jouer sans compte (en cours, `docs/PRD-invite.md` et `docs/PLAN-invite.md`)
+- Phase 1 (rejoindre sans compte) sur `feat/invite` : plugin `anonymous` de Better Auth (`users.is_anonymous`, migration 0004), page `/auth/invite` (avertissement + pseudo proposé par `guestPseudo`), garde serveur : création de partie et historique refusés (403). Restent : 2 (ce que l'invité voit), 3 (conversion en compte), 4 (oubli après 7 jours). Release seulement après les 4.
+- Tests : helper `createGuest(app, pseudo)` (sign-in/anonymous puis update-user). Un invité sans pseudo (pseudo refusé) garde sa session : la page ne rouvre pas de session, elle ne change que le pseudo.
+- Piège pour la phase 3 : le plugin supprime le compte invité quand il se connecte à un compte existant (cascade sur ses parties).
+
 ## Reprendre sur un autre PC
 1. `git checkout dev && git pull`, puis `make install && make dev` (Docker requis ; `make env` crée les `.env` depuis les `.env.example`).
 2. Back http://localhost:3000 (Swagger `/api/documentation`), front http://localhost:5173, phpMyAdmin :8080, Mailpit :8025.

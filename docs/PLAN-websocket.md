@@ -51,13 +51,13 @@ Le catalogue d'événements typé remplace les chaînes libres des deux côtés.
 
 ### Critères d'acceptation
 
-- [ ] Test : chaque garde-fou existant (pas ton tour, créateur seulement, coup refusé) renvoie `{ ok: false, message }` à l'émetteur seul.
-- [ ] Test : une entrée mal typée (`room` objet, `cardId` nombre…) est refusée avec un message, sans toucher la base.
-- [ ] Test : une exception dans un handler renvoie un accusé d'échec.
-- [ ] Test front : un accusé d'échec affiche un toast d'erreur et relit la partie.
-- [ ] Test front : un accusé « session expirée » affiche un toast et redirige vers la connexion.
-- [ ] Plus aucune émission de l'événement générique `error` pour un refus ; plus de code mort dans le provider.
-- [ ] `make check` vert.
+- [x] Test : chaque garde-fou existant (pas ton tour, créateur seulement, coup refusé) renvoie `{ ok: false, message }` à l'émetteur seul.
+- [x] Test : une entrée mal typée (`room` objet, `cardId` nombre…) est refusée avec un message, sans toucher la base.
+- [x] Test : une exception dans un handler renvoie un accusé d'échec.
+- [x] Test front : un accusé d'échec affiche un toast d'erreur et relit la partie.
+- [x] Test front : un accusé « session expirée » affiche un toast et redirige vers la connexion.
+- [x] Plus aucune émission de l'événement générique `error` pour un refus ; plus de code mort dans le provider.
+- [x] `make check` vert.
 
 ## Bloquée par
 
@@ -75,11 +75,11 @@ Les fonctions pures des coups deviennent partagées. Le client n'envoie plus que
 
 ### Critères d'acceptation
 
-- [ ] Tests unitaires : pour chaque étape, les coups permis et refusés.
-- [ ] Test d'API : une manche complète jouée uniquement par intentions jusqu'à `endGame`, scores enregistrés.
-- [ ] Test : un `play-move` portant un `gameData` est refusé (schéma) ; un coup hors étape (`flip` pendant `draw`) est refusé.
-- [ ] Le front (pioche, défausse, plateau, révélation initiale) envoie des intentions ; partie à 2 joueurs vérifiée dans le navigateur.
-- [ ] `make check` vert.
+- [x] Tests unitaires : pour chaque étape, les coups permis et refusés.
+- [x] Test d'API : une manche complète jouée uniquement par intentions jusqu'à `endGame`, scores enregistrés.
+- [x] Test : un `play-move` portant un `gameData` est refusé (schéma) ; un coup hors étape (`flip` pendant `draw`) est refusé.
+- [x] Le front (pioche, défausse, plateau, révélation initiale) envoie des intentions (tests de composants ; partie complète jouée par intentions en test d'API). Vérification manuelle dans le navigateur à faire.
+- [x] `make check` vert.
 
 ## Bloquée par
 

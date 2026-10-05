@@ -1,7 +1,8 @@
 import { and, asc, eq, getTableColumns, inArray, type SQL } from "drizzle-orm";
-import type { ErrorType, GameData, GameType } from "../../../shared/types.ts";
+import type { ErrorType, GameData, GameType, Intent } from "../../../shared/types.ts";
 import { db, type Db, type Tx } from "../db/index.ts";
 import { gamePlayers, games, users } from "../db/schema.ts";
+import { applyIntent } from "../game/moves.ts";
 import * as rules from "../game/rules.ts";
 import { logger } from "../utils/logger.ts";
 
@@ -248,12 +249,12 @@ export async function updateGameSettings(
   return (await loadGame(gameId))!;
 }
 
-// Enregistre un coup du joueur dont c'est le tour : fait avancer la partie ; en fin de manche,
-// enregistre les scores et termine la partie si un joueur atteint le score maximum
-export async function playMove(gameId: string, gameData: GameData, userId: string) {
+// Joue le coup voulu par un joueur de la partie, calculé sur l'état enregistré : fait avancer la partie ;
+// en fin de manche, enregistre les scores et termine la partie si un joueur atteint le score maximum
+export async function playMove(gameId: string, intent: Intent, userId: string) {
   return applyMove(gameId, (current, game) => {
     const isPlayer = game.players.some((player) => player.id === userId);
-    return isPlayer && current.currentPlayer === userId ? gameData : null;
+    return isPlayer ? applyIntent(current, userId, intent) : null;
   });
 }
 
@@ -297,18 +298,6 @@ async function saveScores(tx: Tx, game: GameType, gameData: GameData) {
       .where(and(eq(gamePlayers.gameId, game.id), eq(gamePlayers.userId, id)));
   }
   return totals;
-}
-
-// Révèle une carte pendant la phase de révélation initiale
-export async function revealInitialCard(gameId: string, playerId: string, cardId: string) {
-  return applyMove(gameId, (gameData) => {
-    const card = gameData.playersCards?.[playerId]?.find((candidate) => candidate.id === cardId);
-    if (!card) {
-      return null;
-    }
-    card.revealed = true;
-    return gameData;
-  });
 }
 
 // Ajoute un joueur de la partie à ceux qui veulent rejouer (null s'il n'en fait pas partie)

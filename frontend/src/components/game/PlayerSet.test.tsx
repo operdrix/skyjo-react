@@ -6,7 +6,7 @@ const game = vi.hoisted(() => ({ current: null as unknown }));
 
 vi.mock("@/hooks/Game", () => ({ useGame: () => ({ game: game.current, sound: false }) }));
 vi.mock("@/hooks/User", () => ({ useUser: () => ({ userId: "ALICE" }) }));
-vi.mock("@/hooks/WebSocket", () => ({ useWebSocket: () => ({ sendMessage: vi.fn() }) }));
+vi.mock("@/hooks/useGameAction", () => ({ useGameAction: () => vi.fn() }));
 
 afterEach(cleanup);
 

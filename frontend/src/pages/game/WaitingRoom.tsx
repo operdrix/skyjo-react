@@ -149,7 +149,7 @@ const WaitingRoom = () => {
     await api.patch(`game/${gameId}`, { private: !game.private });
 
     // avertir les autres joueurs du changement
-    sendMessage("update-game-params", { room: gameId });
+    sendMessage("update-game-params", { room: game.id });
   };
 
   // Mettre à jour le nombre de joueurs max
@@ -159,18 +159,15 @@ const WaitingRoom = () => {
     // Mettre à jour le nombre de joueurs max dans la base de données
     await api.patch(`game/${gameId}`, { maxPlayers: value });
     // avertir les autres joueurs du changement
-    sendMessage("update-game-params", { room: gameId });
+    sendMessage("update-game-params", { room: game.id });
   };
 
-  const handleStartGame = () => {
-    setCreationLoading(true);
+  const handleStartGame = async () => {
     if (!isCreator || !game) return;
-    sendMessage("start-game", { room: gameId });
-
-    // cas où le start-game échoue coté serveur
-    setTimeout(() => {
-      setCreationLoading(false);
-    }, 5000);
+    setCreationLoading(true);
+    const response = await sendMessage("start-game", { room: game.id });
+    // Refus déjà signalé : le bouton redevient utilisable
+    if (!response.ok) setCreationLoading(false);
   };
 
   if (error) {

@@ -1,13 +1,12 @@
 import GameCard from "@/components/game/GameCard";
-import { drawFromDeck } from "@/game/moves";
 import { useGame } from "@/hooks/Game";
 import { useUser } from "@/hooks/User";
-import { useWebSocket } from "@/hooks/WebSocket";
+import { useGameAction } from "@/hooks/useGameAction";
 import notify from "@/utils/notify";
 
 const Deck = () => {
   const { userId } = useUser();
-  const { sendMessage } = useWebSocket();
+  const sendMessage = useGameAction();
   const { game, sound } = useGame();
 
   // Détermination si la pioche est sélectionnable
@@ -25,7 +24,7 @@ const Deck = () => {
     if (!game || !userId) return;
     if (!isDeckSelectable()) return;
     notify("turnCard", !sound);
-    sendMessage("play-move", { room: game.id, gameData: drawFromDeck(game.gameData) });
+    sendMessage("play-move", { room: game.id, move: "draw" });
   };
 
   if (!game || !userId) return null;

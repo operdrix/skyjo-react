@@ -1,4 +1,4 @@
-import type { GameData } from "@/types/types";
+import type { GameData, GameStep, Intent, MoveType } from "../../../shared/types.ts";
 
 // Coups d'un joueur : chaque fonction renvoie de nouvelles données de partie
 // (copie profonde), sans jamais modifier celles reçues de l'état React.
@@ -77,4 +77,38 @@ export function revealInitialCard(gameData: GameData, playerId: string, cardInde
     cards[cardIndex].revealed = true;
   }
   return next;
+}
+
+// Coups qui portent sur une carte du jeu du joueur, selon l'étape en cours
+const CARD_MOVES: Partial<Record<GameStep, Partial<Record<MoveType, typeof flipCard>>>> = {
+  initialReveal: { reveal: revealInitialCard },
+  "replace-discard": { replace: replaceWithDiscard },
+  "decide-deck": { replace: replaceWithDrawn },
+  "flip-deck": { flip: flipCard },
+};
+
+// Coups sans carte du jeu, selon l'étape en cours
+const TABLE_MOVES: Partial<Record<GameStep, Partial<Record<MoveType, typeof drawFromDeck>>>> = {
+  draw: { draw: drawFromDeck, "take-discard": takeDiscard },
+  "decide-deck": { "discard-drawn": discardDrawnCard },
+};
+
+// Partie après le coup voulu par le joueur, ou null si ce coup est impossible maintenant
+// (pas son tour, mauvaise étape, carte inexistante ou déjà visible, plus de 2 révélations initiales)
+export function applyIntent(gameData: GameData, playerId: string, { move, cardIndex }: Intent): GameData | null {
+  const step = gameData.currentStep;
+  // Pendant la révélation initiale, chacun joue sans attendre son tour
+  if (step !== "initialReveal" && gameData.currentPlayer !== playerId) return null;
+
+  const tableMove = TABLE_MOVES[step]?.[move];
+  if (tableMove) return tableMove(gameData);
+
+  const cardMove = CARD_MOVES[step]?.[move];
+  const cards = gameData.playersCards[playerId];
+  if (!cardMove || !cards || !Number.isInteger(cardIndex) || cardIndex! < 0 || cardIndex! >= cards.length) {
+    return null;
+  }
+  if ((move === "flip" || move === "reveal") && cards[cardIndex!].revealed) return null;
+  if (move === "reveal" && cards.filter((card) => card.revealed).length >= 2) return null;
+  return cardMove(gameData, playerId, cardIndex!);
 }

@@ -61,12 +61,10 @@ async function setTurn(gameId: string, playerId: string) {
   return turn;
 }
 
-// Émet un événement et attend le refus du serveur
+// Émet un événement et vérifie l'accusé de refus, avec un motif
 async function expectRefused(socket: Socket, event: string, data: object) {
-  const refused = nextEvent<{ message: string }>(socket, "error");
-  socket.emit(event, data);
-  const { message } = await refused;
-  expect(message).toBeTruthy();
+  const response = await socket.emitWithAck(event, data);
+  expect(response).toMatchObject({ ok: false, message: expect.any(String) });
 }
 
 describe("garde-fous des événements websocket", () => {
@@ -75,9 +73,9 @@ describe("garde-fous des événements websocket", () => {
     const turn = await setTurn(gameId, alice.id);
     const socket = await connect(bob);
 
-    await expectRefused(socket, "play-move", { room: gameId, gameData: { ...turn, currentStep: "decide" } });
+    await expectRefused(socket, "play-move", { room: gameId, move: "draw" });
 
-    expect((await getGame(gameId)).gameData.currentStep).toBe("draw");
+    expect((await getGame(gameId)).gameData).toEqual(turn);
   });
 
   it("refuse un coup d'un joueur qui n'est pas dans la partie", async () => {
@@ -85,19 +83,29 @@ describe("garde-fous des événements websocket", () => {
     const turn = await setTurn(gameId, carol.id);
     const socket = await connect(carol);
 
-    await expectRefused(socket, "play-move", { room: gameId, gameData: { ...turn, currentStep: "decide" } });
+    await expectRefused(socket, "play-move", { room: gameId, move: "draw" });
 
-    expect((await getGame(gameId)).gameData.currentStep).toBe("draw");
+    expect((await getGame(gameId)).gameData).toEqual(turn);
   });
 
-  it("refuse la révélation initiale d'une carte d'un autre joueur", async () => {
+  it("refuse un coup impossible à l'étape en cours", async () => {
     const gameId = await aliceAndBobGame();
-    const aliceCard = (await getGame(gameId)).gameData.playersCards[alice.id][0];
-    const socket = await connect(bob);
+    const turn = await setTurn(gameId, alice.id);
+    const socket = await connect(alice);
 
-    await expectRefused(socket, "initial-turn-card", { room: gameId, playerId: alice.id, cardId: aliceCard.id });
+    await expectRefused(socket, "play-move", { room: gameId, move: "flip", cardIndex: 0 });
 
-    expect((await getGame(gameId)).gameData.playersCards[alice.id][0].revealed).toBe(false);
+    expect((await getGame(gameId)).gameData).toEqual(turn);
+  });
+
+  it("refuse un état de partie envoyé par le client", async () => {
+    const gameId = await aliceAndBobGame();
+    const turn = await setTurn(gameId, alice.id);
+    const socket = await connect(alice);
+
+    await expectRefused(socket, "play-move", { room: gameId, gameData: { ...turn, currentStep: "endGame" } });
+
+    expect((await getGame(gameId)).gameData).toEqual(turn);
   });
 
   it("refuse le démarrage par un autre joueur que le créateur", async () => {

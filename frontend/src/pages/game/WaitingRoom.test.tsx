@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const api = vi.hoisted(() => ({ get: vi.fn(), patch: vi.fn() }));
 const handlers = vi.hoisted(() => new Map<string, (data: unknown) => void>());
+const sendMessage = vi.hoisted(() => vi.fn());
 
 vi.mock("@/services/apiService", () => ({ api }));
 vi.mock("@/utils/notify", () => ({ default: vi.fn() }));
@@ -15,7 +16,7 @@ vi.mock("@/hooks/WebSocket", () => ({
     socket: {},
     isConnected: true,
     loading: false,
-    sendMessage: vi.fn(),
+    sendMessage,
     subscribeToEvent: (event: string, callback: (data: unknown) => void) => handlers.set(event, callback),
     unsubscribeFromEvent: vi.fn(),
   }),
@@ -23,6 +24,7 @@ vi.mock("@/hooks/WebSocket", () => ({
 
 afterEach(() => {
   cleanup();
+  vi.clearAllMocks();
   getToasts().forEach((t) => dismissToast(t.id));
 });
 
@@ -72,5 +74,44 @@ describe("salle d'attente", () => {
     act(() => handlers.get("start-game")!({ ...game, id: "autre", state: "playing" }));
 
     expect(screen.queryByText("plateau")).toBeNull();
+  });
+
+  it("annonce l'arrivée une seule fois, après l'inscription dans la partie", async () => {
+    const openGame = { ...fullGame, maxPlayers: 4 };
+    api.get.mockResolvedValue({ data: openGame });
+    let joined!: () => void;
+    api.patch.mockReturnValue(new Promise((resolve) => (joined = () => resolve({ data: {} }))));
+    render(
+      <MemoryRouter initialEntries={["/join/g1"]}>
+        <Routes>
+          <Route path="/join/:gameId" element={<WaitingRoom />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    await screen.findByText("bob");
+    expect(api.patch).toHaveBeenCalledWith("game/join/g1", {});
+    expect(sendMessage).not.toHaveBeenCalledWith("player-joined-game", expect.anything());
+
+    await act(async () => joined());
+
+    expect(sendMessage.mock.calls.filter(([event]) => event === "player-joined-game")).toEqual([
+      ["player-joined-game", { room: "g1" }],
+    ]);
+  });
+
+  it("annonce une seule fois le retour d'un joueur déjà inscrit", async () => {
+    const game = { ...fullGame, players: [...fullGame.players, { id: "ALICE", username: "alice" }], maxPlayers: 4 };
+    api.get.mockResolvedValue({ data: game });
+    render(
+      <MemoryRouter initialEntries={["/join/g1"]}>
+        <Routes>
+          <Route path="/join/:gameId" element={<WaitingRoom />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    await screen.findByText("bob");
+
+    expect(api.patch).not.toHaveBeenCalled();
+    expect(sendMessage.mock.calls.filter(([event]) => event === "player-joined-game")).toHaveLength(1);
   });
 });

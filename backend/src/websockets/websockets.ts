@@ -91,8 +91,6 @@ async function creatorGame(socket: GameSocket, room: string): Promise<GameType |
   return game;
 }
 
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 export async function websockets(app: FastifyInstance) {
   await app.ready();
   const io: Server = app.io;
@@ -119,10 +117,9 @@ export async function websockets(app: FastifyInstance) {
     const { userId, username } = socket.data;
     logger.info(`Joueur connecté : ${username} (${userId}) - socket: ${socket.id}`);
 
-    // Un joueur rejoint une partie (après un délai pour éviter les problèmes de concurrence)
+    // Un joueur entre dans la room d'une partie dont il est joueur
     on(socket, app, "player-joined-game", ["room"], async ({ room }) => {
       const gameId = room as string;
-      await wait(1000);
 
       let game = await getGame(gameId);
       if ("error" in game) {
@@ -165,7 +162,6 @@ export async function websockets(app: FastifyInstance) {
       await updateGame({ params: { action: "start", gameId }, body: { userId } });
       const game = await getGame(gameId);
       if ("error" in game) return;
-      await wait(3000);
       io.to(gameId).emit("start-game", game);
     });
 
@@ -206,7 +202,6 @@ export async function websockets(app: FastifyInstance) {
       io.to(gameId).emit("waiting-deal");
       const next = await createNextGame(gameId);
       if (!next) return;
-      await wait(1000);
       io.to(gameId).emit("go-to-new-game", next);
     });
 

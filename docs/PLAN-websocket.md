@@ -144,11 +144,11 @@ En salle d'attente, le front attend la fin de l'inscription dans la partie avant
 
 ### Critères d'acceptation
 
-- [ ] Test front : l'arrivée d'un nouveau joueur émet une seule annonce, après la réponse de l'inscription.
-- [ ] Test d'API : un joueur qui rejoint est diffusé aux autres en moins de 1 s ; `start-game` diffuse sans délai.
-- [ ] Plus aucune attente artificielle côté serveur.
-- [ ] Test front : l'écran de distribution reste affiché environ 3 s puis laisse place au plateau.
-- [ ] `make check` vert.
+- [x] Test front : l'arrivée d'un nouveau joueur émet une seule annonce, après la réponse de l'inscription.
+- [x] Test d'API : un joueur qui rejoint est diffusé aux autres en moins de 1 s ; `start-game` diffuse sans délai.
+- [x] Plus aucune attente artificielle côté serveur.
+- [x] Test front : l'écran de distribution reste affiché environ 3 s puis laisse place au plateau.
+- [x] `make check` vert.
 
 ## Bloquée par
 

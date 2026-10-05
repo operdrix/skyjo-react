@@ -814,6 +814,7 @@
 .game-card-inner {
   position: absolute;
   inset: 0;
+  -webkit-transform-style: preserve-3d;
   transform-style: preserve-3d;
 }
 .game-card-animated {
@@ -822,13 +823,20 @@
 .game-card-flipped {
   transform: rotateY(180deg);
 }
+/* Chaque face a sa propre transformation 3D (nécessaire à Safari pour cacher la face arrière) */
 .game-card-face {
   position: absolute;
   inset: 0;
   backface-visibility: hidden;
+  transform: rotateY(0deg);
 }
 .game-card-front {
   transform: rotateY(180deg);
+}
+/* Dos masqué une fois la carte retournée (à mi-retournement) : Safari peut sinon l'afficher par-dessus la face */
+.game-card-flipped .game-card-face:not(.game-card-front) {
+  visibility: hidden;
+  transition: visibility 0s 210ms;
 }
 .game-card-face .playing-card {
   width: 100%;
@@ -851,7 +859,8 @@
   display: grid;
   place-items: center;
   border: 2.5px dashed var(--color-error);
-  background: color-mix(in oklab, var(--color-error) 10%, transparent);
+  /* Fond opaque : la carte de la défausse, dessous, ne doit pas transparaître */
+  background: color-mix(in oklab, var(--color-error) 12%, var(--color-base-100));
 }
 
 @media (min-width: 640px) {

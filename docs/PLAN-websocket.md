@@ -29,11 +29,11 @@ Seul un joueur d'une partie peut en suivre les mises à jour : un compte étrang
 
 ### Critères d'acceptation
 
-- [ ] Test : un compte non joueur qui émet `player-joined-game` sur une partie n'en reçoit aucune mise à jour ensuite.
-- [ ] Test : un socket qui rejoint la partie B après la partie A ne reçoit plus les événements de A.
-- [ ] Test : à la déconnexion, seule la partie courante passe le joueur en `leave`.
-- [ ] Test front : un `play-move` d'une autre partie ne modifie pas l'état affiché.
-- [ ] `make check` vert.
+- [x] Test : un compte non joueur qui émet `player-joined-game` sur une partie n'en reçoit aucune mise à jour ensuite.
+- [x] Test : un socket qui rejoint la partie B après la partie A ne reçoit plus les événements de A.
+- [x] Test : à la déconnexion, seule la partie courante passe le joueur en `leave`.
+- [x] Test front : un `play-move` d'une autre partie ne modifie pas l'état affiché.
+- [x] `make check` vert.
 
 ## Bloquée par
 

@@ -6,7 +6,8 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router";
 
 // Événements socket de la partie en cours : mises à jour de la partie, distribution, nouvelle partie
-export function useGameEvents(onWaitingDeal: (waiting: boolean) => void, enabled: boolean) {
+// (les mises à jour d'une autre partie, encore en vol après un changement de partie, sont ignorées)
+export function useGameEvents(gameId: string | undefined, onWaitingDeal: (waiting: boolean) => void, enabled: boolean) {
   const { socket, isConnected, subscribeToEvent, unsubscribeFromEvent } = useWebSocket();
   const { setGame } = useGame();
   const { userId } = useUser();
@@ -17,7 +18,12 @@ export function useGameEvents(onWaitingDeal: (waiting: boolean) => void, enabled
 
     const handleWaitingDeal = () => onWaitingDeal(true);
 
+    const handleUpdate = (updatedGame: GameType) => {
+      if (updatedGame.id === gameId) setGame(updatedGame);
+    };
+
     const handleStartGame = (updatedGame: GameType) => {
+      if (updatedGame.id !== gameId) return;
       setGame(updatedGame);
       onWaitingDeal(false);
     };
@@ -32,14 +38,25 @@ export function useGameEvents(onWaitingDeal: (waiting: boolean) => void, enabled
 
     subscribeToEvent("waiting-deal", handleWaitingDeal);
     subscribeToEvent("start-game", handleStartGame);
-    updates.forEach((event) => subscribeToEvent(event, setGame));
+    updates.forEach((event) => subscribeToEvent(event, handleUpdate));
     subscribeToEvent("go-to-new-game", handleGoToNewGame);
 
     return () => {
       unsubscribeFromEvent("waiting-deal", handleWaitingDeal);
       unsubscribeFromEvent("start-game", handleStartGame);
-      updates.forEach((event) => unsubscribeFromEvent(event, setGame));
+      updates.forEach((event) => unsubscribeFromEvent(event, handleUpdate));
       unsubscribeFromEvent("go-to-new-game", handleGoToNewGame);
     };
-  }, [socket, isConnected, enabled, subscribeToEvent, unsubscribeFromEvent, setGame, onWaitingDeal, userId, navigate]);
+  }, [
+    gameId,
+    socket,
+    isConnected,
+    enabled,
+    subscribeToEvent,
+    unsubscribeFromEvent,
+    setGame,
+    onWaitingDeal,
+    userId,
+    navigate,
+  ]);
 }

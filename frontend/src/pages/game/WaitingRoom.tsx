@@ -100,7 +100,11 @@ const WaitingRoom = () => {
   useEffect(() => {
     if (!socket || !isConnected || error) return;
 
+    // Les mises à jour d'une autre partie (ancienne room encore en vol) sont ignorées
+    const isOtherGame = (updatedGame: GameType) => updatedGame.id !== gameId;
+
     const handlePlayerJoined = async (updatedGame: GameType) => {
+      if (isOtherGame(updatedGame)) return;
       notify("join");
       setGame(updatedGame);
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -112,23 +116,28 @@ const WaitingRoom = () => {
         navigate("/");
         return;
       }
-      setGame(updatedGame);
+      if (!isOtherGame(updatedGame)) setGame(updatedGame);
+    };
+
+    const handleUpdate = (updatedGame: GameType) => {
+      if (!isOtherGame(updatedGame)) setGame(updatedGame);
     };
 
     const handleStartGame = (updatedGame: GameType) => {
+      if (isOtherGame(updatedGame)) return;
       setGame(updatedGame);
       navigate(`/game/${gameId}`);
     };
 
     subscribeToEvent("player-joined-game", handlePlayerJoined);
     subscribeToEvent("player-left-game", handlePlayerLeft);
-    subscribeToEvent("update-game-params", setGame);
+    subscribeToEvent("update-game-params", handleUpdate);
     subscribeToEvent("start-game", handleStartGame);
 
     return () => {
       unsubscribeFromEvent("player-joined-game", handlePlayerJoined);
       unsubscribeFromEvent("player-left-game", handlePlayerLeft);
-      unsubscribeFromEvent("update-game-params", setGame);
+      unsubscribeFromEvent("update-game-params", handleUpdate);
       unsubscribeFromEvent("start-game", handleStartGame);
     };
   }, [socket, isConnected, subscribeToEvent, unsubscribeFromEvent, navigate, error, gameId, setGame]);

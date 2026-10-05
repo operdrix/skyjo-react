@@ -20,6 +20,7 @@ type Payload = Record<string, unknown>;
 const SESSION_EXPIRED = { message: "Session expirée, veuillez vous reconnecter" };
 const MOVE_REFUSED = { message: "Coup refusé" };
 const CREATOR_ONLY = { message: "Seul le créateur de la partie peut faire cela" };
+const NOT_A_PLAYER = { message: "Tu ne fais pas partie de cette partie" };
 
 // Joueur de la session portée par les cookies du handshake (null sans session ou sans pseudo)
 async function sessionPlayer(socket: Socket, app: FastifyInstance) {
@@ -128,11 +129,21 @@ export async function websockets(app: FastifyInstance) {
         logger.error("Game not found for room:", gameId);
         return;
       }
+      // Seuls les joueurs de la partie en suivent les mises à jour
+      if (!game.players.some((player) => player.id === userId)) {
+        refuse(socket, NOT_A_PLAYER);
+        return;
+      }
       if (game.state !== "pending") {
         await updateGame({ params: { action: "join", gameId }, body: { userId } });
         game = await getGame(gameId);
       }
 
+      // Une seule room de partie par socket : on quitte la précédente
+      const previous = socket.data.room;
+      if (previous && previous !== gameId) {
+        socket.leave(previous);
+      }
       socket.join(gameId);
       socket.data.room = gameId;
       io.to(gameId).emit("player-joined-game", game);

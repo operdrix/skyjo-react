@@ -12,6 +12,7 @@ import {
   createPlayer,
   nextEvent as nextSocketEvent,
   setupApp,
+  storedGameData,
 } from "../../test/helpers.ts";
 
 let app: FastifyInstance;
@@ -77,10 +78,10 @@ function revealedHand(prefix: string, top: number, middle: number): Card[] {
 
 // Alice doit retourner une carte et il ne lui reste que la dernière de cachée :
 // la retourner termine la manche (Bob a déjà tout révélé)
-async function aliceLastCard(gameId: string, game: GameType, aliceHand: Card[], bobHand: Card[]) {
+async function aliceLastCard(gameId: string, aliceHand: Card[], bobHand: Card[]) {
   aliceHand[11].revealed = false;
   const gameData: GameData = {
-    ...game.gameData,
+    ...(await storedGameData(gameId)),
     currentStep: "flip-deck",
     currentPlayer: alice.id,
     turnOrder: [alice.id, bob.id],
@@ -122,8 +123,8 @@ describe("déroulé d'une partie par websocket", () => {
   });
 
   it("enregistre les scores de fin de manche sans terminer la partie", async () => {
-    const { gameId, game, socket } = await startedGame();
-    await aliceLastCard(gameId, game, revealedHand("a", 0, 1), revealedHand("b", 5, 6));
+    const { gameId, socket } = await startedGame();
+    await aliceLastCard(gameId, revealedHand("a", 0, 1), revealedHand("b", 5, 6));
 
     const moved = nextEvent(socket, "play-move");
     socket.emit("play-move", { room: gameId, move: "flip", cardIndex: 11 });
@@ -138,8 +139,8 @@ describe("déroulé d'une partie par websocket", () => {
   });
 
   it("termine la partie quand un joueur atteint 100 points", async () => {
-    const { gameId, game, socket } = await startedGame();
-    await aliceLastCard(gameId, game, revealedHand("a", 0, 1), revealedHand("b", 12, 11));
+    const { gameId, socket } = await startedGame();
+    await aliceLastCard(gameId, revealedHand("a", 0, 1), revealedHand("b", 12, 11));
 
     const moved = nextEvent(socket, "play-move");
     socket.emit("play-move", { room: gameId, move: "flip", cardIndex: 11 });

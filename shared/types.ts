@@ -15,6 +15,10 @@ export type Card = {
   onHand: boolean;
 };
 
+// Carte telle que diffusée : face cachée, elle n'a ni valeur ni couleur
+export type HiddenCard = Omit<Card, "value" | "color"> & { value?: undefined; color?: undefined };
+export type ShownCard = Card | HiddenCard;
+
 export type GameStep =
   "initialReveal" | "draw" | "replace-discard" | "decide-deck" | "replace-deck" | "flip-deck" | "endTurn" | "endGame";
 
@@ -27,6 +31,12 @@ export type GameData = {
   turnOrder: string[];
   lastTurn: boolean;
   firstPlayerToEnd: string | null;
+};
+
+// Données de partie diffusées aux joueurs : les cartes non révélées sont masquées
+export type PublicGameData = Omit<GameData, "playersCards" | "deckCards"> & {
+  playersCards: Record<string, ShownCard[]>;
+  deckCards: ShownCard[];
 };
 
 export type GameState = "pending" | "playing" | "finished";
@@ -49,8 +59,8 @@ export type GamePlayer = PublicUser & {
   };
 };
 
-// Partie telle que renvoyée par l'API et diffusée par les websockets
-export type GameType = {
+// Partie enregistrée, avec toutes ses cartes (jamais envoyée telle quelle)
+type GameFields<D> = {
   id: string;
   players: GamePlayer[];
   state: GameState;
@@ -63,9 +73,13 @@ export type GameType = {
   winnerScore: number | null;
   maxPlayers: number;
   creatorPlayer: PublicUser;
-  gameData: GameData;
+  gameData: D;
   playersPlayAgain: string[];
 };
+export type StoredGame = GameFields<GameData>;
+
+// Partie telle que renvoyée par l'API et diffusée par les websockets
+export type GameType = GameFields<PublicGameData>;
 
 // ─── Événements temps réel ───────────────────────────────────────────────────
 

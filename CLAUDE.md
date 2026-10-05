@@ -29,7 +29,7 @@ Jeu de cartes Skyjo en ligne, pour jouer entre amis / famille. Vue d'ensemble : 
 
 ## Pièges connus
 - MariaDB : pas de `LEFT JOIN LATERAL`, donc pas d'API relationnelle Drizzle avec `with` (`db.query.x.findMany({ with })`). Faire des `select` + `innerJoin` (voir `findGames` dans `controllers/games.ts`).
-- Temps réel : le client envoie une intention (`play-move { room, move, cardIndex? }`), le serveur calcule le coup sur l'état enregistré (`backend/src/game/moves.ts`, `applyIntent`) et refuse un coup impossible. Chaque événement client reçoit un accusé `{ ok }` ou `{ ok: false, message }` ; catalogue typé dans `shared/types.ts`. Plan en cours : `docs/PLAN-websocket.md`.
+- Temps réel : le client envoie une intention (`play-move { room, move, cardIndex? }`), le serveur calcule le coup sur l'état enregistré (`backend/src/game/moves.ts`, `applyIntent`) et refuse un coup impossible. Les cartes non révélées (joueurs et pioche) sont masquées dans toute réponse et diffusion (`backend/src/game/view.ts`, `hideCards`, appliqué en sortie du contrôleur) : la partie complète ne sort jamais du serveur ; en test, la lire en base (`storedGameData`). Chaque événement client reçoit un accusé `{ ok }` ou `{ ok: false, message }` ; catalogue typé dans `shared/types.ts`. Plan en cours : `docs/PLAN-websocket.md`.
 - `userId` ne doit jamais venir du body : le prendre dans la session (`request.user`, rempli par `app.authenticate`).
 - Pas de valeur par défaut codée en dur pour `BETTER_AUTH_SECRET`.
 - Données personnelles minimales : pseudo et email seulement (pas de nom, prénom ni photo, pas de vérification d'email).

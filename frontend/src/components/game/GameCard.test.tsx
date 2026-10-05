@@ -1,5 +1,5 @@
 import GameCard from "@/components/game/GameCard";
-import type { Card } from "@/types/types";
+import type { Card, HiddenCard } from "@/types/types";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -31,6 +31,12 @@ describe("GameCard", () => {
     render(<GameCard card={card(7, false)} disabled />);
     expect(screen.getByRole("img", { name: "carte cachée" })).toBeTruthy();
     expect(screen.queryByText("7")).toBeNull();
+  });
+
+  it("affiche le dos d'une carte masquée par le serveur, sans valeur ni couleur", () => {
+    const masked: HiddenCard = { id: "c2", revealed: false, onHand: false };
+    render(<GameCard card={masked} disabled />);
+    expect(screen.getByRole("img", { name: "carte cachée" })).toBeTruthy();
   });
 
   it("rend une carte jouable cliquable comme un bouton", () => {

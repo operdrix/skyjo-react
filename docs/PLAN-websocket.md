@@ -9,7 +9,7 @@ Décisions durables qui s'appliquent à toutes les phases :
 - **Catalogue d'événements** : tous les événements client → serveur et serveur → client sont déclarés une seule fois, typés, dans les types partagés back/front. Plus de nom d'événement en chaîne libre.
 - **Accusé de réception** : chaque événement envoyé par le client reçoit une réponse `{ ok: true }` ou `{ ok: false, message }` (message en français, affichable tel quel). L'événement générique `error` n'est plus utilisé pour les refus.
 - **Coups par intention** : le client envoie `play-move { room, move, cardIndex? }`, avec `move` ∈ `draw`, `take-discard`, `discard-drawn`, `replace`, `flip`, `reveal`. Le serveur applique la fonction pure du coup (partagée back/front) à l'état complet, sous verrou, après avoir vérifié le tour et l'étape. Le client n'envoie plus jamais de `gameData`.
-- **Vue joueur** : ce que le serveur diffuse a la même forme que la partie actuelle. Une carte face cachée n'a ni valeur ni couleur ; la pioche ne contient que des cartes masquées (sa longueur donne le nombre restant). En fin de manche, toutes les cartes des joueurs sont visibles.
+- **Vue joueur** : ce que le serveur diffuse a la même forme que la partie actuelle, identique pour tous les joueurs. Une carte face cachée n'a ni valeur ni couleur ; la pioche ne contient que des cartes masquées (sa longueur donne le nombre restant). En fin de manche, toutes les cartes des joueurs sont visibles.
 - **Identifiants de cartes** : tirés au hasard à la distribution (l'id actuel `card_N`, attribué avant le mélange, révèle la valeur).
 - **Rooms** : une room par partie, identifiée par l'id de la partie. Un socket est dans au plus une room de partie. Entrer dans une room exige d'être joueur de la partie.
 - **Présence** : un joueur est présent dans une partie tant qu'au moins un de ses sockets est dans la room. Délai de grâce de 10 s avant de le retirer (salle d'attente) ou de le marquer `disconnected` (partie en cours).
@@ -93,17 +93,17 @@ Les fonctions pures des coups deviennent partagées. Le client n'envoie plus que
 
 ### Ce qu'on livre
 
-Les ids de cartes sont tirés au hasard à la distribution. Chaque diffusion (événements socket et lecture HTTP de la partie) est filtrée pour le joueur destinataire : ses cartes et celles des adversaires face cachée n'ont ni valeur ni couleur, et la pioche n'est qu'une suite de cartes masquées. La carte piochée devient visible de tous dès qu'elle est en main, comme une carte révélée. En fin de manche, tout est visible. Le front affiche le dos de carte pour toute carte masquée. Les consignes du projet (`CLAUDE.md`, mémoire de reprise) sont mises à jour : le serveur ne fait plus confiance au `gameData` du client et ne diffuse plus les cartes cachées.
+Les ids de cartes sont tirés au hasard à la distribution. Chaque diffusion (événements socket et lecture HTTP de la partie) est filtrée : ses cartes et celles des adversaires face cachée n'ont ni valeur ni couleur, et la pioche n'est qu'une suite de cartes masquées. La carte piochée devient visible de tous dès qu'elle est en main, comme une carte révélée. En fin de manche, tout est visible. Personne ne connaît une carte face cachée, pas même son propriétaire : la vue est la même pour tous les joueurs, un seul masquage suffit. Le front affiche le dos de carte pour toute carte masquée. Les consignes du projet (`CLAUDE.md`, mémoire de reprise) sont mises à jour : le serveur ne fait plus confiance au `gameData` du client et ne diffuse plus les cartes cachées.
 
 ### Critères d'acceptation
 
-- [ ] Test : pour chaque événement diffusé et pour `GET` de la partie, aucune carte non révélée ne porte de valeur ni de couleur, pour chaque joueur.
-- [ ] Test : la pioche diffusée ne contient que des cartes masquées, de la bonne longueur.
-- [ ] Test : en `endGame`, toutes les cartes des joueurs portent leur valeur.
-- [ ] Test : deux distributions donnent des ids sans lien avec la valeur (pas de `card_N`).
-- [ ] Contrôle manuel dans le navigateur : l'onglet réseau ne montre aucune valeur cachée pendant une manche.
-- [ ] `CLAUDE.md` et `.claude/memoire/reprise.md` à jour.
-- [ ] `make check` vert.
+- [x] Test : pour chaque événement diffusé et pour `GET` de la partie, aucune carte non révélée ne porte de valeur ni de couleur, pour chaque joueur.
+- [x] Test : la pioche diffusée ne contient que des cartes masquées, de la bonne longueur.
+- [x] Test : en `endGame`, toutes les cartes des joueurs portent leur valeur.
+- [x] Test : deux distributions donnent des ids sans lien avec la valeur (pas de `card_N`).
+- [ ] Contrôle manuel dans le navigateur : l'onglet réseau ne montre aucune valeur cachée pendant une manche (à faire).
+- [x] `CLAUDE.md` et `.claude/memoire/reprise.md` à jour.
+- [x] `make check` vert.
 
 ## Bloquée par
 

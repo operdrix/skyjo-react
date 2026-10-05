@@ -1,5 +1,6 @@
 // Règles du Skyjo : module pur, sans accès base ni socket.
 
+import { randomUUID } from "node:crypto";
 import type { Card, CardColor, GameData } from "../../../shared/types.ts";
 
 export type Scores = Record<string, number>;
@@ -12,7 +13,7 @@ export function createDeck(): Card[] {
   const cards: Card[] = [];
   const addCards = (value: number, count: number, color: CardColor) => {
     for (let i = 0; i < count; i++) {
-      cards.push({ id: "card_" + cards.length, value, color, revealed: false, onHand: false });
+      cards.push({ id: randomUUID(), value, color, revealed: false, onHand: false });
     }
   };
 

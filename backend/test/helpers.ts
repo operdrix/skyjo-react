@@ -1,7 +1,9 @@
+import { eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { io as connectClient, type Socket } from "socket.io-client";
 import { buildApp } from "../src/app.ts";
 import { db } from "../src/db/index.ts";
+import type { GameData } from "../../shared/types.ts";
 import { accounts, gamePlayers, games, sessions, users, verifications } from "../src/db/schema.ts";
 
 const PASSWORD = "secret-de-test";
@@ -77,4 +79,10 @@ export function connectPlayer(url: string, player: TestPlayer): Socket {
 
 export function nextEvent<T>(socket: Socket, event: string): Promise<T> {
   return new Promise((resolve) => socket.once(event, resolve));
+}
+
+// Données de partie enregistrées, toutes cartes visibles (l'API et les sockets masquent les cartes cachées)
+export async function storedGameData(gameId: string): Promise<GameData> {
+  const [game] = await db.select({ gameData: games.gameData }).from(games).where(eq(games.id, gameId));
+  return game.gameData;
 }

@@ -1,9 +1,10 @@
 import { and, asc, eq, getTableColumns, inArray, type SQL } from "drizzle-orm";
-import type { ErrorType, GameData, GameType, Intent } from "../../../shared/types.ts";
+import type { ErrorType, GameData, GameType, Intent, StoredGame } from "../../../shared/types.ts";
 import { db, type Db, type Tx } from "../db/index.ts";
 import { gamePlayers, games, users } from "../db/schema.ts";
 import { applyIntent } from "../game/moves.ts";
 import * as rules from "../game/rules.ts";
+import { hideCards } from "../game/view.ts";
 import { logger } from "../utils/logger.ts";
 
 type Executor = Db | Tx;
@@ -15,12 +16,17 @@ const CREATOR_ONLY = { error: "Seul le créateur de la partie peut faire cela.",
 
 const isError = <T extends object>(value: T | ErrorType): value is ErrorType => "error" in value;
 
+// Partie telle qu'envoyée aux joueurs : les cartes non révélées sont masquées
+function toPublic(game: StoredGame): GameType {
+  return game.gameData ? { ...game, gameData: hideCards(game.gameData) } : (game as unknown as GameType);
+}
+
 // Seuls attributs de joueur exposés dans les réponses de partie
 const PUBLIC_USER = { id: users.id, username: users.username };
 
 // Partie avec ses joueurs et son créateur, au format attendu par le front.
 // Requêtes simples plutôt que l'API relationnelle de Drizzle : ses LEFT JOIN LATERAL ne passent pas sur MariaDB.
-async function findGames(executor: Executor, where?: SQL, withGameData = true): Promise<GameType[]> {
+async function findGames(executor: Executor, where?: SQL, withGameData = true): Promise<StoredGame[]> {
   const { gameData, ...summaryColumns } = getTableColumns(games);
   const rows = await executor
     .select(withGameData ? { ...summaryColumns, gameData } : summaryColumns)
@@ -50,11 +56,11 @@ async function findGames(executor: Executor, where?: SQL, withGameData = true): 
         players: players
           .filter(({ gamePlayer }) => gamePlayer.gameId === game.id)
           .map(({ user, gamePlayer }) => ({ ...user, game_players: gamePlayer })),
-      }) as unknown as GameType,
+      }) as unknown as StoredGame,
   );
 }
 
-async function loadGame(gameId: string, executor: Executor = db): Promise<GameType | null> {
+async function loadGame(gameId: string, executor: Executor = db): Promise<StoredGame | null> {
   const [game] = await findGames(executor, eq(games.id, gameId));
   return game ?? null;
 }
@@ -76,7 +82,7 @@ export async function getGames(query: GamesQuery) {
     conditions.push(inArray(games.id, memberGames));
   }
 
-  return findGames(db, conditions.length ? and(...conditions) : undefined);
+  return (await findGames(db, conditions.length ? and(...conditions) : undefined)).map(toPublic);
 }
 
 // Liste des parties d'un joueur, sans les données de jeu
@@ -89,7 +95,7 @@ export async function getUserGames(userId: string) {
     return { error: "L'utilisateur n'existe pas.", code: 404 };
   }
   const memberGames = db.select({ id: gamePlayers.gameId }).from(gamePlayers).where(eq(gamePlayers.userId, userId));
-  return findGames(db, inArray(games.id, memberGames), false);
+  return (await findGames(db, inArray(games.id, memberGames), false)).map(toPublic);
 }
 
 // Supprimer une partie
@@ -111,7 +117,7 @@ export async function deleteGame(gameId: string, userId: string) {
 // Consulter une partie
 export async function getGame(gameId: string): Promise<GameType | ErrorType> {
   const game = await loadGame(gameId);
-  return game ?? { error: "La partie n'existe pas.", code: 404 };
+  return game ? toPublic(game) : { error: "La partie n'existe pas.", code: 404 };
 }
 
 // Créer une nouvelle partie, le créateur en est le premier joueur
@@ -151,7 +157,7 @@ export async function updateGame(request: { params: { action: string; gameId: st
       return { error: "La partie n'existe pas.", code: 404 };
     }
     const result = await applyGameAction(tx, game, action, body);
-    return result ?? (await loadGame(gameId, tx))!;
+    return result ?? toPublic((await loadGame(gameId, tx))!);
   });
 }
 
@@ -161,7 +167,7 @@ async function lockGame(tx: Tx, gameId: string) {
 }
 
 // Applique l'action ; renvoie une erreur, ou rien si la partie a été mise à jour
-async function applyGameAction(tx: Tx, game: GameType, action: string, body: NonNullable<GameActionBody>) {
+async function applyGameAction(tx: Tx, game: StoredGame, action: string, body: NonNullable<GameActionBody>) {
   if (game.state === "finished") {
     return { error: "Cette partie est déjà terminée !", code: 400 };
   }
@@ -246,7 +252,7 @@ export async function updateGameSettings(
 
   const { maxPlayers, private: privateRoom } = settings;
   await db.update(games).set({ maxPlayers, private: privateRoom }).where(eq(games.id, gameId));
-  return (await loadGame(gameId))!;
+  return toPublic((await loadGame(gameId))!);
 }
 
 // Joue le coup voulu par un joueur de la partie, calculé sur l'état enregistré : fait avancer la partie ;
@@ -260,7 +266,7 @@ export async function playMove(gameId: string, intent: Intent, userId: string) {
 
 // Applique un coup calculé à partir des données courantes, lues sous verrou
 // (null : coup invalide, rien n'est enregistré)
-async function applyMove(gameId: string, move: (current: GameData, game: GameType) => GameData | null) {
+async function applyMove(gameId: string, move: (current: GameData, game: StoredGame) => GameData | null) {
   return db.transaction(async (tx) => {
     const game = await lockGame(tx, gameId);
     const gameData = game && move(game.gameData, game);
@@ -280,12 +286,12 @@ async function applyMove(gameId: string, move: (current: GameData, game: GameTyp
     }
 
     await tx.update(games).set(update).where(eq(games.id, gameId));
-    return (await loadGame(gameId, tx))!;
+    return toPublic((await loadGame(gameId, tx))!);
   });
 }
 
 // Ajoute les scores de la manche aux joueurs, renvoie les totaux
-async function saveScores(tx: Tx, game: GameType, gameData: GameData) {
+async function saveScores(tx: Tx, game: StoredGame, gameData: GameData) {
   const roundScores = rules.computeRoundScores(gameData);
   const totals: rules.Scores = {};
 
@@ -313,7 +319,7 @@ export async function addPlayerPlayAgain(gameId: string, userId: string) {
         .set({ playersPlayAgain: [...game.playersPlayAgain, userId] })
         .where(eq(games.id, gameId));
     }
-    return (await loadGame(gameId, tx))!;
+    return toPublic((await loadGame(gameId, tx))!);
   });
 }
 

@@ -1,16 +1,24 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { io, Socket } from "socket.io-client";
-import { WebSocketContext } from "@/context/WebSocketContext";
+import { io } from "socket.io-client";
+import { useLocation, useNavigate } from "react-router";
+import { type GameClientSocket, WebSocketContext } from "@/context/WebSocketContext";
+import { goToLogin } from "@/lib/redirect";
+import { toast } from "@/lib/toast";
+import type { Ack, ClientEvent, ClientPayloads, ServerEvent, ServerToClientEvents } from "../../../shared/types";
+
+// Délai au-delà duquel le serveur est considéré comme injoignable
+const ACK_TIMEOUT_MS = 5000;
+const UNREACHABLE = "Le serveur ne répond pas, réessaie";
 
 interface WebSocketProviderProps {
   children: React.ReactNode;
   url: string;
-  enabled?: boolean; // Ajouter un flag pour contrôler si WebSocket doit se connecter
+  enabled?: boolean; // Ne se connecte que si le joueur est authentifié
 }
 
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, url, enabled = true }) => {
   // Socket créé sans se connecter (la connexion est ouverte dans l'effet ci-dessous)
-  const socket = useMemo<Socket | null>(
+  const socket = useMemo<GameClientSocket | null>(
     () =>
       enabled
         ? io(url, {
@@ -22,8 +30,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, 
     [url, enabled],
   );
   const [isConnected, setIsConnected] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true); // Ajout de loading pour suivre l’état de connexion
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   useEffect(() => {
     if (!socket) {
@@ -32,96 +41,64 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, 
 
     const onConnect = () => {
       setIsConnected(true);
-      setLoading(false); // La connexion est établie
-      setError(null); // Réinitialiser l'erreur si la connexion est rétablie
+      setLoading(false);
     };
     const onDisconnect = () => {
       setIsConnected(false);
-      setLoading(false); // Fin du chargement même en cas de déconnexion
-      setError("Disconnected from WebSocket server");
-    };
-    const onConnectError = (err: Error) => {
-      setError(`Connection error: ${err.message}`);
-      setLoading(false); // Arrêter le chargement en cas d'erreur de connexion
+      setLoading(false);
     };
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
-    socket.on("connect_error", onConnectError);
+    socket.on("connect_error", onDisconnect);
     socket.connect();
 
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
-      socket.off("connect_error", onConnectError);
+      socket.off("connect_error", onDisconnect);
       socket.disconnect();
     };
   }, [socket]);
 
-  const joinRoom = useCallback(
-    (gameId: string) => {
-      if (socket && isConnected) {
-        socket.emit("join-room", gameId);
-      }
-    },
-    [socket, isConnected],
-  );
-
   const sendMessage = useCallback(
-    (event: string, data: unknown) => {
-      if (socket && isConnected) {
-        socket.emit(event, data);
-      } else {
-        setError("Cannot send message: Socket is not connected.");
+    async <E extends ClientEvent>(event: E, data: ClientPayloads[E]): Promise<Ack> => {
+      let response: Ack;
+      try {
+        if (!socket || !isConnected) throw new Error("Socket déconnecté");
+        // Émission non typée : le catalogue garantit déjà la forme de event et data
+        const emitWithAck = socket.timeout(ACK_TIMEOUT_MS).emitWithAck as (e: string, d: unknown) => Promise<Ack>;
+        response = await emitWithAck(event, data);
+      } catch {
+        response = { ok: false, message: UNREACHABLE };
       }
+
+      if (!response.ok) {
+        if (response.reason === "session-expired") {
+          goToLogin(navigate, pathname, response.message);
+        } else {
+          toast({ type: "error", message: response.message });
+        }
+      }
+      return response;
     },
-    [socket, isConnected],
+    [socket, isConnected, navigate, pathname],
   );
 
   const subscribeToEvent = useCallback(
-    <T,>(event: string, callback: (data: T) => void) => {
-      if (socket) {
-        socket.on(event, callback);
-      }
+    <E extends ServerEvent>(event: E, callback: ServerToClientEvents[E]) => {
+      // Écoute non typée : le catalogue lie déjà event et callback
+      (socket as unknown as { on: (e: string, c: unknown) => void } | null)?.on(event, callback);
     },
     [socket],
   );
 
   const unsubscribeFromEvent = useCallback(
-    <T,>(event: string, callback: (data: T) => void) => {
-      if (socket) {
-        socket.off(event, callback);
-      }
+    <E extends ServerEvent>(event: E, callback: ServerToClientEvents[E]) => {
+      (socket as unknown as { off: (e: string, c: unknown) => void } | null)?.off(event, callback);
     },
     [socket],
   );
-
-  const reconnect = useCallback(() => {
-    if (socket && !isConnected) {
-      setLoading(true);
-      socket.connect();
-    }
-  }, [socket, isConnected]);
-
-  const disconnect = useCallback(() => {
-    if (socket && isConnected) {
-      socket.disconnect();
-      setLoading(false); // Arrêter le chargement quand on se déconnecte explicitement
-    }
-  }, [socket, isConnected]);
-
-  const subscribeToError = useCallback(
-    (callback: (error: string) => void) => {
-      if (error) {
-        callback(error); // Appeler le callback avec l'erreur actuelle si elle existe
-      }
-    },
-    [error],
-  );
-
-  const clearError = useCallback(() => {
-    setError(null);
-  }, []);
 
   const contextValue = useMemo(
     () => ({
@@ -129,31 +106,11 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, 
       isConnected,
       // Sans connexion demandée, rien n'est en cours de chargement
       loading: enabled && loading,
-      error,
-      joinRoom,
       sendMessage,
       subscribeToEvent,
       unsubscribeFromEvent,
-      reconnect,
-      disconnect,
-      subscribeToError,
-      clearError,
     }),
-    [
-      socket,
-      isConnected,
-      enabled,
-      loading,
-      error,
-      joinRoom,
-      sendMessage,
-      subscribeToEvent,
-      unsubscribeFromEvent,
-      reconnect,
-      disconnect,
-      subscribeToError,
-      clearError,
-    ],
+    [socket, isConnected, enabled, loading, sendMessage, subscribeToEvent, unsubscribeFromEvent],
   );
 
   return <WebSocketContext.Provider value={contextValue}>{children}</WebSocketContext.Provider>;

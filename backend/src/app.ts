@@ -14,6 +14,8 @@ import { gamesRoutes } from "./routes/games.ts";
 import { usersRoutes } from "./routes/users.ts";
 //websockets
 import { websockets } from "./websockets/websockets.ts";
+import type { SocketData } from "./websockets/types.ts";
+import type { ClientToServerEvents, ServerToClientEvents } from "../../shared/types.ts";
 
 // Secret lu dans l'environnement, sans valeur par défaut
 function requireSecret(name: "BETTER_AUTH_SECRET") {
@@ -38,7 +40,7 @@ export async function buildApp() {
   // Socket.io branché sur le serveur HTTP de Fastify (remplace fastify-socket.io, abandonné)
   app.decorate(
     "io",
-    new SocketServer(app.server, {
+    new SocketServer<ClientToServerEvents, ServerToClientEvents, Record<string, never>, SocketData>(app.server, {
       cors: {
         origin: frontendOrigins(process.env.FRONTEND_HOST),
         credentials: true,

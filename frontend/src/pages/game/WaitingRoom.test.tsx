@@ -1,6 +1,6 @@
 import { dismissToast, getToasts } from "@/lib/toast";
 import WaitingRoom from "@/pages/game/WaitingRoom";
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -113,5 +113,29 @@ describe("salle d'attente", () => {
 
     expect(api.patch).not.toHaveBeenCalled();
     expect(sendMessage.mock.calls.filter(([event]) => event === "player-joined-game")).toHaveLength(1);
+  });
+
+  it("réactive le lancement dès que le serveur le refuse", async () => {
+    sendMessage.mockResolvedValue({ ok: false, message: "Il faut au moins 2 joueurs" });
+    const game = {
+      ...fullGame,
+      creator: "ALICE",
+      players: [...fullGame.players, { id: "ALICE", username: "alice" }],
+      maxPlayers: 4,
+    };
+    api.get.mockResolvedValue({ data: game });
+    render(
+      <MemoryRouter initialEntries={["/join/g1"]}>
+        <Routes>
+          <Route path="/join/:gameId" element={<WaitingRoom />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    const button = (await screen.findByRole("button", { name: /lancer la partie/i })) as HTMLButtonElement;
+
+    fireEvent.click(button);
+
+    expect(sendMessage).toHaveBeenCalledWith("start-game", { room: "g1" });
+    await waitFor(() => expect(button.disabled).toBe(false), { timeout: 1000 });
   });
 });

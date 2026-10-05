@@ -1,13 +1,13 @@
 import type { FastifyReply } from "fastify";
-import type { Server } from "socket.io";
 import type { Auth } from "../auth.ts";
+import type { GameServer } from "../websockets/types.ts";
 
 // Décorations ajoutées par buildApp()
 declare module "fastify" {
   interface FastifyInstance {
     auth: Auth;
     authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
-    io: Server;
+    io: GameServer;
   }
 
   // Joueur connecté, renseigné par authenticate

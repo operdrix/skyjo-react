@@ -66,3 +66,42 @@ export type GameType = {
   gameData: GameData;
   playersPlayAgain: string[];
 };
+
+// ─── Événements temps réel ───────────────────────────────────────────────────
+
+// Accusé de réception renvoyé par le serveur pour chaque événement du client
+export type Ack = { ok: true } | { ok: false; message: string; reason?: "session-expired" };
+
+export type RoomPayload = { room: string };
+
+// Événements envoyés par le client (toujours avec un accusé de réception)
+export type ClientPayloads = {
+  "player-joined-game": RoomPayload;
+  "update-game-params": RoomPayload;
+  "start-game": RoomPayload;
+  "restart-game": RoomPayload;
+  "player-play-again": RoomPayload;
+  "initial-turn-card": RoomPayload & { cardId: string };
+  "play-move": RoomPayload & { gameData: GameData };
+};
+export type ClientEvent = keyof ClientPayloads;
+
+export type ClientToServerEvents = {
+  [E in ClientEvent]: (data: ClientPayloads[E], ack: (response: Ack) => void) => void;
+};
+
+// Nouvelle partie créée par « Rejouer »
+export type NextGame = { gameId: string; players: string[] };
+
+// Événements diffusés par le serveur
+export type ServerToClientEvents = {
+  "player-joined-game": (game: GameType) => void;
+  "player-left-game": (game: GameType) => void;
+  "update-game-params": (game: GameType) => void;
+  "start-game": (game: GameType) => void;
+  "play-move": (game: GameType) => void;
+  "play-again": (game: GameType) => void;
+  "waiting-deal": () => void;
+  "go-to-new-game": (next: NextGame) => void;
+};
+export type ServerEvent = keyof ServerToClientEvents;

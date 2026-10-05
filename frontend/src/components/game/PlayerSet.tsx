@@ -3,7 +3,7 @@ import GameCard from "@/components/game/GameCard";
 import { flipCard, replaceWithDiscard, replaceWithDrawn, revealInitialCard } from "@/game/moves";
 import { useGame } from "@/hooks/Game";
 import { useUser } from "@/hooks/User";
-import { useWebSocket } from "@/hooks/WebSocket";
+import { useGameAction } from "@/hooks/useGameAction";
 import notify from "@/utils/notify";
 import { useState } from "react";
 
@@ -18,7 +18,7 @@ const PlayerSet = ({
 }) => {
   const { game, setGame, sound } = useGame();
   const { userId } = useUser();
-  const { sendMessage } = useWebSocket();
+  const sendMessage = useGameAction();
   const [loading, setLoading] = useState(false);
 
   if (!game || !userId) return null;
@@ -46,7 +46,7 @@ const PlayerSet = ({
         // Affichage immédiat, le serveur renvoie ensuite la partie à jour
         setGame({ ...game, gameData: revealInitialCard(game.gameData, userId, cardIndex) });
       }
-      sendMessage("initial-turn-card", { room: game.id, playerId, cardId });
+      sendMessage("initial-turn-card", { room: game.id, cardId });
       // petite tempo pour pas cliquer trop vite et bloquer le jeu
       setTimeout(() => {
         setLoading(false);

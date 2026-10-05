@@ -49,7 +49,7 @@ export function useGameEvents(gameId: string | undefined, onWaitingDeal: (waitin
       navigate(players.includes(userId) ? `/game/${gameId}` : "/");
     };
 
-    const updates = ["player-joined-game", "player-left-game", "update-game-params", "play-move"];
+    const updates = ["player-joined-game", "player-left-game", "update-game-params", "play-move"] as const;
 
     subscribeToEvent("waiting-deal", handleWaitingDeal);
     subscribeToEvent("start-game", handleStartGame);

@@ -51,13 +51,13 @@ Le catalogue d'événements typé remplace les chaînes libres des deux côtés.
 
 ### Critères d'acceptation
 
-- [ ] Test : chaque garde-fou existant (pas ton tour, créateur seulement, coup refusé) renvoie `{ ok: false, message }` à l'émetteur seul.
-- [ ] Test : une entrée mal typée (`room` objet, `cardId` nombre…) est refusée avec un message, sans toucher la base.
-- [ ] Test : une exception dans un handler renvoie un accusé d'échec.
-- [ ] Test front : un accusé d'échec affiche un toast d'erreur et relit la partie.
-- [ ] Test front : un accusé « session expirée » affiche un toast et redirige vers la connexion.
-- [ ] Plus aucune émission de l'événement générique `error` pour un refus ; plus de code mort dans le provider.
-- [ ] `make check` vert.
+- [x] Test : chaque garde-fou existant (pas ton tour, créateur seulement, coup refusé) renvoie `{ ok: false, message }` à l'émetteur seul.
+- [x] Test : une entrée mal typée (`room` objet, `cardId` nombre…) est refusée avec un message, sans toucher la base.
+- [x] Test : une exception dans un handler renvoie un accusé d'échec.
+- [x] Test front : un accusé d'échec affiche un toast d'erreur et relit la partie.
+- [x] Test front : un accusé « session expirée » affiche un toast et redirige vers la connexion.
+- [x] Plus aucune émission de l'événement générique `error` pour un refus ; plus de code mort dans le provider.
+- [x] `make check` vert.
 
 ## Bloquée par
 

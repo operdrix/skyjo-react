@@ -61,12 +61,10 @@ async function setTurn(gameId: string, playerId: string) {
   return turn;
 }
 
-// Émet un événement et attend le refus du serveur
+// Émet un événement et vérifie l'accusé de refus, avec un motif
 async function expectRefused(socket: Socket, event: string, data: object) {
-  const refused = nextEvent<{ message: string }>(socket, "error");
-  socket.emit(event, data);
-  const { message } = await refused;
-  expect(message).toBeTruthy();
+  const response = await socket.emitWithAck(event, data);
+  expect(response).toMatchObject({ ok: false, message: expect.any(String) });
 }
 
 describe("garde-fous des événements websocket", () => {

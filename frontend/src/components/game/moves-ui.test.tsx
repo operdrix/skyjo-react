@@ -8,7 +8,7 @@ const state = vi.hoisted(() => ({ game: null as unknown, sendMessage: vi.fn(), s
 
 vi.mock("@/hooks/Game", () => ({ useGame: () => ({ game: state.game, setGame: state.setGame, sound: false }) }));
 vi.mock("@/hooks/User", () => ({ useUser: () => ({ userId: "ALICE" }) }));
-vi.mock("@/hooks/WebSocket", () => ({ useWebSocket: () => ({ sendMessage: state.sendMessage }) }));
+vi.mock("@/hooks/useGameAction", () => ({ useGameAction: () => state.sendMessage }));
 vi.mock("@/utils/notify", () => ({ default: vi.fn() }));
 
 const card = (id: string, value: number, revealed = false) => ({ id, value, color: "green", revealed, onHand: false });

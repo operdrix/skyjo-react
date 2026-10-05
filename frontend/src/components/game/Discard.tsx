@@ -2,12 +2,12 @@ import GameCard from "@/components/game/GameCard";
 import { discardDrawnCard, takeDiscard } from "@/game/moves";
 import { useGame } from "@/hooks/Game";
 import { useUser } from "@/hooks/User";
-import { useWebSocket } from "@/hooks/WebSocket";
+import { useGameAction } from "@/hooks/useGameAction";
 import notify from "@/utils/notify";
 
 const Discard = () => {
   const { userId } = useUser();
-  const { sendMessage } = useWebSocket();
+  const sendMessage = useGameAction();
   const { game, sound } = useGame();
 
   // Détermination si la défausse est sélectionnable

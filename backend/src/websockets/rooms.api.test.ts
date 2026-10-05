@@ -64,9 +64,8 @@ describe("rooms des parties", () => {
     const carolSocket = await connect(carol);
     const carolUpdates = collect(carolSocket, "update-game-params");
 
-    const refused = nextEvent<{ message: string }>(carolSocket, "error");
-    carolSocket.emit("player-joined-game", { room: gameId });
-    expect((await refused).message).toBeTruthy();
+    const response = await carolSocket.emitWithAck("player-joined-game", { room: gameId });
+    expect(response).toMatchObject({ ok: false, message: expect.any(String) });
 
     const aliceUpdate = nextEvent(aliceSocket, "update-game-params");
     aliceSocket.emit("update-game-params", { room: gameId });

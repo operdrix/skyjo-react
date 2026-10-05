@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { io } from "socket.io-client";
-import { useLocation, useNavigate } from "react-router";
 import { type GameClientSocket, WebSocketContext } from "@/context/WebSocketContext";
-import { goToLogin } from "@/lib/redirect";
+import { useUser } from "@/hooks/User";
 import { toast } from "@/lib/toast";
 import type { Ack, ClientEvent, ClientPayloads, ServerEvent, ServerToClientEvents } from "../../../shared/types";
 
@@ -31,8 +30,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, 
   );
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
-  const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { refresh } = useUser();
 
   useEffect(() => {
     if (!socket) {
@@ -78,14 +76,15 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, 
 
       if (!response.ok) {
         if (response.reason === "session-expired") {
-          goToLogin(navigate, pathname, response.message);
+          // Session rechargée : la page, voyant le joueur déconnecté, l'envoie vers la connexion
+          refresh();
         } else {
           toast({ type: "error", message: response.message });
         }
       }
       return response;
     },
-    [socket, isConnected, navigate, pathname],
+    [socket, isConnected, refresh],
   );
 
   const subscribeToEvent = useCallback(

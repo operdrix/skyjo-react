@@ -1,7 +1,7 @@
 import { WebSocketProvider } from "@/context/WebSocketProvider";
 import { useWebSocket } from "@/hooks/WebSocket";
 import { dismissToast, getToasts } from "@/lib/toast";
-import { act, cleanup, renderHook, screen } from "@testing-library/react";
+import { act, cleanup, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -29,20 +29,22 @@ const fake = vi.hoisted(() => {
 
 vi.mock("socket.io-client", () => ({ io: () => fake.socket }));
 
+const refresh = vi.hoisted(() => vi.fn());
+vi.mock("@/hooks/User", () => ({ useUser: () => ({ refresh }) }));
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
   getToasts().forEach((t) => dismissToast(t.id));
 });
 
-// Hook rendu sur une page de partie, avec la page de connexion à côté
+// Hook rendu sur une page de partie
 function renderProvider() {
   const wrapper = ({ children }: { children: ReactNode }) => (
     <MemoryRouter initialEntries={["/game/g1"]}>
       <WebSocketProvider url="http://test">
         <Routes>
           <Route path="/game/:gameId" element={children} />
-          <Route path="/auth/login" element={<p>connexion</p>} />
         </Routes>
       </WebSocketProvider>
     </MemoryRouter>
@@ -73,14 +75,17 @@ describe("envoi d'un événement avec accusé de réception", () => {
     expect(getToasts()).toMatchObject([{ type: "error", message: "Coup refusé" }]);
   });
 
-  it("renvoie vers la connexion quand la session a expiré", async () => {
+  it("recharge la session quand elle a expiré, sans message d'erreur", async () => {
+    // La session rechargée (déconnectée), la page de partie renvoie vers la connexion :
+    // y aller directement ferait revenir la page de connexion vers la partie (session encore en cache)
     fake.emitWithAck.mockResolvedValue({ ok: false, message: "Session expirée", reason: "session-expired" });
     const send = renderProvider();
 
-    await act(() => send("start-game", { room: "g1" }));
+    const response = await act(() => send("start-game", { room: "g1" }));
 
-    expect(await screen.findByText("connexion")).toBeTruthy();
-    expect(getToasts()).toMatchObject([{ message: "Session expirée" }]);
+    expect(response).toMatchObject({ ok: false, reason: "session-expired" });
+    expect(refresh).toHaveBeenCalled();
+    expect(getToasts()).toEqual([]);
   });
 
   it("prévient quand le serveur ne répond pas", async () => {

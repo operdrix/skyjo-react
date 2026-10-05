@@ -31,6 +31,15 @@ function game(partial: Partial<GameData>): GameData {
 }
 
 describe("createDeck", () => {
+  it("tire des ids au hasard, sans lien avec la valeur", () => {
+    const ids = createDeck().map((card) => card.id);
+    const other = new Set(createDeck().map((card) => card.id));
+
+    expect(new Set(ids).size).toBe(150);
+    expect(ids.some((id) => /^card_/.test(id))).toBe(false);
+    expect(ids.some((id) => other.has(id))).toBe(false);
+  });
+
   it("contient les 150 cartes du Skyjo", () => {
     const deck = createDeck();
     const count = (value: number) => deck.filter((card) => card.value === value).length;

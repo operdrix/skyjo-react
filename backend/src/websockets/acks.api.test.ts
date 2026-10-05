@@ -2,10 +2,18 @@ import type { Socket } from "socket.io-client";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { eq } from "drizzle-orm";
-import type { GameData, GameType } from "../../../shared/types.ts";
+import type { GameData } from "../../../shared/types.ts";
 import { db } from "../db/index.ts";
 import { games, sessions } from "../db/schema.ts";
-import { closeApp, connectPlayer, type TestPlayer, createPlayer, nextEvent, setupApp } from "../../test/helpers.ts";
+import {
+  closeApp,
+  connectPlayer,
+  type TestPlayer,
+  createPlayer,
+  nextEvent,
+  setupApp,
+  storedGameData,
+} from "../../test/helpers.ts";
 
 let app: FastifyInstance;
 let url: string;
@@ -64,7 +72,7 @@ describe("accusés de réception des événements", () => {
 
   it("renvoie un accusé d'échec quand le traitement plante", async () => {
     const gameId = await aliceAndBobGame({ start: true });
-    const { gameData } = (await app.inject({ method: "GET", url: `/api/game/${gameId}` })).json<GameType>();
+    const gameData = await storedGameData(gameId);
     // Partie corrompue en base : la pioche est vide, piocher plante
     const turn: GameData = { ...gameData, currentStep: "draw", currentPlayer: alice.id, deckCards: [] };
     await db.update(games).set({ gameData: turn }).where(eq(games.id, gameId));

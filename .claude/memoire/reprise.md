@@ -1,4 +1,4 @@
-# Mémoire projet : état et reprise (maj 2026-10-04, en production v3.2.0)
+# Mémoire projet : état et reprise (maj 2026-10-05, en production v3.2.0)
 
 Fichier versionné pour reprendre le travail sur n'importe quel PC. Chargé par `CLAUDE.md`. À tenir à jour en fin de session.
 
@@ -42,6 +42,10 @@ Fichier versionné pour reprendre le travail sur n'importe quel PC. Chargé par 
 - Vérifier le plateau en vrai format mobile : Chrome headless piloté par CDP (`--remote-debugging-port`, `Emulation.setDeviceMetricsOverride`, `Network.setCookie` avec la session d'un robot), WebSocket natif de Node 22, pas besoin de Puppeteer.
 - Chrome headless ne descend pas sous 500 px (sauf émulation CDP) de large : une capture à 390 px est tronquée, pas un vrai rendu mobile.
 
+## Refonte websocket (en cours, `docs/PRD-websocket.md` et `docs/PLAN-websocket.md`)
+- Phases 1 et 6 (PR #50), 2 et 3 (PR #51) mergées ; phase 4 (cartes cachées) sur `feat/websocket-cartes-cachees`. Restent : 5 (contrôles d'état) et 7 (présence avec délai de grâce).
+- Test manuel à 2 joueurs dans Chrome à refaire avant release (protocole changé : intentions, accusés, cartes masquées).
+
 ## Reprendre sur un autre PC
 1. `git checkout dev && git pull`, puis `make install && make dev` (Docker requis ; `make env` crée les `.env` depuis les `.env.example`).
 2. Back http://localhost:3000 (Swagger `/api/documentation`), front http://localhost:5173, phpMyAdmin :8080, Mailpit :8025.
@@ -67,6 +71,7 @@ Restent :
 6. (corrigé) Retour dans la salle d'attente : la cause était le CORS qui bloquait le PATCH de `join`.
 7. `restartGame` ajoute toujours le créateur à la nouvelle partie, même s'il n'a pas demandé à rejouer (comportement d'origine conservé).
 8. (corrigé, refonte websocket phase 3) `play-move` n'accepte plus de `gameData` : le serveur calcule le coup à partir de l'intention.
+9. (corrigé, refonte websocket phase 4) Les cartes cachées ne quittent plus le serveur (valeurs masquées dans l'API et les sockets, ids de cartes aléatoires au lieu de `card_N`).
 
 ## Astuces de test manuel
 - Comparer avant/après un changement visuel : `git worktree add <scratch>/old dev`, `npm ci`, Vite ancien sur :4173 et nouveau sur un autre port, avec `FRONTEND_HOST=http://localhost:5173,http://localhost:4173` pour le back. Les cookies `localhost` sont partagés entre ports : une connexion sert aux deux.

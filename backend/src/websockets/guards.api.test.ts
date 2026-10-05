@@ -5,7 +5,15 @@ import { eq } from "drizzle-orm";
 import type { GameData, GameType } from "../../../shared/types.ts";
 import { db } from "../db/index.ts";
 import { games } from "../db/schema.ts";
-import { closeApp, connectPlayer, type TestPlayer, createPlayer, nextEvent, setupApp } from "../../test/helpers.ts";
+import {
+  closeApp,
+  connectPlayer,
+  type TestPlayer,
+  createPlayer,
+  nextEvent,
+  setupApp,
+  storedGameData,
+} from "../../test/helpers.ts";
 
 let app: FastifyInstance;
 let url: string;
@@ -55,7 +63,7 @@ async function aliceAndBobGame({ start = true } = {}) {
 
 // Passe la partie au tour de pioche du joueur donné
 async function setTurn(gameId: string, playerId: string) {
-  const { gameData } = await getGame(gameId);
+  const gameData = await storedGameData(gameId);
   const turn: GameData = { ...gameData, currentStep: "draw", currentPlayer: playerId };
   await db.update(games).set({ gameData: turn }).where(eq(games.id, gameId));
   return turn;
@@ -75,7 +83,7 @@ describe("garde-fous des événements websocket", () => {
 
     await expectRefused(socket, "play-move", { room: gameId, move: "draw" });
 
-    expect((await getGame(gameId)).gameData).toEqual(turn);
+    expect(await storedGameData(gameId)).toEqual(turn);
   });
 
   it("refuse un coup d'un joueur qui n'est pas dans la partie", async () => {
@@ -85,7 +93,7 @@ describe("garde-fous des événements websocket", () => {
 
     await expectRefused(socket, "play-move", { room: gameId, move: "draw" });
 
-    expect((await getGame(gameId)).gameData).toEqual(turn);
+    expect(await storedGameData(gameId)).toEqual(turn);
   });
 
   it("refuse un coup impossible à l'étape en cours", async () => {
@@ -95,7 +103,7 @@ describe("garde-fous des événements websocket", () => {
 
     await expectRefused(socket, "play-move", { room: gameId, move: "flip", cardIndex: 0 });
 
-    expect((await getGame(gameId)).gameData).toEqual(turn);
+    expect(await storedGameData(gameId)).toEqual(turn);
   });
 
   it("refuse un état de partie envoyé par le client", async () => {
@@ -105,7 +113,7 @@ describe("garde-fous des événements websocket", () => {
 
     await expectRefused(socket, "play-move", { room: gameId, gameData: { ...turn, currentStep: "endGame" } });
 
-    expect((await getGame(gameId)).gameData).toEqual(turn);
+    expect(await storedGameData(gameId)).toEqual(turn);
   });
 
   it("refuse le démarrage par un autre joueur que le créateur", async () => {

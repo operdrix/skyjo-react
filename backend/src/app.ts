@@ -13,7 +13,7 @@ import { frontendOrigins } from "./utils/origins.ts";
 import { gamesRoutes } from "./routes/games.ts";
 import { usersRoutes } from "./routes/users.ts";
 //websockets
-import { websockets } from "./websockets/websockets.ts";
+import { cancelPendingLeaves, websockets } from "./websockets/websockets.ts";
 import type { SocketData } from "./websockets/types.ts";
 import type { ClientToServerEvents, ServerToClientEvents } from "../../shared/types.ts";
 
@@ -52,6 +52,7 @@ export async function buildApp() {
   });
   app.addHook("onClose", async () => {
     await app.io.close();
+    cancelPendingLeaves();
   });
   await app
     .register(helmet, {

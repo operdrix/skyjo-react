@@ -66,9 +66,12 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, 
       let response: Ack;
       try {
         if (!socket || !isConnected) throw new Error("Socket déconnecté");
-        // Émission non typée : le catalogue garantit déjà la forme de event et data
-        const emitWithAck = socket.timeout(ACK_TIMEOUT_MS).emitWithAck as (e: string, d: unknown) => Promise<Ack>;
-        response = await emitWithAck(event, data);
+        // Émission non typée : le catalogue garantit déjà la forme de event et data.
+        // La méthode est appelée sur son objet (emitWithAck s'appuie sur this).
+        const withTimeout = socket.timeout(ACK_TIMEOUT_MS) as unknown as {
+          emitWithAck: (e: string, d: unknown) => Promise<Ack>;
+        };
+        response = await withTimeout.emitWithAck(event, data);
       } catch {
         response = { ok: false, message: UNREACHABLE };
       }

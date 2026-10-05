@@ -15,7 +15,14 @@ const fake = vi.hoisted(() => {
     off: vi.fn(),
     connect: () => listeners.get("connect")?.(),
     disconnect: vi.fn(),
-    timeout: () => ({ emitWithAck }),
+    // Comme socket.io : emitWithAck s'appuie sur this (perdu si la méthode est extraite de l'objet)
+    timeout: () => ({
+      emitWithAck(this: { emit?: unknown } | undefined, ...args: unknown[]) {
+        if (!this?.emit) throw new TypeError("Cannot read properties of undefined (reading 'emit')");
+        return emitWithAck(...args);
+      },
+      emit: true,
+    }),
   };
   return { socket, emitWithAck };
 });

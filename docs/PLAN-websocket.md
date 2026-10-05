@@ -78,7 +78,7 @@ Les fonctions pures des coups deviennent partagées. Le client n'envoie plus que
 - [x] Tests unitaires : pour chaque étape, les coups permis et refusés.
 - [x] Test d'API : une manche complète jouée uniquement par intentions jusqu'à `endGame`, scores enregistrés.
 - [x] Test : un `play-move` portant un `gameData` est refusé (schéma) ; un coup hors étape (`flip` pendant `draw`) est refusé.
-- [x] Le front (pioche, défausse, plateau, révélation initiale) envoie des intentions (tests de composants ; partie complète jouée par intentions en test d'API). Vérification manuelle dans le navigateur à faire.
+- [x] Le front (pioche, défausse, plateau, révélation initiale) envoie des intentions (tests de composants ; partie complète jouée par intentions en test d'API). Vérifié dans le navigateur le 2026-10-05.
 - [x] `make check` vert.
 
 ## Bloquée par
@@ -101,7 +101,7 @@ Les ids de cartes sont tirés au hasard à la distribution. Chaque diffusion (é
 - [x] Test : la pioche diffusée ne contient que des cartes masquées, de la bonne longueur.
 - [x] Test : en `endGame`, toutes les cartes des joueurs portent leur valeur.
 - [x] Test : deux distributions donnent des ids sans lien avec la valeur (pas de `card_N`).
-- [ ] Contrôle manuel dans le navigateur : l'onglet réseau ne montre aucune valeur cachée pendant une manche (à faire).
+- [x] Contrôle manuel dans le navigateur : aucune valeur cachée dans les réponses HTTP ni dans les événements reçus pendant une manche (vérifié le 2026-10-05).
 - [x] `CLAUDE.md` et `.claude/memoire/reprise.md` à jour.
 - [x] `make check` vert.
 

@@ -45,7 +45,8 @@ Fichier versionné pour reprendre le travail sur n'importe quel PC. Chargé par 
 ## Refonte websocket (en cours, `docs/PRD-websocket.md` et `docs/PLAN-websocket.md`)
 - Phases 1 et 6 (PR #50), 2 et 3 (PR #51), 4 (PR #52) mergées ; phase 5 (contrôles d'état, migration 0003 `next_game_id`) sur `feat/websocket-controles-etat`. Reste : 7 (présence avec délai de grâce).
 - Contrôles d'état : pas de distribution pendant une manche (seulement au lancement ou en `endGame`), 2 joueurs minimum, relance seulement d'une partie terminée avec au moins un autre joueur, relance idempotente. Après pull : `make db-reset` ou redémarrer le back.
-- Test manuel à 2 joueurs dans Chrome à refaire avant release (protocole changé : intentions, accusés, cartes masquées).
+- Test manuel des phases 1 à 6 fait le 2026-10-05 (Chrome + robot Node) : rooms, refus avec toast et resynchro, coups par intention, cartes masquées (0 fuite en HTTP et en socket), manche suivante avec animation, fin de partie, « Rejouer » (double-clic : une seule partie), reconnexion, session expirée (côté robot). Deux bugs trouvés et corrigés : `emitWithAck` appelé hors de son objet (tous les envois échouaient dans le navigateur) et annonce de la page de jeu avant la connexion du socket. Non testé dans le navigateur : la redirection vers la connexion à l'expiration de session (il faudrait déconnecter le compte de dev).
+- Robot de test pilotable : petit serveur HTTP local (Node + `socket.io-client`) qui garde le socket ouvert, journalise les événements reçus et compte les cartes cachées qui fuient. Un robot qui se déconnecte quitte la salle d'attente (avant la phase 7) : il doit rester connecté. Pour aller vite en fin de manche : révéler en base toutes les cartes sauf la dernière de chaque joueur.
 
 ## Reprendre sur un autre PC
 1. `git checkout dev && git pull`, puis `make install && make dev` (Docker requis ; `make env` crée les `.env` depuis les `.env.example`).

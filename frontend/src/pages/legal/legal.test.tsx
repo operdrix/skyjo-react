@@ -48,6 +48,14 @@ describe("pages légales", () => {
     expect(screen.getByRole("link", { name: /cnil\.fr/ }).getAttribute("href")).toContain("cnil.fr");
   });
 
+  it("politique de confidentialité : compte invité, sa durée et le pseudo gardé dans l'historique", () => {
+    renderPage(<PrivacyPage />);
+
+    expect(text()).toContain("sans compte");
+    expect(text()).toMatch(/invité[^.]*7 jours/i);
+    expect(text()).toMatch(/pseudo[^.]*historique des autres joueurs/);
+  });
+
   it("conditions d'utilisation", () => {
     renderPage(<Terms />);
 

@@ -12,6 +12,6 @@ declare module "fastify" {
 
   // Joueur connecté, renseigné par authenticate
   interface FastifyRequest {
-    user: { id: string; username: string };
+    user: { id: string; username: string; isAnonymous: boolean };
   }
 }

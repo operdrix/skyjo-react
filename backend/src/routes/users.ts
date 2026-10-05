@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { getUserGames } from "../controllers/games.ts";
 import { getUserById, getUsers } from "../controllers/users.ts";
+import { sendResult } from "./reply.ts";
 
 type IdParams = { Params: { id: string } };
 
@@ -61,7 +62,7 @@ export function usersRoutes(app: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      reply.send(await getUserGames(request.params.id));
+      return sendResult(reply, await getUserGames(request.params.id));
     },
   );
 }

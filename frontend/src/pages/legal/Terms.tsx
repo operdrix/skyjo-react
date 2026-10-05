@@ -23,6 +23,10 @@ const Terms = () => (
       <ul className="list-disc list-inside space-y-1">
         <li>Un compte est personnel. Vous êtes responsable de la confidentialité de votre mot de passe.</li>
         <li>
+          Vous pouvez rejoindre une partie sans compte, en invité : seul un pseudo est demandé. Un invité ne peut pas
+          créer de partie et n'a pas d'historique ; sa place est liée au navigateur utilisé.
+        </li>
+        <li>
           Votre pseudo est visible des autres joueurs. Il ne doit pas être injurieux, discriminatoire, contraire à la
           loi ni usurper l'identité d'une autre personne.
         </li>

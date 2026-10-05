@@ -1,7 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
-import { username } from "better-auth/plugins";
+import { anonymous, username } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { db } from "./db/index.ts";
 import * as schema from "./db/schema.ts";
@@ -81,6 +81,8 @@ export function createAuth(secret: string) {
         usernameNormalization: false,
         displayUsername: false,
       }),
+      // Invités : session sans compte, le pseudo est choisi juste après (update-user)
+      anonymous(),
     ],
     databaseHooks: {
       session: {

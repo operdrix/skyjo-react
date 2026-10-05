@@ -86,3 +86,22 @@ export async function storedGameData(gameId: string): Promise<GameData> {
   const [game] = await db.select({ gameData: games.gameData }).from(games).where(eq(games.id, gameId));
   return game.gameData;
 }
+
+// Crée un invité (session sans compte) puis lui donne un pseudo ; renvoie aussi la réponse du choix du pseudo
+export async function createGuest(app: FastifyInstance, username: string) {
+  const signIn = await app.inject({ method: "POST", url: "/api/auth/sign-in/anonymous" });
+  if (signIn.statusCode !== 200) {
+    throw new Error(`Création de l'invité impossible : ${signIn.body}`);
+  }
+  const guest: TestPlayer = {
+    id: signIn.json<{ user: { id: string } }>().user.id,
+    cookies: sessionCookies(signIn),
+  };
+  const pseudo = await app.inject({
+    method: "POST",
+    url: "/api/auth/update-user",
+    cookies: guest.cookies,
+    payload: { username },
+  });
+  return { guest, pseudo };
+}

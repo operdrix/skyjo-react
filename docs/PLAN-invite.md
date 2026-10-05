@@ -27,14 +27,14 @@ Sur la page de connexion, un choix « Rejoindre sans compte » mène à un écra
 
 ### Critères d'acceptation
 
-- [ ] Test d'API : un invité créé avec un pseudo a une session ; un pseudo déjà pris est refusé avec un message.
-- [ ] Test d'API : un invité rejoint une partie, entre dans la room et joue un coup.
-- [ ] Test d'API : un invité reçoit un refus (403) à la création de partie et à la lecture de son historique.
-- [ ] Test de composant : le choix « Rejoindre sans compte », l'avertissement, le pseudo prérempli modifiable, le retour à la partie visée.
-- [ ] Test unitaire : le pseudo proposé respecte les règles des pseudos.
-- [ ] Pages légales à jour.
-- [ ] Contrôle manuel dans le navigateur : lien de partie, rejoindre sans compte, partie jouée jusqu'au bout.
-- [ ] `make check` vert.
+- [x] Test d'API : un invité créé avec un pseudo a une session ; un pseudo déjà pris est refusé avec un message.
+- [x] Test d'API : un invité rejoint une partie, entre dans la room et joue un coup.
+- [x] Test d'API : un invité reçoit un refus (403) à la création de partie et à la lecture de son historique.
+- [x] Test de composant : le choix « Rejoindre sans compte », l'avertissement, le pseudo prérempli modifiable, le retour à la partie visée.
+- [x] Test unitaire : le pseudo proposé respecte les règles des pseudos.
+- [x] Pages légales à jour.
+- [x] Contrôle manuel dans le navigateur : lien de partie, rejoindre sans compte, partie jouée jusqu'au bout.
+- [x] `make check` vert.
 
 ## Bloquée par
 

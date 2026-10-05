@@ -11,6 +11,8 @@ import {
 } from "../controllers/games.ts";
 import { sendResult } from "./reply.ts";
 
+const GUEST_CANNOT_CREATE = "Crée un compte pour créer une partie.";
+
 type GameParams = { Params: { gameId: string } };
 
 export function gamesRoutes(app: FastifyInstance) {
@@ -84,6 +86,10 @@ export function gamesRoutes(app: FastifyInstance) {
       },
     },
     async (request, reply) => {
+      // Seuls les joueurs avec compte créent des parties
+      if (request.user.isAnonymous) {
+        return reply.status(403).send({ error: GUEST_CANNOT_CREATE, code: 403 });
+      }
       return sendResult(reply, await createGame(request.user.id, request.body?.privateRoom));
     },
   );

@@ -44,6 +44,7 @@ const router = createBrowserRouter([
       { path: "/auth/login", lazy: page(() => import("@/pages/auth/Login")) },
       { path: "/auth/register", lazy: page(() => import("@/pages/auth/Register")) },
       { path: "/auth/pseudo", lazy: page(() => import("@/pages/auth/ChoosePseudo")) },
+      { path: "/auth/invite", lazy: page(() => import("@/pages/auth/Guest")) },
       { path: "/auth/request-reset-password", lazy: page(() => import("@/pages/auth/RequestResetPassword")) },
       { path: "/auth/password-reset", lazy: page(() => import("@/pages/auth/ResetPassword")) },
     ],

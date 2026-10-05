@@ -32,6 +32,27 @@ describe("PlayerSet", () => {
     expect(screen.getByText("bob")).toBeTruthy();
   });
 
+  it("signale un adversaire invité à la table", () => {
+    game.current = {
+      id: "g1",
+      players: [
+        { id: "ALICE", username: "alice", isAnonymous: false },
+        { id: "LYNX", username: "Lynx 42", isAnonymous: true },
+      ],
+      gameData: {
+        currentStep: "initialReveal",
+        currentPlayer: null,
+        playersCards: { ALICE: [], LYNX: [] },
+        discardPile: [],
+        deckCards: [],
+      },
+    };
+
+    render(<PlayerSet playerId="LYNX" />);
+
+    expect(screen.getByRole("group", { name: /Lynx 42/ }).textContent).toContain("invité");
+  });
+
   it("affiche les points de la manche à côté du nom en fin de manche", () => {
     game.current = {
       id: "g1",

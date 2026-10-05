@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router";
 import ToggleTheme from "../nav/ToggleTheme";
 
 const Drawer = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthentified, logout } = useUser();
+  const { isAuthentified, isGuest, logout } = useUser();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -56,11 +56,13 @@ const Drawer = ({ children }: { children: React.ReactNode }) => {
           </li>
           {isAuthentified ? (
             <>
-              {isAuthentified && (
-                <li>
+              <li>
+                {isGuest ? (
+                  <Link to={"/auth/register"}>Créer mon compte</Link>
+                ) : (
                   <Link to={"/dashboard"}>Mon espace</Link>
-                </li>
-              )}
+                )}
+              </li>
               <li>
                 <button onClick={handleLogout}>Déconnexion</button>
               </li>

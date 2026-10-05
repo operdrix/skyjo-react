@@ -46,6 +46,8 @@ export type PlayerStatus = "connected" | "disconnected";
 export type PublicUser = {
   id: string;
   username: string;
+  // Invité (joue sans compte)
+  isAnonymous: boolean;
 };
 
 // Joueur d'une partie tel que renvoyé par l'API

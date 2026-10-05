@@ -1,3 +1,4 @@
+import GuestTag from "@/components/GuestTag";
 import type { GameType } from "@/types/types";
 import { useState } from "react";
 import { useNavigate } from "react-router";
@@ -30,6 +31,7 @@ export default function GameHistoryCard({
             {game.players?.map((player, index) => (
               <span key={player.id}>
                 {player.username}
+                <GuestTag player={player} />
                 {index < game.players.length - 2 ? ", " : index === game.players.length - 2 ? " et " : ""}
               </span>
             ))}

@@ -15,6 +15,7 @@ const authClient = vi.hoisted(() => ({
 const user = vi.hoisted(() => ({
   current: {
     isAuthentified: false,
+    isGuest: false,
     needsPseudo: false,
     userName: null as string | null,
     suggestedPseudo: "",
@@ -40,6 +41,7 @@ beforeEach(() => {
   authClient.signIn.anonymous.mockResolvedValue({ data: {}, error: null });
   user.current = {
     isAuthentified: false,
+    isGuest: false,
     needsPseudo: false,
     userName: null,
     suggestedPseudo: "",
@@ -122,6 +124,15 @@ describe("jouer sans compte", () => {
     renderWithGame("/auth/invite?redirect=%2Fjoin%2F42", <Guest />);
 
     expect(screen.getByText("salle d'attente")).toBeTruthy();
+  });
+});
+
+describe("inscription d'un invité", () => {
+  it("laisse un invité ouvrir la page d'inscription", () => {
+    user.current = { ...user.current, isAuthentified: true, isGuest: true, userName: "Lynx 42" };
+    renderAt(<Register />);
+
+    expect(screen.getByRole("heading", { name: "Créer un compte" })).toBeTruthy();
   });
 });
 

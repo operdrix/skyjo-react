@@ -22,7 +22,7 @@ function toPublic({ nextGameId: _, ...game }: StoredGame): GameType {
 }
 
 // Seuls attributs de joueur exposés dans les réponses de partie
-const PUBLIC_USER = { id: users.id, username: users.username };
+const PUBLIC_USER = { id: users.id, username: users.username, isAnonymous: users.isAnonymous };
 
 // Partie avec ses joueurs et son créateur, au format attendu par le front.
 // Requêtes simples plutôt que l'API relationnelle de Drizzle : ses LEFT JOIN LATERAL ne passent pas sur MariaDB.

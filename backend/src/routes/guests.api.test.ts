@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { FastifyInstance } from "fastify";
+import type { GameType } from "../../../shared/types.ts";
 import {
   closeApp,
   connectPlayer,
@@ -59,6 +60,20 @@ describe("invités (jouer sans compte)", () => {
     expect(await socket.emitWithAck("player-joined-game", { room: gameId })).toEqual({ ok: true });
     expect(await socket.emitWithAck("play-move", { room: gameId, move: "reveal", cardIndex: 0 })).toEqual({ ok: true });
     socket.close();
+  });
+
+  it("indique quels joueurs de la partie sont invités", async () => {
+    const { guest } = await createGuest(app, "Castor 5");
+    const created = await app.inject({ method: "POST", url: "/api/game", cookies: alice.cookies, payload: {} });
+    const gameId = created.json<{ gameId: string }>().gameId;
+    await app.inject({ method: "PATCH", url: `/api/game/join/${gameId}`, cookies: guest.cookies, payload: {} });
+
+    const game = (await app.inject({ method: "GET", url: `/api/game/${gameId}` })).json<GameType>();
+
+    const guestOf = (id: string) => game.players.find((player) => player.id === id)?.isAnonymous;
+    expect(guestOf(guest.id)).toBe(true);
+    expect(guestOf(alice.id)).toBe(false);
+    expect(game.creatorPlayer.isAnonymous).toBe(false);
   });
 
   it("refuse la création de partie à un invité", async () => {

@@ -7,6 +7,8 @@ export type UserContextType = {
   userEmail: string | null;
   // Connecté avec un pseudo : peut jouer
   isAuthentified: boolean;
+  // Invité : joue sans compte (pas d'historique ni de création de partie)
+  isGuest: boolean;
   // Connecté (Google) mais pseudo pas encore choisi
   needsPseudo: boolean;
   suggestedPseudo: string;

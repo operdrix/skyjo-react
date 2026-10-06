@@ -1,6 +1,7 @@
 import ErrorMessage from "@/components/game/messages/ErrorMessage";
 import PageSkeleton from "@/components/PageSkeleton";
 import { useUser } from "@/hooks/User";
+import { usePublicGamesUpdates } from "@/hooks/usePublicGamesUpdates";
 import { api } from "@/services/apiService";
 import { GameType } from "@/types/types";
 import { useEffect, useState } from "react";
@@ -14,8 +15,12 @@ const JoinPublic = () => {
   const navigate = useNavigate();
 
   const [reload, setReload] = useState<number>(0);
+  const refresh = () => setReload((count) => count + 1);
 
-  // Chargement des parties publiques en attente (rechargées via le bouton)
+  // La liste se recharge d'elle-même quand le serveur signale un changement
+  usePublicGamesUpdates(refresh);
+
+  // Chargement des parties publiques en attente (rechargées au signal du serveur ou via le bouton)
   useEffect(() => {
     if (!userId) return;
     let active = true;
@@ -23,6 +28,7 @@ const JoinPublic = () => {
       if (!active) return;
       if (response.data) {
         setGames(response.data);
+        setError(null);
       } else {
         setError(response.code === 500 ? "Une erreur réseau s'est produite." : "La partie n'existe pas.");
       }
@@ -52,14 +58,7 @@ const JoinPublic = () => {
   return (
     <div className="flex flex-1 items-center px-4 py-6">
       <div className="panel relative mx-auto flex w-full max-w-5xl flex-col justify-between p-5 min-h-[40vh]">
-        <button
-          className="absolute right-0 top-0 btn btn-ghost m-2"
-          onClick={() => {
-            setLoading(true);
-            setError(null);
-            setReload((count) => count + 1);
-          }}
-        >
+        <button className="absolute right-0 top-0 btn btn-ghost m-2" aria-label="Recharger la liste" onClick={refresh}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"

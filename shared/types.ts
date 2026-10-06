@@ -91,6 +91,9 @@ export type Ack = { ok: true } | { ok: false; message: string; reason?: "session
 
 export type RoomPayload = { room: string };
 
+// Événement sans données
+export type EmptyPayload = Record<string, never>;
+
 // Coup joué : le client indique son intention, le serveur calcule la partie suivante
 export type MoveType = "draw" | "take-discard" | "discard-drawn" | "replace" | "flip" | "reveal";
 export type Intent = { move: MoveType; cardIndex?: number };
@@ -103,6 +106,8 @@ export type ClientPayloads = {
   "restart-game": RoomPayload;
   "player-play-again": RoomPayload;
   "play-move": RoomPayload & Intent;
+  // Suivre la liste des parties publiques (jusqu'à l'entrée dans une partie)
+  "watch-public-games": EmptyPayload;
 };
 export type ClientEvent = keyof ClientPayloads;
 
@@ -123,5 +128,7 @@ export type ServerToClientEvents = {
   "play-again": (game: GameType) => void;
   "waiting-deal": () => void;
   "go-to-new-game": (next: NextGame) => void;
+  // La liste des parties publiques a peut-être changé : à recharger
+  "public-games-changed": () => void;
 };
 export type ServerEvent = keyof ServerToClientEvents;

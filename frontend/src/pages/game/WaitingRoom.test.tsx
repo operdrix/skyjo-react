@@ -110,9 +110,12 @@ describe("salle d'attente", () => {
       </MemoryRouter>,
     );
     await screen.findByText("bob");
+    // L'annonce part d'un effet qui peut suivre l'affichage (CI lente) : on l'attend
+    await waitFor(() =>
+      expect(sendMessage.mock.calls.filter(([event]) => event === "player-joined-game")).toHaveLength(1),
+    );
 
     expect(api.patch).not.toHaveBeenCalled();
-    expect(sendMessage.mock.calls.filter(([event]) => event === "player-joined-game")).toHaveLength(1);
   });
 
   it("réactive le lancement dès que le serveur le refuse", async () => {

@@ -1,4 +1,4 @@
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import {
   createGame,
   deleteGame,
@@ -9,6 +9,7 @@ import {
   type GameActionBody,
   type GamesQuery,
 } from "../controllers/games.ts";
+import { notifyPublicGames } from "../websockets/websockets.ts";
 import { sendResult } from "./reply.ts";
 
 const GUEST_CANNOT_CREATE = "Crée un compte pour créer une partie.";
@@ -16,6 +17,11 @@ const GUEST_CANNOT_CREATE = "Crée un compte pour créer une partie.";
 type GameParams = { Params: { gameId: string } };
 
 export function gamesRoutes(app: FastifyInstance) {
+  // Après un changement accepté, la liste des parties publiques est à recharger
+  const onResponse = async (_request: FastifyRequest, reply: FastifyReply) => {
+    if (reply.statusCode < 400) notifyPublicGames(app.io);
+  };
+
   // Liste des parties
   app.get<{ Querystring: GamesQuery }>(
     "/api/games",
@@ -64,6 +70,7 @@ export function gamesRoutes(app: FastifyInstance) {
     "/api/game",
     {
       preHandler: [app.authenticate],
+      onResponse,
       schema: {
         tags: ["Parties"],
         summary: "Créer une partie",
@@ -99,6 +106,7 @@ export function gamesRoutes(app: FastifyInstance) {
     "/api/game/:action/:gameId",
     {
       preHandler: [app.authenticate],
+      onResponse,
       schema: {
         tags: ["Parties"],
         summary: "Action sur une partie",
@@ -132,6 +140,7 @@ export function gamesRoutes(app: FastifyInstance) {
     "/api/game/:gameId",
     {
       preHandler: [app.authenticate],
+      onResponse,
       schema: {
         tags: ["Parties"],
         summary: "Modifier les paramètres d'une partie",
@@ -163,6 +172,7 @@ export function gamesRoutes(app: FastifyInstance) {
     "/api/game/:gameId",
     {
       preHandler: [app.authenticate],
+      onResponse,
       schema: {
         tags: ["Parties"],
         summary: "Supprimer une partie",

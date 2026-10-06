@@ -10,7 +10,7 @@ import {
   updateGame,
 } from "../controllers/games.ts";
 import { logger } from "../utils/logger.ts";
-import type { GameSocket } from "./types.ts";
+import type { GameServer, GameSocket } from "./types.ts";
 
 const INVALID_DATA = "Données invalides";
 const SESSION_EXPIRED = "Session expirée, reconnecte-toi";
@@ -46,7 +46,16 @@ const CLIENT_FIELDS: { [E in ClientEvent]: Record<keyof ClientPayloads[E], Check
   "restart-game": { room: text },
   "player-play-again": { room: text },
   "play-move": { room: text, move, cardIndex: optionalIndex },
+  "watch-public-games": {},
 };
+
+// Room des sockets qui affichent la liste des parties publiques
+const PUBLIC_GAMES_ROOM = "public-games";
+
+// Signale aux sockets qui suivent la liste des parties publiques qu'elle a peut-être changé
+export function notifyPublicGames(io: GameServer) {
+  io.to(PUBLIC_GAMES_ROOM).emit("public-games-changed");
+}
 
 // Résultat d'un handler : rien si l'action est acceptée, sinon le motif du refus
 type Refusal = string | void;
@@ -148,9 +157,15 @@ export async function websockets(app: FastifyInstance) {
       if (previous && previous !== gameId) {
         socket.leave(previous);
       }
+      socket.leave(PUBLIC_GAMES_ROOM);
       socket.join(gameId);
       socket.data.room = gameId;
       io.to(gameId).emit("player-joined-game", game);
+    });
+
+    // L'émetteur affiche la liste des parties publiques
+    on(socket, app, "watch-public-games", async () => {
+      socket.join(PUBLIC_GAMES_ROOM);
     });
 
     // Les paramètres de la partie ont changé
@@ -169,6 +184,7 @@ export async function websockets(app: FastifyInstance) {
       // Le front joue l'animation de distribution à partir de waiting-deal
       io.to(gameId).emit("waiting-deal");
       io.to(gameId).emit("start-game", started as GameType);
+      notifyPublicGames(io);
     });
 
     // Un joueur annonce son coup ; le serveur le calcule sur l'état enregistré
@@ -207,6 +223,7 @@ export async function websockets(app: FastifyInstance) {
           const sockets = await io.in(room).fetchSockets();
           if (sockets.some((other) => other.data.userId === userId)) return;
           await updateGame({ params: { action: "leave", gameId: room }, body: { userId } });
+          notifyPublicGames(io);
           const game = await getGame(room);
           if (!("error" in game)) {
             io.to(room).emit("player-left-game", game);

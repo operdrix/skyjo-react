@@ -1,3 +1,4 @@
+import { GAME_KIND } from "@/lib/gameKind";
 import ErrorMessage from "@/components/game/messages/ErrorMessage";
 import PageSkeleton from "@/components/PageSkeleton";
 import { useUser } from "@/hooks/User";
@@ -24,7 +25,7 @@ const JoinPublic = () => {
   useEffect(() => {
     if (!userId) return;
     let active = true;
-    api.get("games?state=pending&privateRoom=false").then((response) => {
+    api.get(`games?state=pending&privateRoom=false&type=${GAME_KIND}`).then((response) => {
       if (!active) return;
       if (response.data) {
         setGames(response.data);

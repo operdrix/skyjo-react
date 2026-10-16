@@ -17,6 +17,15 @@ describe("rankPlayers", () => {
     ]);
   });
 
+  it("classe du plus grand total au plus petit quand le plus haut total gagne", () => {
+    const ranking = rankPlayers([player("BOB", [20]), player("ALICE", [50]), player("CARL", [20])], "highest");
+    expect(ranking.map((r) => [r.rank, r.id])).toEqual([
+      [1, "ALICE"],
+      [2, "BOB"],
+      [2, "CARL"],
+    ]);
+  });
+
   it("donne le même rang aux ex aequo", () => {
     const ranking = rankPlayers([player("ALICE", [10]), player("BOB", [10]), player("CARL", [15])]);
     expect(ranking.map((r) => r.rank)).toEqual([1, 1, 3]);

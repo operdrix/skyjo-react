@@ -1,21 +1,27 @@
 import Game from "@/pages/game/Game";
-import { cleanup, render } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const sendMessage = vi.hoisted(() => vi.fn());
 const ws = vi.hoisted(() => ({ isConnected: false }));
+const current = vi.hoisted(() => ({ game: null as unknown }));
 
-vi.mock("@/services/apiService", () => ({ api: { get: vi.fn(() => new Promise(() => {})) } }));
+vi.mock("@/services/apiService", () => ({
+  api: { get: vi.fn(() => (current.game ? Promise.resolve({ data: current.game }) : new Promise(() => {}))) },
+}));
+vi.mock("@/components/banco/BancoTable", () => ({ default: () => <p>table banco</p> }));
+vi.mock("@/components/game/ColonnesTable", () => ({ default: () => <p>table colonnes</p> }));
 vi.mock("@/utils/notify", () => ({ default: vi.fn() }));
 vi.mock("@/hooks/useGameEvents", () => ({ useGameEvents: vi.fn() }));
 vi.mock("@/hooks/User", () => ({ useUser: () => ({ userId: "ALICE", loading: false }) }));
-vi.mock("@/hooks/Game", () => ({ useGame: () => ({ game: null, setGame: vi.fn(), sound: false }) }));
+vi.mock("@/hooks/Game", () => ({ useGame: () => ({ game: current.game, setGame: vi.fn(), sound: false }) }));
 vi.mock("@/hooks/WebSocket", () => ({
   useWebSocket: () => ({ isConnected: ws.isConnected, loading: false, sendMessage }),
 }));
 
 afterEach(() => {
+  current.game = null;
   cleanup();
   vi.clearAllMocks();
 });
@@ -37,5 +43,22 @@ describe("page de jeu", () => {
     ws.isConnected = true;
     rerender(page());
     expect(sendMessage).toHaveBeenCalledWith("player-joined-game", { room: "g1" });
+  });
+
+  it.each([
+    ["banco", "table banco"],
+    ["colonnes", "table colonnes"],
+  ])("affiche la table du jeu de la partie (%s)", async (gameType, table) => {
+    ws.isConnected = true;
+    current.game = {
+      id: "g1",
+      gameType,
+      state: "playing",
+      players: [],
+      gameData: { turnOrder: [], currentPlayer: null, currentStep: "draw", roundOver: false },
+    };
+    render(page());
+
+    expect(await screen.findByText(table)).toBeTruthy();
   });
 });

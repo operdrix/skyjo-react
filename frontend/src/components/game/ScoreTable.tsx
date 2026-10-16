@@ -1,5 +1,5 @@
 import GuestTag from "@/components/GuestTag";
-import { formatPoints, formatScore, rankPlayers } from "@/game/scores";
+import { formatPoints, formatScore, rankPlayers, type Winning } from "@/game/scores";
 
 type Player = {
   id: string;
@@ -14,13 +14,15 @@ export default function ScoreTable({
   userId,
   variant = "full",
   playAgain,
+  winning = "lowest",
 }: {
   players: Player[];
   userId: string | null;
   variant?: "full" | "round";
   playAgain?: string[];
+  winning?: Winning;
 }) {
-  const ranking = rankPlayers(players);
+  const ranking = rankPlayers(players, winning);
   const roundCount = Math.max(0, ...ranking.map((p) => p.rounds.length));
 
   return (

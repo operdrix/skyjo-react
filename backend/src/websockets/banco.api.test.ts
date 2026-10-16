@@ -2,9 +2,10 @@ import type { Socket } from "socket.io-client";
 import { and, eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { FastifyInstance } from "fastify";
-import type { BancoData, GameType, PublicBancoData } from "../../../shared/types.ts";
+import type { BancoCard, BancoData, GameType, PublicBancoData } from "../../../shared/types.ts";
 import { db } from "../db/index.ts";
-import { gamePlayers } from "../db/schema.ts";
+import { gamePlayers, games } from "../db/schema.ts";
+import { deal } from "../game/banco/rules.ts";
 import {
   closeApp,
   connectPlayer,
@@ -57,6 +58,30 @@ async function joinRoom(player: TestPlayer, room: string) {
 
 const storedBanco = (gameId: string) => storedGameData<BancoData>(gameId);
 
+let cardId = 0;
+const card = (value: number | BancoCard["kind"]): BancoCard =>
+  typeof value === "number"
+    ? { id: `seed-${++cardId}`, kind: "number", value }
+    : ({ id: `seed-${++cardId}`, kind: value } as BancoCard);
+
+// Redistribue la manche en cours avec une pioche connue (la première carte sort d'abord)
+async function seedBanco(gameId: string, deckValues: (number | BancoCard["kind"])[], discardValues: number[] = []) {
+  const { turnOrder } = await storedBanco(gameId);
+  const previous = {
+    deck: deckValues.map(card),
+    discard: discardValues.map(card),
+    hands: {},
+    pending: [],
+  } as unknown as BancoData;
+  await db
+    .update(games)
+    .set({ gameData: deal(turnOrder, 1, previous) })
+    .where(eq(games.id, gameId));
+}
+
+// Pioche sans action : chaque coup donne un nombre
+const NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+
 // Partie de Banco créée par Alice, rejointe par les autres joueurs, démarrée
 async function startedBanco(others: TestPlayer[] = [bob]) {
   const created = await app.inject({
@@ -71,17 +96,27 @@ async function startedBanco(others: TestPlayer[] = [bob]) {
   return { gameId, game: started.json<BancoGame>() };
 }
 
+// Partie démarrée avec une pioche sans action, pour des tours prévisibles
+async function seededBanco(others: TestPlayer[] = [bob]) {
+  const started = await startedBanco(others);
+  await seedBanco(started.gameId, NUMBERS);
+  return started;
+}
+
 const play = (socket: Socket, room: string, move: "hit" | "stay") => socket.emitWithAck("play-move", { room, move });
+const target = (socket: Socket, room: string, player: TestPlayer) =>
+  socket.emitWithAck("play-move", { room, move: "target", target: player.id });
 
 describe("partie de Banco", () => {
-  it("se lance avec une carte par joueur, Alice commence, la pioche n'est pas diffusée", async () => {
+  it("se lance avec le paquet complet, Alice commence, pioche et défausse ne sont pas diffusées", async () => {
     const { gameId, game } = await startedBanco([bob, carol]);
 
     expect(game.gameType).toBe("banco");
-    expect(game.gameData.currentPlayer).toBe(alice.id);
-    expect(Object.values(game.gameData.hands).map((hand) => hand.length)).toEqual([1, 1, 1]);
+    expect(game.gameData.turnOrder[0]).toBe(alice.id);
     expect(game.gameData).not.toHaveProperty("deck");
-    expect(game.gameData.deckCount).toBe(85 - 3);
+    expect(game.gameData).not.toHaveProperty("discard");
+    const { hands, pending, deckCount, discardCount } = game.gameData;
+    expect(Object.values(hands).flat().length + pending.length + deckCount + discardCount).toBe(94);
 
     const stored = await storedBanco(gameId);
     const fetched = await app.inject({ method: "GET", url: `/api/game/${gameId}` });
@@ -101,7 +136,7 @@ describe("partie de Banco", () => {
   });
 
   it("joue une manche par intentions, refuse un coup hors de son tour, enregistre les scores", async () => {
-    const { gameId } = await startedBanco();
+    const { gameId } = await seededBanco();
     const aliceSocket = await joinRoom(alice, gameId);
     const bobSocket = await joinRoom(bob, gameId);
 
@@ -127,7 +162,7 @@ describe("partie de Banco", () => {
   });
 
   it("fait commencer le joueur suivant à la manche suivante", async () => {
-    const { gameId } = await startedBanco();
+    const { gameId } = await seededBanco();
     const aliceSocket = await joinRoom(alice, gameId);
     const bobSocket = await joinRoom(bob, gameId);
     await play(aliceSocket, gameId, "stay");
@@ -135,11 +170,15 @@ describe("partie de Banco", () => {
 
     const next = await act("start", gameId, alice);
 
-    expect(next.json<BancoGame>().gameData.currentPlayer).toBe(bob.id);
+    const { gameData } = next.json<BancoGame>();
+    expect(gameData.currentPlayer).toBe(bob.id);
+    // La pioche continue : les 2 cartes de la manche précédente sont défaussées, 2 nouvelles sont distribuées
+    expect(gameData.discardCount).toBe(2);
+    expect(gameData.deckCount).toBe(NUMBERS.length - 4);
   });
 
   it("termine la partie quand un joueur atteint 200, le plus haut total gagne", async () => {
-    const { gameId } = await startedBanco();
+    const { gameId } = await seededBanco();
     await db
       .update(gamePlayers)
       .set({ score: 300 })
@@ -158,7 +197,7 @@ describe("partie de Banco", () => {
 
   it("laisse un invité rejoindre et jouer", async () => {
     const { guest } = await createGuest(app, "invité-banco");
-    const { gameId } = await startedBanco([guest]);
+    const { gameId } = await seededBanco([guest]);
     const aliceSocket = await joinRoom(alice, gameId);
     const guestSocket = await joinRoom(guest, gameId);
 
@@ -168,7 +207,7 @@ describe("partie de Banco", () => {
   });
 
   it("passe le tour d'un joueur parti après le délai de grâce", async () => {
-    const { gameId } = await startedBanco();
+    const { gameId } = await seededBanco();
     const aliceSocket = await joinRoom(alice, gameId);
     await joinRoom(bob, gameId);
 
@@ -178,5 +217,45 @@ describe("partie de Banco", () => {
     const state = await storedBanco(gameId);
     expect(state.status[alice.id]).toBe("stopped");
     expect(state.currentPlayer).toBe(bob.id);
+  });
+
+  it("refuse une cible qui n'est plus en jeu, puis applique l'action à une cible valide", async () => {
+    const { gameId } = await startedBanco([bob, carol]);
+    await seedBanco(gameId, [1, 2, 3, 4, "freeze", 5, 6]);
+    const aliceSocket = await joinRoom(alice, gameId);
+    const bobSocket = await joinRoom(bob, gameId);
+    const carolSocket = await joinRoom(carol, gameId);
+    await play(aliceSocket, gameId, "hit");
+    await play(bobSocket, gameId, "stay");
+    await play(carolSocket, gameId, "hit");
+
+    expect(await target(carolSocket, gameId, bob)).toEqual({ ok: false, message: "Coup refusé" });
+    expect(await target(aliceSocket, gameId, alice)).toEqual({ ok: false, message: "Coup refusé" });
+
+    const applied = nextEvent<BancoGame>(aliceSocket, "play-move");
+    expect(await target(carolSocket, gameId, alice)).toEqual({ ok: true });
+    const game = await applied;
+    expect(game.gameData.status[alice.id]).toBe("stopped");
+    expect(game.gameData.lastAction).toMatchObject({ playerId: carol.id, target: alice.id });
+  });
+
+  it("ne diffuse aucune carte de la pioche reformée avec la défausse", async () => {
+    const { gameId } = await startedBanco();
+    await seedBanco(gameId, [1, 2], [3, 4, 5, 6, 7, 8, 9, 10]);
+    const aliceSocket = await joinRoom(alice, gameId);
+    await joinRoom(bob, gameId);
+
+    const afterHit = nextEvent<BancoGame>(aliceSocket, "play-move");
+    expect(await play(aliceSocket, gameId, "hit")).toEqual({ ok: true });
+    const hit = await afterHit;
+
+    const stored = await storedBanco(gameId);
+    expect(stored.deck).toHaveLength(7);
+    expect(hit.gameData.deckCount).toBe(7);
+    const fetched = await app.inject({ method: "GET", url: `/api/game/${gameId}` });
+    for (const card of stored.deck) {
+      expect(JSON.stringify(hit)).not.toContain(card.id);
+      expect(fetched.body).not.toContain(card.id);
+    }
   });
 });

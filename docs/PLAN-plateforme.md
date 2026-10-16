@@ -100,12 +100,12 @@ Le paquet complet de 94 cartes. Une carte action tirée demande au joueur de cho
 
 ### Critères d'acceptation
 
-- [ ] Tests unitaires : chaque action, choix de cible valide ou refusé, cible unique automatique, enchaînements pendant Trois d'un coup, Seconde chance (usage, don, défausse), pioche reformée.
-- [ ] Test websocket : une intention de cible est refusée si la cible n'est pas en jeu ; aucune carte de la pioche ne fuit après remélange.
-- [ ] Test de composant : choix de cible, état « Seconde chance » visible, aide de jeu accessible pendant la partie.
-- [ ] Texte de l'aide de jeu rédigé sans reprendre le livret d'origine ni le nom des cartes d'origine.
-- [ ] Contrôle manuel d'une partie complète à 3 joueurs jusqu'à 200 points.
-- [ ] `make check` vert.
+- [x] Tests unitaires : chaque action, choix de cible valide ou refusé, cible unique automatique, enchaînements pendant Trois d'un coup, Seconde chance (usage, don, défausse), pioche reformée.
+- [x] Test websocket : une intention de cible est refusée si la cible n'est pas en jeu ; aucune carte de la pioche ne fuit après remélange.
+- [x] Test de composant : choix de cible, état « Seconde chance » visible, aide de jeu accessible pendant la partie.
+- [x] Texte de l'aide de jeu rédigé sans reprendre le livret d'origine ni le nom des cartes d'origine.
+- [x] Contrôle manuel d'une partie complète à 3 joueurs jusqu'à 200 points.
+- [x] `make check` vert.
 
 ## Bloquée par
 

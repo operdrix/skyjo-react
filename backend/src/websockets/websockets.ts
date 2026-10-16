@@ -38,6 +38,7 @@ type Check = (value: unknown) => boolean;
 const text: Check = (value) => typeof value === "string" && value !== "";
 const move: Check = (value) => ALL_MOVES.includes(value as MoveType);
 const optionalIndex: Check = (value) => value === undefined || Number.isInteger(value);
+const optionalText: Check = (value) => value === undefined || text(value);
 
 const CLIENT_FIELDS: { [E in ClientEvent]: Record<keyof ClientPayloads[E], Check> } = {
   "player-joined-game": { room: text },
@@ -45,7 +46,7 @@ const CLIENT_FIELDS: { [E in ClientEvent]: Record<keyof ClientPayloads[E], Check
   "start-game": { room: text },
   "restart-game": { room: text },
   "player-play-again": { room: text },
-  "play-move": { room: text, move, cardIndex: optionalIndex },
+  "play-move": { room: text, move, cardIndex: optionalIndex, target: optionalText },
   "watch-public-games": {},
 };
 
@@ -188,8 +189,8 @@ export async function websockets(app: FastifyInstance) {
     });
 
     // Un joueur annonce son coup ; le serveur le calcule sur l'état enregistré
-    on(socket, app, "play-move", async ({ room, move, cardIndex }) => {
-      const game = await savePlayMove(room, { move, cardIndex }, userId);
+    on(socket, app, "play-move", async ({ room, move, cardIndex, target }) => {
+      const game = await savePlayMove(room, { move, cardIndex, target }, userId);
       if (!game) return MOVE_REFUSED;
       io.to(game.id).emit("play-move", game);
     });

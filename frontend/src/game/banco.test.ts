@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cardLabel, handTotal } from "@/game/banco";
+import { cardLabel, handTotal, validTargets } from "@/game/banco";
 import type { BancoCard } from "../../../shared/types";
 
 const plus = (value: number): BancoCard => ({ id: `p${value}`, kind: "plus", value });
@@ -31,5 +31,36 @@ describe("handTotal", () => {
 describe("cardLabel", () => {
   it("écrit un nombre, un + ou le ×2", () => {
     expect(hand(7, plus(6), double).map(cardLabel)).toEqual(["7", "+6", "×2"]);
+  });
+
+  it("nomme les actions", () => {
+    const actions: BancoCard[] = [
+      { id: "g", kind: "freeze" },
+      { id: "t", kind: "three" },
+      { id: "s", kind: "second" },
+    ];
+    expect(actions.map(cardLabel)).toEqual(["Gel", "Trois d'un coup", "Seconde chance"]);
+  });
+});
+
+describe("validTargets", () => {
+  const second: BancoCard = { id: "s", kind: "second" };
+  const data = (card: BancoCard) => ({
+    turnOrder: ["a", "b", "c", "d"],
+    status: { a: "playing", b: "playing", c: "stopped", d: "playing" } as const,
+    hands: { a: hand(1), b: hand(2), c: hand(3), d: hand(4, second) },
+    pending: [{ playerId: "a", card }],
+  });
+
+  it("propose les joueurs en jeu, joueur compris, pour Gel et Trois d'un coup", () => {
+    expect(validTargets(data({ id: "g", kind: "freeze" }))).toEqual(["a", "b", "d"]);
+  });
+
+  it("propose pour une Seconde chance les autres joueurs en jeu qui n'en ont pas", () => {
+    expect(validTargets(data(second))).toEqual(["b"]);
+  });
+
+  it("ne propose rien sans action en attente", () => {
+    expect(validTargets({ ...data(second), pending: [] })).toEqual([]);
   });
 });

@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
+import type { BancoData } from "../../../shared/types.ts";
 import { engineFor, GAME_KINDS } from "./engines.ts";
+
+// Manche précédente de Banco dont la pioche ne contient que des nombres : distribution prévisible
+const numbersOnly = {
+  deck: [1, 2, 3, 4, 5, 6].map((value) => ({ id: `n${value}`, kind: "number", value })),
+  discard: [],
+  hands: {},
+  pending: [],
+} as unknown as BancoData;
 
 describe("engineFor", () => {
   it("connaît le jeu colonnes", () => {
@@ -49,14 +58,25 @@ describe("moteur colonnes", () => {
 describe("moteur banco", () => {
   const engine = engineFor("banco")!;
 
-  it("est connu, se joue de 2 à 8 joueurs avec Encore et Stop", () => {
+  it("est connu, se joue de 2 à 8 joueurs avec Encore, Stop et le choix d'une cible", () => {
     expect(GAME_KINDS).toContain("banco");
     expect([engine.minPlayers, engine.maxPlayers]).toEqual([2, 8]);
-    expect(engine.moves).toEqual(["hit", "stay"]);
+    expect(engine.moves).toEqual(["hit", "stay", "target"]);
+  });
+
+  it("applique la cible choisie pour une action", () => {
+    const withFreeze = {
+      ...numbersOnly,
+      deck: [numbersOnly.deck[0], numbersOnly.deck[1], { id: "g", kind: "freeze" }],
+    };
+    const state = engine.play(engine.deal(["a", "b"], 1, withFreeze as BancoData), "a", { move: "hit" })!;
+
+    expect(engine.play(state, "a", { move: "target" })).toBeNull();
+    expect(engine.play(state, "a", { move: "target", target: "b" })!.status.b).toBe("stopped");
   });
 
   it("distribue selon la manche et joue les intentions", () => {
-    const state = engine.deal(["a", "b"], 2);
+    const state = engine.deal(["a", "b"], 2, numbersOnly);
 
     expect(state.currentPlayer).toBe("b");
     expect(engine.play(state, "a", { move: "stay" })).toBeNull();
@@ -66,13 +86,13 @@ describe("moteur banco", () => {
   });
 
   it("fait passer le tour d'un joueur parti", () => {
-    const state = engine.deal(["a", "b"], 1);
+    const state = engine.deal(["a", "b"], 1, numbersOnly);
 
     expect(engine.leave(state, "a").currentPlayer).toBe("b");
   });
 
   it("finit la manche quand plus personne n'est en jeu", () => {
-    const state = engine.deal(["a", "b"], 1);
+    const state = engine.deal(["a", "b"], 1, numbersOnly);
     const over = engine.play(engine.play(state, "a", { move: "stay" })!, "b", { move: "stay" })!;
 
     expect(engine.isRoundOver(over)).toBe(true);

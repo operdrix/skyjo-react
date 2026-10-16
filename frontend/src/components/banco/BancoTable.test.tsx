@@ -12,13 +12,16 @@ vi.mock("@/components/game/GameMenu", () => ({ default: () => null }));
 vi.mock("@/components/game/GameSettings", () => ({ default: () => null }));
 vi.mock("@/components/game/messages/ModalScore", () => ({ default: () => null }));
 
+const ACTIONS = ["freeze", "three", "second"];
 const hand = (...values: (number | string)[]) =>
   values.map((value, index) =>
     value === "×2"
       ? { id: `x2-${index}`, kind: "double" }
-      : typeof value === "string"
-        ? { id: `p${value}-${index}`, kind: "plus", value: Number(value) }
-        : { id: `c${value}-${index}`, kind: "number", value },
+      : typeof value === "string" && ACTIONS.includes(value)
+        ? { id: `${value}-${index}`, kind: value }
+        : typeof value === "string"
+          ? { id: `p${value}-${index}`, kind: "plus", value: Number(value) }
+          : { id: `c${value}-${index}`, kind: "number", value },
   );
 
 function makeGame(gameData: object = {}) {
@@ -28,15 +31,19 @@ function makeGame(gameData: object = {}) {
     players: [
       { id: "ALICE", username: "alice", game_players: { score: 40, scoreByRound: [40] } },
       { id: "BOB", username: "bob", isAnonymous: true, game_players: { score: 12, scoreByRound: [12] } },
+      { id: "CAROL", username: "carol", game_players: { score: 0, scoreByRound: [0] } },
     ],
     gameData: {
       turnOrder: ["ALICE", "BOB"],
       currentPlayer: "ALICE",
       hands: { ALICE: hand(3, 10), BOB: hand(4, 4) },
       status: { ALICE: "playing", BOB: "busted" },
+      pending: [],
       lastDraw: null,
+      lastAction: null,
       roundOver: false,
       deckCount: 70,
+      discardCount: 0,
       ...gameData,
     },
   };
@@ -93,6 +100,59 @@ describe("table de Banco", () => {
     render(<BancoTable />);
 
     expect(screen.getByRole("status").textContent).toContain("bob a tiré un +8");
+  });
+
+  it("montre la Seconde chance d'un joueur", () => {
+    state.game = makeGame({ hands: { ALICE: hand(3, "second"), BOB: hand(4, 4) } });
+    render(<BancoTable />);
+
+    const actions = within(panel("alice")).getByRole("list", { name: "Actions" });
+    expect(within(actions).getByRole("img", { name: "Seconde chance" })).toBeTruthy();
+  });
+
+  it("me fait choisir la cible d'une action, parmi les joueurs possibles, à la place d'Encore et Stop", () => {
+    state.game = makeGame({
+      turnOrder: ["ALICE", "BOB", "CAROL"],
+      currentPlayer: "BOB",
+      hands: { ALICE: hand(3), BOB: hand(5), CAROL: hand(6) },
+      status: { ALICE: "playing", BOB: "playing", CAROL: "stopped" },
+      pending: [{ playerId: "ALICE", card: { id: "g", kind: "freeze" } }],
+    });
+    render(<BancoTable />);
+
+    expect(screen.getByRole("status").textContent).toContain("Choisis qui reçoit Gel");
+    expect(screen.queryByRole("button", { name: "Encore" })).toBeNull();
+    const choice = within(screen.getByRole("group", { name: "Cible de Gel" }));
+    expect(choice.getAllByRole("button").map((button) => button.textContent)).toEqual(["alice (toi)", "bob"]);
+
+    fireEvent.click(choice.getByRole("button", { name: "bob" }));
+
+    expect(state.sendMessage.mock.calls).toEqual([["play-move", { room: "g1", move: "target", target: "BOB" }]]);
+  });
+
+  it("indique qui choisit une cible quand ce n'est pas moi", () => {
+    state.game = makeGame({
+      currentPlayer: "ALICE",
+      status: { ALICE: "playing", BOB: "playing" },
+      pending: [{ playerId: "BOB", card: { id: "t", kind: "three" } }],
+    });
+    render(<BancoTable />);
+
+    expect(screen.getByRole("status").textContent).toContain("bob choisit qui reçoit Trois d'un coup");
+    expect(screen.getByRole("button", { name: "Encore" }).hasAttribute("disabled")).toBe(true);
+  });
+
+  it("annonce l'action attribuée et la Seconde chance utilisée", () => {
+    state.game = makeGame({
+      lastAction: { playerId: "BOB", card: { id: "g", kind: "freeze" }, target: "ALICE" },
+      lastDraw: { playerId: "BOB", card: { id: "x", kind: "number", value: 4 }, saved: true },
+      status: { ALICE: "playing", BOB: "playing" },
+    });
+    render(<BancoTable />);
+
+    const text = screen.getByRole("status").textContent;
+    expect(text).toContain("bob a tiré un 4 : Seconde chance utilisée !");
+    expect(text).toContain("bob donne Gel à alice");
   });
 
   it.each([

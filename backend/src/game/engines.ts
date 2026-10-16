@@ -24,8 +24,8 @@ export type GameEngine<S, V> = {
   maxPlayers: number;
   // Coups acceptés dans play-move
   moves: readonly MoveType[];
-  // Nouvelle manche distribuée entre ces joueurs (`round` commence à 1)
-  deal(playerIds: string[], round: number): S;
+  // Nouvelle manche distribuée entre ces joueurs (`round` commence à 1), à la suite de la manche précédente
+  deal(playerIds: string[], round: number, previous?: S): S;
   // Partie après le coup voulu par le joueur, manche avancée ; null si le coup est impossible
   play(state: S, playerId: string, intent: Intent): S | null;
   // Joueur parti en cours de manche (le jeu peut passer son tour)
@@ -61,11 +61,12 @@ const colonnes: GameEngine<GameData, PublicGameData> = {
 const bancoEngine: GameEngine<BancoData, PublicBancoData> = {
   minPlayers: 2,
   maxPlayers: 8,
-  moves: ["hit", "stay"],
-  deal: banco.deal,
-  play: (state, playerId, { move }) => {
+  moves: ["hit", "stay", "target"],
+  deal: (playerIds, round, previous) => banco.deal(playerIds, round, previous),
+  play: (state, playerId, { move, target }) => {
     if (move === "hit") return banco.hit(state, playerId);
     if (move === "stay") return banco.stay(state, playerId);
+    if (move === "target" && target) return banco.chooseTarget(state, playerId, target);
     return null;
   },
   leave: banco.leave,

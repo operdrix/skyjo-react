@@ -44,29 +44,36 @@ export type GameKind = "colonnes" | "banco";
 
 // ─── Banco : stop ou encore ──────────────────────────────────────────────────
 
-// Nombre (0 à 12), modificateur « + » (+2 à +10) ou ×2 : les modificateurs ne comptent pas comme des nombres
+// Nombre (0 à 12), modificateur « + » (+2 à +10) ou ×2 : les modificateurs ne comptent pas comme des nombres.
+// Actions : Gel (arrête la cible), Trois d'un coup (la cible tire 3 cartes), Seconde chance (annule un doublon)
+export type BancoAction = "freeze" | "three" | "second";
 export type BancoCard =
   | { id: string; kind: "number"; value: number }
   | { id: string; kind: "plus"; value: number }
-  | { id: string; kind: "double" };
+  | { id: string; kind: "double" }
+  | { id: string; kind: BancoAction };
 
 // En jeu, arrêté (garde ses points) ou éliminé par un doublon (0 point)
 export type BancoStatus = "playing" | "stopped" | "busted";
 
 export type BancoData = {
-  // Pioche : jamais diffusée
+  // Pioche et défausse : jamais diffusées (la défausse remélangée reforme la pioche)
   deck: BancoCard[];
+  discard: BancoCard[];
   hands: Record<string, BancoCard[]>;
   status: Record<string, BancoStatus>;
   turnOrder: string[];
   currentPlayer: string | null;
-  // Dernière carte tirée, pour suivre la partie
-  lastDraw: { playerId: string; card: BancoCard } | null;
+  // Actions à attribuer, dans l'ordre : le joueur de la première choisit sa cible, personne d'autre ne joue
+  pending: { playerId: string; card: BancoCard }[];
+  // Dernière carte tirée (saved : doublon annulé par une Seconde chance) et dernière action attribuée
+  lastDraw: { playerId: string; card: BancoCard; saved?: boolean } | null;
+  lastAction: { playerId: string; card: BancoCard; target: string } | null;
   roundOver: boolean;
 };
 
-// Données de Banco diffusées : la pioche n'est donnée que par son nombre de cartes
-export type PublicBancoData = Omit<BancoData, "deck"> & { deckCount: number };
+// Données de Banco diffusées : pioche et défausse ne sont données que par leur nombre de cartes
+export type PublicBancoData = Omit<BancoData, "deck" | "discard"> & { deckCount: number; discardCount: number };
 
 export type GameState = "pending" | "playing" | "finished";
 
@@ -125,9 +132,11 @@ export type RoomPayload = { room: string };
 export type EmptyPayload = Record<string, never>;
 
 // Coup joué : le client indique son intention, le serveur calcule la partie suivante
-// Colonnes : draw … reveal ; Banco : hit (Encore), stay (Stop)
-export type MoveType = "draw" | "take-discard" | "discard-drawn" | "replace" | "flip" | "reveal" | "hit" | "stay";
-export type Intent = { move: MoveType; cardIndex?: number };
+// Colonnes : draw … reveal ; Banco : hit (Encore), stay (Stop), target (cible d'une action)
+export type MoveType =
+  "draw" | "take-discard" | "discard-drawn" | "replace" | "flip" | "reveal" | "hit" | "stay" | "target";
+// cardIndex : carte visée (Colonnes) ; target : joueur visé par une action (Banco)
+export type Intent = { move: MoveType; cardIndex?: number; target?: string };
 
 // Événements envoyés par le client (toujours avec un accusé de réception)
 export type ClientPayloads = {

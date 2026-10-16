@@ -35,6 +35,7 @@ export function gamesRoutes(app: FastifyInstance) {
           properties: {
             status: { type: "string", description: "Filtrer par statut (waiting, playing, finished)" },
             private: { type: "boolean", description: "Filtrer les parties privées" },
+            type: { type: "string", description: "Filtrer par jeu (colonnes)" },
           },
         },
       },
@@ -66,7 +67,7 @@ export function gamesRoutes(app: FastifyInstance) {
   );
 
   // Création d'un jeu
-  app.post<{ Body: { privateRoom?: boolean } }>(
+  app.post<{ Body: { privateRoom?: boolean; type?: string } }>(
     "/api/game",
     {
       preHandler: [app.authenticate],
@@ -80,6 +81,7 @@ export function gamesRoutes(app: FastifyInstance) {
           type: "object",
           properties: {
             privateRoom: { type: "boolean", description: "Partie privée ou publique", default: false },
+            type: { type: "string", description: "Jeu de la partie (colonnes par défaut)" },
           },
         },
         response: {
@@ -97,7 +99,8 @@ export function gamesRoutes(app: FastifyInstance) {
       if (request.user.isAnonymous) {
         return reply.status(403).send({ error: GUEST_CANNOT_CREATE, code: 403 });
       }
-      return sendResult(reply, await createGame(request.user.id, request.body?.privateRoom));
+      const { privateRoom, type } = request.body ?? {};
+      return sendResult(reply, await createGame(request.user.id, { privateRoom, type }));
     },
   );
 

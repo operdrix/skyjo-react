@@ -36,6 +36,13 @@
       "when": 1791235358216,
       "tag": "0004_chilly_mauler",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1792170214210,
+      "tag": "0005_chief_leper_queen",
+      "breakpoints": true
     }
   ]
 }

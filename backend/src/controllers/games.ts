@@ -1,24 +1,47 @@
 import { and, asc, eq, getTableColumns, inArray, sql, type SQL } from "drizzle-orm";
-import type { ErrorType, GameData, GameType, Intent, NextGame, StoredGame } from "../../../shared/types.ts";
+import type {
+  ErrorType,
+  GameData,
+  GameKind,
+  GameType,
+  Intent,
+  NextGame,
+  PublicGameData,
+  StoredGame,
+} from "../../../shared/types.ts";
 import { db, type Db, type Tx } from "../db/index.ts";
 import { gamePlayers, games, users } from "../db/schema.ts";
-import { applyIntent } from "../game/moves.ts";
-import * as rules from "../game/rules.ts";
-import { hideCards } from "../game/view.ts";
+import { engineFor, type GameEngine } from "../game/engines.ts";
+import type { Scores } from "../game/rules.ts";
 import { logger } from "../utils/logger.ts";
 
 type Executor = Db | Tx;
 export type GameAction = "join" | "leave" | "start" | "finish";
 export type GameActionBody = { userId?: string; winner?: string; winnerScore?: number } | null | undefined;
-export type GamesQuery = { userId?: string; state?: GameType["state"]; privateRoom?: string; creatorId?: string };
+export type GamesQuery = {
+  userId?: string;
+  state?: GameType["state"];
+  privateRoom?: string;
+  creatorId?: string;
+  type?: string;
+};
 
 const CREATOR_ONLY = { error: "Seul le créateur de la partie peut faire cela.", code: 403 };
 
+const UNKNOWN_KIND = { error: "Ce jeu n'existe pas.", code: 400 };
+
 const isError = <T extends object>(value: T | ErrorType): value is ErrorType => "error" in value;
 
+// Règles du jeu de la partie (les types en base sont ceux des moteurs connus)
+const engineOf = (game: { gameType: string }): GameEngine => engineFor(game.gameType)!;
+
 // Partie telle qu'envoyée aux joueurs : les cartes non révélées sont masquées
+// (jeu inconnu : aucune donnée de jeu ne sort)
 function toPublic({ nextGameId: _, ...game }: StoredGame): GameType {
-  return game.gameData ? { ...game, gameData: hideCards(game.gameData) } : (game as unknown as GameType);
+  const engine = engineFor(game.gameType);
+  if (!game.gameData) return game as unknown as GameType;
+  const gameData = engine ? engine.view(game.gameData) : ({} as PublicGameData);
+  return { ...game, gameData };
 }
 
 // Seuls attributs de joueur exposés dans les réponses de partie
@@ -72,9 +95,12 @@ async function loadGame(gameId: string, executor: Executor = db): Promise<Stored
 
 // Liste des parties avec filtres
 export async function getGames(query: GamesQuery) {
-  const { userId, state, privateRoom, creatorId } = query;
+  const { userId, state, privateRoom, creatorId, type } = query;
 
   const conditions: SQL[] = [];
+  if (type) {
+    conditions.push(eq(games.gameType, type as GameKind));
+  }
   if (state) {
     conditions.push(eq(games.state, state));
   }
@@ -90,8 +116,8 @@ export async function getGames(query: GamesQuery) {
   return (await findGames(db, conditions.length ? and(...conditions) : undefined)).map(toPublic);
 }
 
-// Liste des parties d'un joueur, sans les données de jeu
-export async function getUserGames(userId: string) {
+// Liste des parties d'un joueur (d'un seul jeu si type est donné), sans les données de jeu
+export async function getUserGames(userId: string, type?: string) {
   const user = await db.query.users.findFirst({
     where: (users, { eq }) => eq(users.id, userId),
     columns: { id: true, isAnonymous: true },
@@ -103,7 +129,8 @@ export async function getUserGames(userId: string) {
     return { error: "Les invités n'ont pas d'historique.", code: 403 };
   }
   const memberGames = db.select({ id: gamePlayers.gameId }).from(gamePlayers).where(eq(gamePlayers.userId, userId));
-  return (await findGames(db, inArray(games.id, memberGames), false)).map(toPublic);
+  const where = and(inArray(games.id, memberGames), type ? eq(games.gameType, type as GameKind) : undefined);
+  return (await findGames(db, where, false)).map(toPublic);
 }
 
 // Supprimer une partie
@@ -128,14 +155,21 @@ export async function getGame(gameId: string): Promise<GameType | ErrorType> {
   return game ? toPublic(game) : { error: "La partie n'existe pas.", code: 404 };
 }
 
-// Créer une nouvelle partie, le créateur en est le premier joueur
-export async function createGame(userId: string | undefined, privateRoom = false, executor: Executor = db) {
+// Créer une nouvelle partie du jeu demandé (colonnes par défaut), le créateur en est le premier joueur
+export async function createGame(
+  userId: string | undefined,
+  { privateRoom = false, type = "colonnes" }: { privateRoom?: boolean; type?: string } = {},
+  executor: Executor = db,
+) {
   if (!userId) {
     return { error: "L'identifiant du créateur est manquant", code: 400 };
   }
+  if (!engineFor(type)) {
+    return UNKNOWN_KIND;
+  }
   const [{ id: gameId }] = await executor
     .insert(games)
-    .values({ creator: userId, private: privateRoom })
+    .values({ creator: userId, private: privateRoom, gameType: type as GameKind })
     .$returningId();
   await executor.insert(gamePlayers).values({ gameId, userId });
   logger.debug("[game controller] ID de la partie créée :", gameId);
@@ -215,15 +249,15 @@ async function applyGameAction(tx: Tx, game: StoredGame, action: string, body: N
       if (game.state === "playing" && game.gameData.currentStep !== "endGame") {
         return { error: "Une manche est déjà en cours.", code: 400 };
       }
-      if (game.players.length < 2) {
-        return { error: "Il faut au moins 2 joueurs pour lancer la partie.", code: 400 };
+      if (game.players.length < engineOf(game).minPlayers) {
+        return { error: `Il faut au moins ${engineOf(game).minPlayers} joueurs pour lancer la partie.`, code: 400 };
       }
       await tx
         .update(games)
         .set({
           state: "playing",
           roundNumber: game.roundNumber + 1,
-          gameData: rules.dealCards(game.players.map((player) => player.id)),
+          gameData: engineOf(game).deal(game.players.map((player) => player.id)),
         })
         .where(eq(games.id, game.id));
       return;
@@ -274,11 +308,11 @@ export async function updateGameSettings(
 export async function playMove(gameId: string, intent: Intent, userId: string) {
   return applyMove(gameId, (current, game) => {
     const isPlayer = game.players.some((player) => player.id === userId);
-    return isPlayer ? applyIntent(current, userId, intent) : null;
+    return isPlayer ? engineOf(game).play(current, userId, intent) : null;
   });
 }
 
-// Applique un coup calculé à partir des données courantes, lues sous verrou
+// Applique un coup calculé à partir des données courantes, lues sous verrou, manche avancée
 // (null : coup invalide, rien n'est enregistré)
 async function applyMove(gameId: string, move: (current: GameData, game: StoredGame) => GameData | null) {
   return db.transaction(async (tx) => {
@@ -288,12 +322,12 @@ async function applyMove(gameId: string, move: (current: GameData, game: StoredG
       return null;
     }
 
-    rules.advanceGame(gameData);
+    const engine = engineOf(game);
     const update: Partial<typeof games.$inferInsert> = { gameData };
 
-    if (gameData.currentStep === "endGame") {
-      const totals = await saveScores(tx, game, gameData);
-      const { finished, winner, winnerScore } = rules.checkMaximumScore(totals);
+    if (engine.isRoundOver(gameData)) {
+      const totals = await saveScores(tx, game, engine.roundScores(gameData));
+      const { finished, winner, winnerScore } = engine.result(totals);
       if (finished) {
         Object.assign(update, { state: "finished", winner, winnerScore });
       }
@@ -305,9 +339,8 @@ async function applyMove(gameId: string, move: (current: GameData, game: StoredG
 }
 
 // Ajoute les scores de la manche aux joueurs, renvoie les totaux
-async function saveScores(tx: Tx, game: StoredGame, gameData: GameData) {
-  const roundScores = rules.computeRoundScores(gameData);
-  const totals: rules.Scores = {};
+async function saveScores(tx: Tx, game: StoredGame, roundScores: Scores) {
+  const totals: Scores = {};
 
   for (const { id, game_players: current } of game.players) {
     const score = roundScores[id] ?? 0;
@@ -357,14 +390,14 @@ export async function restartGame(gameId: string): Promise<NextGame | ErrorType>
       return { error: "Il faut au moins un autre joueur qui veut rejouer.", code: 400 };
     }
 
-    const created = await createGame(game.creator, true, tx);
+    const created = await createGame(game.creator, { privateRoom: true, type: game.gameType }, tx);
     if (isError(created)) {
       return created;
     }
     await tx.insert(gamePlayers).values(others.map((userId) => ({ gameId: created.gameId, userId })));
     await tx
       .update(games)
-      .set({ state: "playing", roundNumber: 1, gameData: rules.dealCards([game.creator, ...others]) })
+      .set({ state: "playing", roundNumber: 1, gameData: engineOf(game).deal([game.creator, ...others]) })
       .where(eq(games.id, created.gameId));
     await tx.update(games).set({ nextGameId: created.gameId }).where(eq(games.id, game.id));
     return { gameId: created.gameId, players };

@@ -29,12 +29,12 @@ Le jeu actuel devient le jeu `colonnes` d'un socle commun, sans aucun changement
 
 ### Critères d'acceptation
 
-- [ ] Test de migration : les parties existantes ont le type `colonnes`.
-- [ ] Test d'API : une partie créée sans type est de type `colonnes` ; un type inconnu est refusé avec un message.
-- [ ] Test d'API : liste publique et historique ne renvoient que les parties du type demandé.
-- [ ] Tous les tests existants (règles, websocket, invités, cartes masquées) passent sans modification de comportement.
+- [x] Migration : les parties existantes ont le type `colonnes` (vérifié sur la base de dev, colonne `NOT NULL DEFAULT 'colonnes'`).
+- [x] Test d'API : une partie créée sans type est de type `colonnes` ; un type inconnu est refusé avec un message.
+- [x] Test d'API : liste publique et historique ne renvoient que les parties du type demandé.
+- [x] Tous les tests existants (règles, websocket, invités, cartes masquées) passent sans modification de comportement.
 - [ ] Contrôle manuel : une partie complète à 2 joueurs dans le navigateur, identique à avant.
-- [ ] `make check` vert.
+- [x] `make check` vert.
 
 ## Bloquée par
 

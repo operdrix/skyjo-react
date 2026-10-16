@@ -39,6 +39,9 @@ export type PublicGameData = Omit<GameData, "playersCards" | "deckCards"> & {
   deckCards: ShownCard[];
 };
 
+// Jeu de la plateforme auquel appartient une partie
+export type GameKind = "colonnes";
+
 export type GameState = "pending" | "playing" | "finished";
 
 export type PlayerStatus = "connected" | "disconnected";
@@ -64,6 +67,7 @@ export type GamePlayer = PublicUser & {
 // Partie enregistrée, avec toutes ses cartes (jamais envoyée telle quelle)
 type GameFields<D> = {
   id: string;
+  gameType: GameKind;
   players: GamePlayer[];
   state: GameState;
   private: boolean;

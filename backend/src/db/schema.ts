@@ -11,7 +11,7 @@ import {
   varchar,
 } from "drizzle-orm/mysql-core";
 import { nanoid } from "nanoid";
-import type { GameData } from "../../../shared/types.ts";
+import type { GameData, GameKind } from "../../../shared/types.ts";
 
 // createdAt / updatedAt, mis à jour côté application
 const timestamps = {
@@ -85,6 +85,8 @@ export const games = mysqlTable("games", {
   id: varchar({ length: 16 })
     .primaryKey()
     .$defaultFn(() => nanoid(5)),
+  // Jeu de la plateforme (voir src/game/engines.ts) : les parties d'avant la plateforme sont des colonnes
+  gameType: varchar({ length: 16 }).$type<GameKind>().notNull().default("colonnes"),
   creator: varchar({ length: 36 })
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),

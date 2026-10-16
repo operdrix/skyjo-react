@@ -1,7 +1,7 @@
 import { and, eq, gt, inArray, isNotNull, isNull, lt, notExists, sql } from "drizzle-orm";
 import { db } from "../db/index.ts";
 import { gamePlayers, games, sessions, users } from "../db/schema.ts";
-import { renamePlayer } from "../game/players.ts";
+import { engineFor } from "../game/engines.ts";
 
 // Profil public d'un joueur (ni email ni données de connexion)
 const PROFILE = {
@@ -101,7 +101,7 @@ export async function linkGuestAccount(guestId: string, userId: string) {
       await tx
         .update(games)
         .set({
-          gameData: renamePlayer(game.gameData, guestId, userId),
+          gameData: engineFor(game.gameType)!.renamePlayer(game.gameData, guestId, userId),
           playersPlayAgain: game.playersPlayAgain.map((id) => rename(id)!),
           winner: rename(game.winner),
         })

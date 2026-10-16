@@ -12,7 +12,14 @@ vi.mock("@/components/game/GameMenu", () => ({ default: () => null }));
 vi.mock("@/components/game/GameSettings", () => ({ default: () => null }));
 vi.mock("@/components/game/messages/ModalScore", () => ({ default: () => null }));
 
-const hand = (...values: number[]) => values.map((value, index) => ({ id: `c${value}-${index}`, value }));
+const hand = (...values: (number | string)[]) =>
+  values.map((value, index) =>
+    value === "×2"
+      ? { id: `x2-${index}`, kind: "double" }
+      : typeof value === "string"
+        ? { id: `p${value}-${index}`, kind: "plus", value: Number(value) }
+        : { id: `c${value}-${index}`, kind: "number", value },
+  );
 
 function makeGame(gameData: object = {}) {
   return {
@@ -61,6 +68,33 @@ describe("table de Banco", () => {
     expect(bob.getByText("invité")).toBeTruthy();
   });
 
+  it("montre les modificateurs à part des nombres et les compte dans le total provisoire", () => {
+    state.game = makeGame({ hands: { ALICE: hand(3, "×2", 10, "+4"), BOB: hand(4, 4) } });
+    render(<BancoTable />);
+
+    const alice = within(panel("alice"));
+    const numbers = alice.getByRole("list", { name: "Nombres" });
+    const modifiers = alice.getByRole("list", { name: "Modificateurs" });
+    expect(
+      within(numbers)
+        .getAllByRole("img")
+        .map((card) => card.getAttribute("aria-label")),
+    ).toEqual(["carte 3", "carte 10"]);
+    expect(
+      within(modifiers)
+        .getAllByRole("img")
+        .map((card) => card.getAttribute("aria-label")),
+    ).toEqual(["modificateur ×2", "modificateur +4"]);
+    expect(alice.getByText("30 pts")).toBeTruthy();
+  });
+
+  it("annonce un modificateur tiré", () => {
+    state.game = makeGame({ lastDraw: { playerId: "BOB", card: { id: "x", kind: "plus", value: 8 } } });
+    render(<BancoTable />);
+
+    expect(screen.getByRole("status").textContent).toContain("bob a tiré un +8");
+  });
+
   it.each([
     ["Encore", "hit"],
     ["Stop", "stay"],
@@ -94,7 +128,7 @@ describe("table de Banco", () => {
   });
 
   it("annonce le dernier tirage, et l'élimination sur un doublon", () => {
-    state.game = makeGame({ lastDraw: { playerId: "BOB", card: { id: "x", value: 4 } } });
+    state.game = makeGame({ lastDraw: { playerId: "BOB", card: { id: "x", kind: "number", value: 4 } } });
     render(<BancoTable />);
 
     expect(screen.getByRole("status").textContent).toContain("bob a tiré un 4 : éliminé !");

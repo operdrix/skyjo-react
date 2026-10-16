@@ -4,7 +4,7 @@ import GameMenu from "@/components/game/GameMenu";
 import GameSettings from "@/components/game/GameSettings";
 import RoundResults from "@/components/game/RoundResults";
 import ModalScore from "@/components/game/messages/ModalScore";
-import { STATUS_LABELS, handTotal } from "@/game/banco";
+import { STATUS_LABELS, cardLabel, handTotal, hasSeven } from "@/game/banco";
 import { useGame } from "@/hooks/Game";
 import { useUser } from "@/hooks/User";
 import { useGameAction } from "@/hooks/useGameAction";
@@ -20,6 +20,7 @@ function BancoPlayer({ game, playerId, isMe }: { game: BancoGame; playerId: stri
   const { hands, status, currentPlayer } = game.gameData;
   const hand = hands[playerId] ?? [];
   const playerStatus = status[playerId];
+  const modifiers = hand.filter((card) => card.kind !== "number");
 
   return (
     <section
@@ -35,13 +36,36 @@ function BancoPlayer({ game, playerId, isMe }: { game: BancoGame; playerId: stri
         <span className={`badge badge-sm ${STATUS_BADGES[playerStatus]}`}>{STATUS_LABELS[playerStatus]}</span>
         <span className="ml-auto font-display font-bold tabular-nums">{handTotal(hand, playerStatus)} pts</span>
       </div>
-      <div
-        className={`flex flex-wrap gap-1 ${playerStatus === "busted" ? "opacity-50" : ""}`}
-        style={{ "--card-w": isMe ? "var(--banco-my-card-w)" : "var(--banco-card-w)" } as React.CSSProperties}
-      >
-        {hand.map((card) => (
-          <PlayingCard key={card.id} value={card.value} />
-        ))}
+      <div className={`flex flex-wrap items-center gap-1 ${playerStatus === "busted" ? "opacity-50" : ""}`}>
+        <ul
+          aria-label="Nombres"
+          className="flex flex-wrap gap-1"
+          style={{ "--card-w": isMe ? "var(--banco-my-card-w)" : "var(--banco-card-w)" } as React.CSSProperties}
+        >
+          {hand.map(
+            (card) =>
+              card.kind === "number" && (
+                <li key={card.id}>
+                  <PlayingCard value={card.value} />
+                </li>
+              ),
+          )}
+        </ul>
+        {modifiers.length > 0 && (
+          <ul aria-label="Modificateurs" className="ml-1 flex flex-wrap gap-1">
+            {modifiers.map((card) => (
+              <li key={card.id}>
+                <span
+                  role="img"
+                  aria-label={`modificateur ${cardLabel(card)}`}
+                  className="badge badge-warning badge-lg font-display font-bold tabular-nums"
+                >
+                  {cardLabel(card)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
       <p className="text-xs text-muted tabular-nums">Total {player?.game_players.score ?? 0}</p>
     </section>
@@ -55,9 +79,9 @@ function turnMessage(game: BancoGame, userId: string) {
   const parts: string[] = [];
   if (lastDraw) {
     const busted = status[lastDraw.playerId] === "busted";
-    const seven = new Set((hands[lastDraw.playerId] ?? []).map((card) => card.value)).size >= 7;
+    const seven = hasSeven(hands[lastDraw.playerId] ?? []);
     const outcome = busted ? " : éliminé !" : seven ? " : 7 nombres, +15 !" : "";
-    parts.push(`${name(lastDraw.playerId)} a tiré un ${lastDraw.card.value}${outcome}`);
+    parts.push(`${name(lastDraw.playerId)} a tiré un ${cardLabel(lastDraw.card)}${outcome}`);
   }
   if (roundOver) parts.push("Fin de la manche");
   else if (currentPlayer === userId) parts.push("À toi : Encore ou Stop ?");

@@ -2,14 +2,16 @@ import { describe, expect, it } from "vitest";
 import type { BancoCard, BancoData } from "../../../../shared/types.ts";
 import { createDeck, deal, hit, leave, renamePlayer, result, roundScores, stay, view } from "./rules.ts";
 
-const card = (value: number, id = `c${value}-${Math.random()}`): BancoCard => ({ id, value });
+const card = (value: number, id = `c${value}-${Math.random()}`): BancoCard => ({ id, kind: "number", value });
+const plus = (value: number): BancoCard => ({ id: `p${value}-${Math.random()}`, kind: "plus", value });
+const double = (): BancoCard => ({ id: `x2-${Math.random()}`, kind: "double" });
 
 // Manche à partir des seuls champs utiles au test ; la pioche se lit dans l'ordre (la première carte sort d'abord)
-function round(partial: Partial<BancoData> & { deckValues?: number[] }): BancoData {
+function round(partial: Partial<BancoData> & { deckValues?: (number | BancoCard)[] }): BancoData {
   const { deckValues = [], ...rest } = partial;
   const turnOrder = rest.turnOrder ?? ["a", "b"];
   return {
-    deck: deckValues.map((value) => card(value)),
+    deck: deckValues.map((value) => (typeof value === "number" ? card(value) : value)),
     hands: Object.fromEntries(turnOrder.map((id) => [id, []])),
     status: Object.fromEntries(turnOrder.map((id) => [id, "playing"])),
     turnOrder,
@@ -20,11 +22,12 @@ function round(partial: Partial<BancoData> & { deckValues?: number[] }): BancoDa
   };
 }
 
-const hand = (...values: number[]) => values.map((value) => card(value));
+const hand = (...values: (number | BancoCard)[]) =>
+  values.map((value) => (typeof value === "number" ? card(value) : value));
 
 describe("createDeck", () => {
   it("contient les nombres de 0 à 12, n exemplaires de n et un seul 0", () => {
-    const values = createDeck().map((c) => c.value);
+    const values = createDeck().flatMap((c) => (c.kind === "number" ? [c.value] : []));
 
     expect(values).toHaveLength(79);
     expect(values.filter((v) => v === 0)).toHaveLength(1);
@@ -32,10 +35,18 @@ describe("createDeck", () => {
     expect(values.filter((v) => v === 12)).toHaveLength(12);
   });
 
+  it("contient les modificateurs +2, +4, +6, +8, +10 et ×2, un exemplaire de chaque", () => {
+    const modifiers = createDeck().flatMap((c) =>
+      c.kind === "plus" ? [`+${c.value}`] : c.kind === "double" ? ["×2"] : [],
+    );
+
+    expect(modifiers.sort()).toEqual(["+10", "+2", "+4", "+6", "+8", "×2"]);
+  });
+
   it("tire des ids au hasard, sans lien avec la valeur", () => {
     const ids = createDeck().map((c) => c.id);
 
-    expect(new Set(ids).size).toBe(79);
+    expect(new Set(ids).size).toBe(85);
     expect(ids.some((id) => /\d+$/.test(id) && id.includes("card"))).toBe(false);
   });
 });
@@ -48,7 +59,7 @@ describe("deal", () => {
     expect(state.currentPlayer).toBe("a");
     expect(Object.values(state.hands).map((h) => h.length)).toEqual([1, 1, 1]);
     expect(Object.values(state.status)).toEqual(["playing", "playing", "playing"]);
-    expect(state.deck).toHaveLength(79 - 3);
+    expect(state.deck).toHaveLength(85 - 3);
     expect(state.roundOver).toBe(false);
   });
 
@@ -64,7 +75,7 @@ describe("hit (Encore)", () => {
 
     const next = hit(state, "a")!;
 
-    expect(next.hands.a.map((c) => c.value)).toEqual([3, 7]);
+    expect(next.hands.a.map((c) => c.kind === "number" && c.value)).toEqual([3, 7]);
     expect(next.deck).toHaveLength(1);
     expect(next.lastDraw).toMatchObject({ playerId: "a", card: { value: 7 } });
     expect(next.currentPlayer).toBe("b");
@@ -85,7 +96,7 @@ describe("hit (Encore)", () => {
     const next = hit(state, "a")!;
 
     expect(next.status.a).toBe("busted");
-    expect(next.hands.a.map((c) => c.value)).toEqual([3, 3]);
+    expect(next.hands.a).toHaveLength(2);
     expect(next.currentPlayer).toBe("b");
   });
 
@@ -96,6 +107,22 @@ describe("hit (Encore)", () => {
 
     expect(next.roundOver).toBe(true);
     expect(next.currentPlayer).toBeNull();
+  });
+
+  it("pose un modificateur devant le joueur sans l'éliminer, même s'il en a déjà un", () => {
+    const state = round({ hands: { a: hand(3, plus(4)), b: hand(5) }, deckValues: [double()] });
+
+    const next = hit(state, "a")!;
+
+    expect(next.status.a).toBe("playing");
+    expect(next.hands.a.map((c) => c.kind)).toEqual(["number", "plus", "double"]);
+    expect(next.currentPlayer).toBe("b");
+  });
+
+  it("ne compte pas les modificateurs dans les 7 nombres différents", () => {
+    const state = round({ hands: { a: hand(1, 2, 3, 4, 5, plus(2)), b: hand(9) }, deckValues: [double()] });
+
+    expect(hit(state, "a")!.roundOver).toBe(false);
   });
 
   it("passe les joueurs arrêtés ou éliminés", () => {
@@ -175,6 +202,32 @@ describe("roundScores", () => {
     });
 
     expect(roundScores(state)).toEqual({ a: 13, b: 0, c: 21 + 15 });
+  });
+
+  it("double les nombres avec le ×2, puis ajoute les + et le bonus de 7", () => {
+    const state = round({
+      turnOrder: ["a", "b", "c", "d"],
+      hands: {
+        a: hand(3, 10, double()),
+        b: hand(3, 10, plus(4), plus(10)),
+        c: hand(3, double(), 10, plus(4)),
+        d: hand(0, 1, 2, 3, 4, 5, 6, double(), plus(2)),
+      },
+      status: { a: "stopped", b: "stopped", c: "stopped", d: "playing" },
+      roundOver: true,
+    });
+
+    expect(roundScores(state)).toEqual({ a: 26, b: 27, c: 30, d: 42 + 2 + 15 });
+  });
+
+  it("donne 0 à un joueur éliminé, malgré ses modificateurs", () => {
+    const state = round({
+      hands: { a: hand(4, double(), plus(10), 4), b: hand(1) },
+      status: { a: "busted", b: "stopped" },
+      roundOver: true,
+    });
+
+    expect(roundScores(state).a).toBe(0);
   });
 });
 

@@ -10,12 +10,14 @@ export const TARGET_SCORE = 200;
 export const SEVEN = 7;
 export const SEVEN_BONUS = 15;
 
-// Paquet : nombres de 0 à 12, n exemplaires de la carte n, un seul 0
+// Paquet : nombres de 0 à 12 (n exemplaires de la carte n, un seul 0), modificateurs +2 à +10 et ×2
 export function createDeck(): BancoCard[] {
-  const cards: BancoCard[] = [{ id: randomUUID(), value: 0 }];
+  const cards: BancoCard[] = [{ id: randomUUID(), kind: "number", value: 0 }];
   for (let value = 1; value <= 12; value++) {
-    for (let i = 0; i < value; i++) cards.push({ id: randomUUID(), value });
+    for (let i = 0; i < value; i++) cards.push({ id: randomUUID(), kind: "number", value });
   }
+  for (const value of [2, 4, 6, 8, 10]) cards.push({ id: randomUUID(), kind: "plus", value });
+  cards.push({ id: randomUUID(), kind: "double" });
   return cards;
 }
 
@@ -39,7 +41,8 @@ export function deal(playerIds: string[], round: number, random = Math.random): 
 const isTurnOf = (state: BancoData, playerId: string) =>
   !state.roundOver && state.currentPlayer === playerId && state.status[playerId] === "playing";
 
-const distinctValues = (hand: BancoCard[]) => new Set(hand.map((card) => card.value)).size;
+const numbers = (hand: BancoCard[]) => hand.flatMap((card) => (card.kind === "number" ? [card.value] : []));
+const distinctValues = (hand: BancoCard[]) => new Set(numbers(hand)).size;
 
 // Joueur suivant encore en jeu (lui-même s'il est le seul) ; sans joueur en jeu, la manche est finie
 function passTurn(state: BancoData): BancoData {
@@ -51,13 +54,13 @@ function passTurn(state: BancoData): BancoData {
   return { ...state, currentPlayer: null, roundOver: true };
 }
 
-// Encore : le joueur prend la carte du dessus ; un doublon l'élimine, 7 nombres différents finissent la manche
+// Encore : le joueur prend la carte du dessus ; un nombre en double l'élimine, 7 nombres différents finissent la manche
 export function hit(state: BancoData, playerId: string): BancoData | null {
   if (!isTurnOf(state, playerId) || !state.deck.length) return null;
   const [card, ...deck] = state.deck;
   const before = state.hands[playerId];
   const hand = [...before, card];
-  const busted = before.some((other) => other.value === card.value);
+  const busted = card.kind === "number" && numbers(before).includes(card.value);
   const next: BancoData = {
     ...state,
     deck,
@@ -84,15 +87,21 @@ export function leave(state: BancoData, playerId: string): BancoData {
   return state.currentPlayer === playerId ? passTurn(next) : next;
 }
 
-// Points de la manche : somme des nombres, +15 pour 7 nombres différents, 0 en cas de doublon
+// Points d'une main : somme des nombres, doublée par le ×2, puis les modificateurs +, puis +15 pour 7 nombres différents
+export function handScore(hand: BancoCard[]): number {
+  const sum = numbers(hand).reduce((total, value) => total + value, 0);
+  const doubled = hand.some((card) => card.kind === "double") ? sum * 2 : sum;
+  const bonus = hand.reduce((total, card) => total + (card.kind === "plus" ? card.value : 0), 0);
+  return doubled + bonus + (distinctValues(hand) >= SEVEN ? SEVEN_BONUS : 0);
+}
+
+// Points de la manche : 0 en cas de doublon
 export function roundScores(state: BancoData): Scores {
   return Object.fromEntries(
-    state.turnOrder.map((playerId) => {
-      const hand = state.hands[playerId];
-      if (state.status[playerId] === "busted") return [playerId, 0];
-      const sum = hand.reduce((total, card) => total + card.value, 0);
-      return [playerId, sum + (distinctValues(hand) >= SEVEN ? SEVEN_BONUS : 0)];
-    }),
+    state.turnOrder.map((playerId) => [
+      playerId,
+      state.status[playerId] === "busted" ? 0 : handScore(state.hands[playerId]),
+    ]),
   );
 }
 

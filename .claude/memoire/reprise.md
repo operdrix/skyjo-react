@@ -91,3 +91,7 @@ Restent :
 - Dans un shell, ne pas faire `pkill -f nom` avec le nom visible dans la commande elle-même (le shell se tue). Utiliser `pkill -f "motif[x]"`.
 - Ne jamais écrire de mots de passe de test dans le dépôt.
 - `pkill -f "src/server[.]js"` tue aussi le back de `make dev` : pour un 2e serveur, utiliser `PORT=3001` et un motif distinct.
+
+## Plateforme multi-jeux (cadrage, 2026-10-14, branche `feat/plateforme`)
+- `docs/PRD-plateforme.md` validé : portail olivgames.fr (compte unique, session partagée par tous les sous-domaines via une API unique), un sous-domaine par jeu, Skyjo renommé (nom provisoire « Colonnes »), nouveau jeu type Flip 7 (nom provisoire « Banco »). Plan validé : `docs/PLAN-plateforme.md` (8 phases, API unique `api.olivgames.fr`, front unique qui choisit le jeu par domaine). Prochaine étape : phase 1 (moteur générique + `games.game_type`).
+- `docs/IDEES-JEUX.md` : jeux candidats + précautions juridiques (noms de marque interdits, règles réécrites, visuels propres, vérif INPI/TMview avant prod).

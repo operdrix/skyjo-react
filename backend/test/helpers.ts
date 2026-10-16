@@ -82,9 +82,10 @@ export function nextEvent<T>(socket: Socket, event: string): Promise<T> {
 }
 
 // Données de partie enregistrées, toutes cartes visibles (l'API et les sockets masquent les cartes cachées)
-export async function storedGameData(gameId: string): Promise<GameData> {
+// (D : forme des données du jeu de la partie, Colonnes par défaut)
+export async function storedGameData<D = GameData>(gameId: string): Promise<D> {
   const [game] = await db.select({ gameData: games.gameData }).from(games).where(eq(games.id, gameId));
-  return game.gameData;
+  return game.gameData as D;
 }
 
 // Crée un invité (session sans compte) puis lui donne un pseudo ; renvoie aussi la réponse du choix du pseudo

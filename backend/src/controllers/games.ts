@@ -1,7 +1,6 @@
 import { and, asc, eq, getTableColumns, inArray, sql, type SQL } from "drizzle-orm";
 import type {
   ErrorType,
-  GameData,
   GameKind,
   GameType,
   Intent,
@@ -11,7 +10,7 @@ import type {
 } from "../../../shared/types.ts";
 import { db, type Db, type Tx } from "../db/index.ts";
 import { gamePlayers, games, users } from "../db/schema.ts";
-import { engineFor, type GameEngine } from "../game/engines.ts";
+import { engineFor, type AnyEngine } from "../game/engines.ts";
 import type { Scores } from "../game/rules.ts";
 import { logger } from "../utils/logger.ts";
 
@@ -30,16 +29,21 @@ const CREATOR_ONLY = { error: "Seul le créateur de la partie peut faire cela.",
 
 const UNKNOWN_KIND = { error: "Ce jeu n'existe pas.", code: 400 };
 
+// État enregistré d'une manche, de forme propre au jeu de la partie
+type RoundState = StoredGame["gameData"];
+
+const playerIds = (game: StoredGame) => game.players.map((player) => player.id);
+
 const isError = <T extends object>(value: T | ErrorType): value is ErrorType => "error" in value;
 
 // Règles du jeu de la partie (les types en base sont ceux des moteurs connus)
-const engineOf = (game: { gameType: string }): GameEngine => engineFor(game.gameType)!;
+const engineOf = (game: { gameType: string }): AnyEngine => engineFor(game.gameType)!;
 
 // Partie telle qu'envoyée aux joueurs : les cartes non révélées sont masquées
-// (jeu inconnu : aucune donnée de jeu ne sort)
+// (pas encore distribuée : données vides, renvoyées telles quelles ; jeu inconnu : aucune donnée de jeu ne sort)
 function toPublic({ nextGameId: _, ...game }: StoredGame): GameType {
   const engine = engineFor(game.gameType);
-  if (!game.gameData) return game as unknown as GameType;
+  if (!game.gameData || !Object.keys(game.gameData).length) return game as unknown as GameType;
   const gameData = engine ? engine.view(game.gameData) : ({} as PublicGameData);
   return { ...game, gameData };
 }
@@ -242,24 +246,27 @@ async function applyGameAction(tx: Tx, game: StoredGame, action: string, body: N
         await tx.delete(gamePlayers).where(player);
       } else if (isPlayer) {
         await tx.update(gamePlayers).set({ status: "disconnected" }).where(player);
+        // Le jeu peut passer le tour du joueur parti
+        if (game.state === "playing") await saveRound(tx, game, engineOf(game).leave(game.gameData, userId));
       }
       return;
 
     case "start":
-      if (game.state === "playing" && game.gameData.currentStep !== "endGame") {
-        return { error: "Une manche est déjà en cours.", code: 400 };
+      {
+        const engine = engineOf(game);
+        if (game.state === "playing" && !engine.isRoundOver(game.gameData)) {
+          return { error: "Une manche est déjà en cours.", code: 400 };
+        }
+        if (game.players.length < engine.minPlayers) {
+          return { error: `Il faut au moins ${engine.minPlayers} joueurs pour lancer la partie.`, code: 400 };
+        }
+        const roundNumber = game.roundNumber + 1;
+        // Les joueurs partis sont distribués, puis le jeu peut passer leur tour
+        const gameData = game.players
+          .filter((player) => player.game_players.status === "disconnected")
+          .reduce((state, player) => engine.leave(state, player.id), engine.deal(playerIds(game), roundNumber));
+        await tx.update(games).set({ state: "playing", roundNumber, gameData }).where(eq(games.id, game.id));
       }
-      if (game.players.length < engineOf(game).minPlayers) {
-        return { error: `Il faut au moins ${engineOf(game).minPlayers} joueurs pour lancer la partie.`, code: 400 };
-      }
-      await tx
-        .update(games)
-        .set({
-          state: "playing",
-          roundNumber: game.roundNumber + 1,
-          gameData: engineOf(game).deal(game.players.map((player) => player.id)),
-        })
-        .where(eq(games.id, game.id));
       return;
 
     case "finish":
@@ -314,28 +321,32 @@ export async function playMove(gameId: string, intent: Intent, userId: string) {
 
 // Applique un coup calculé à partir des données courantes, lues sous verrou, manche avancée
 // (null : coup invalide, rien n'est enregistré)
-async function applyMove(gameId: string, move: (current: GameData, game: StoredGame) => GameData | null) {
+async function applyMove(gameId: string, move: (current: RoundState, game: StoredGame) => RoundState | null) {
   return db.transaction(async (tx) => {
     const game = await lockGame(tx, gameId);
     const gameData = game && move(game.gameData, game);
     if (!game || !gameData) {
       return null;
     }
-
-    const engine = engineOf(game);
-    const update: Partial<typeof games.$inferInsert> = { gameData };
-
-    if (engine.isRoundOver(gameData)) {
-      const totals = await saveScores(tx, game, engine.roundScores(gameData));
-      const { finished, winner, winnerScore } = engine.result(totals);
-      if (finished) {
-        Object.assign(update, { state: "finished", winner, winnerScore });
-      }
-    }
-
-    await tx.update(games).set(update).where(eq(games.id, gameId));
+    await saveRound(tx, game, gameData);
     return toPublic((await loadGame(gameId, tx))!);
   });
+}
+
+// Enregistre la manche ; si elle vient de se terminer, ajoute les scores et termine la partie au besoin
+async function saveRound(tx: Tx, game: StoredGame, gameData: RoundState) {
+  const engine = engineOf(game);
+  const update: Partial<typeof games.$inferInsert> = { gameData };
+
+  if (engine.isRoundOver(gameData) && !engine.isRoundOver(game.gameData)) {
+    const totals = await saveScores(tx, game, engine.roundScores(gameData));
+    const { finished, winner, winnerScore } = engine.result(totals);
+    if (finished) {
+      Object.assign(update, { state: "finished", winner, winnerScore });
+    }
+  }
+
+  await tx.update(games).set(update).where(eq(games.id, game.id));
 }
 
 // Ajoute les scores de la manche aux joueurs, renvoie les totaux
@@ -397,7 +408,7 @@ export async function restartGame(gameId: string): Promise<NextGame | ErrorType>
     await tx.insert(gamePlayers).values(others.map((userId) => ({ gameId: created.gameId, userId })));
     await tx
       .update(games)
-      .set({ state: "playing", roundNumber: 1, gameData: engineOf(game).deal([game.creator, ...others]) })
+      .set({ state: "playing", roundNumber: 1, gameData: engineOf(game).deal([game.creator, ...others], 1) })
       .where(eq(games.id, created.gameId));
     await tx.update(games).set({ nextGameId: created.gameId }).where(eq(games.id, game.id));
     return { gameId: created.gameId, players };

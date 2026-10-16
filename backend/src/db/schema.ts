@@ -11,7 +11,7 @@ import {
   varchar,
 } from "drizzle-orm/mysql-core";
 import { nanoid } from "nanoid";
-import type { GameData, GameKind } from "../../../shared/types.ts";
+import type { BancoData, GameData, GameKind } from "../../../shared/types.ts";
 
 // createdAt / updatedAt, mis à jour côté application
 const timestamps = {
@@ -104,7 +104,7 @@ export const games = mysqlTable("games", {
   nextGameId: varchar({ length: 16 }),
   // Objet vide tant que la partie n'a pas démarré
   gameData: json()
-    .$type<GameData>()
+    .$type<GameData | BancoData>()
     .notNull()
     .$defaultFn(() => ({}) as GameData),
   ...timestamps,

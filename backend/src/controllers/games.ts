@@ -261,10 +261,15 @@ async function applyGameAction(tx: Tx, game: StoredGame, action: string, body: N
           return { error: `Il faut au moins ${engine.minPlayers} joueurs pour lancer la partie.`, code: 400 };
         }
         const roundNumber = game.roundNumber + 1;
-        // Les joueurs partis sont distribués, puis le jeu peut passer leur tour
+        // Les joueurs partis sont distribués, puis le jeu peut passer leur tour.
+        // La manche suivante part de la précédente (pioche continue dans Banco)
+        const previous = game.state === "playing" ? game.gameData : undefined;
         const gameData = game.players
           .filter((player) => player.game_players.status === "disconnected")
-          .reduce((state, player) => engine.leave(state, player.id), engine.deal(playerIds(game), roundNumber));
+          .reduce(
+            (state, player) => engine.leave(state, player.id),
+            engine.deal(playerIds(game), roundNumber, previous),
+          );
         await tx.update(games).set({ state: "playing", roundNumber, gameData }).where(eq(games.id, game.id));
       }
       return;

@@ -4,7 +4,7 @@ import GameMenu from "@/components/game/GameMenu";
 import GameSettings from "@/components/game/GameSettings";
 import RoundResults from "@/components/game/RoundResults";
 import ModalScore from "@/components/game/messages/ModalScore";
-import { STATUS_LABELS, cardLabel, handTotal, hasSeven } from "@/game/banco";
+import { STATUS_LABELS, cardLabel, handTotal, hasSeven, isAction, validTargets } from "@/game/banco";
 import { useGame } from "@/hooks/Game";
 import { useUser } from "@/hooks/User";
 import { useGameAction } from "@/hooks/useGameAction";
@@ -20,7 +20,8 @@ function BancoPlayer({ game, playerId, isMe }: { game: BancoGame; playerId: stri
   const { hands, status, currentPlayer } = game.gameData;
   const hand = hands[playerId] ?? [];
   const playerStatus = status[playerId];
-  const modifiers = hand.filter((card) => card.kind !== "number");
+  const modifiers = hand.filter((card) => card.kind === "plus" || card.kind === "double");
+  const actions = hand.filter(isAction);
 
   return (
     <section
@@ -66,24 +67,52 @@ function BancoPlayer({ game, playerId, isMe }: { game: BancoGame; playerId: stri
             ))}
           </ul>
         )}
+        {actions.length > 0 && (
+          <ul aria-label="Actions" className="ml-1 flex flex-wrap gap-1">
+            {actions.map((card) => (
+              <li key={card.id}>
+                <span
+                  role="img"
+                  aria-label={cardLabel(card)}
+                  className={`badge badge-lg font-bold ${card.kind === "second" ? "badge-success" : "badge-info"}`}
+                >
+                  {cardLabel(card)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
       <p className="text-xs text-muted tabular-nums">Total {player?.game_players.score ?? 0}</p>
     </section>
   );
 }
 
-// Ce qui vient de se passer, puis à qui c'est le tour
+// Ce qui vient de se passer, puis qui doit jouer
 function turnMessage(game: BancoGame, userId: string) {
-  const { lastDraw, currentPlayer, status, roundOver, hands } = game.gameData;
+  const { lastDraw, lastAction, pending, currentPlayer, status, roundOver, hands } = game.gameData;
   const name = (id: string) => game.players.find((p) => p.id === id)?.username ?? "?";
   const parts: string[] = [];
   if (lastDraw) {
     const busted = status[lastDraw.playerId] === "busted";
     const seven = hasSeven(hands[lastDraw.playerId] ?? []);
-    const outcome = busted ? " : éliminé !" : seven ? " : 7 nombres, +15 !" : "";
-    parts.push(`${name(lastDraw.playerId)} a tiré un ${cardLabel(lastDraw.card)}${outcome}`);
+    const outcome = lastDraw.saved
+      ? " : Seconde chance utilisée !"
+      : busted
+        ? " : éliminé !"
+        : seven
+          ? " : 7 nombres, +15 !"
+          : "";
+    const drawn = isAction(lastDraw.card) ? cardLabel(lastDraw.card) : `un ${cardLabel(lastDraw.card)}`;
+    parts.push(`${name(lastDraw.playerId)} a tiré ${drawn}${outcome}`);
   }
+  if (lastAction) {
+    parts.push(`${name(lastAction.playerId)} donne ${cardLabel(lastAction.card)} à ${name(lastAction.target)}`);
+  }
+  const [choice] = pending;
   if (roundOver) parts.push("Fin de la manche");
+  else if (choice?.playerId === userId) parts.push(`Choisis qui reçoit ${cardLabel(choice.card)}`);
+  else if (choice) parts.push(`${name(choice.playerId)} choisit qui reçoit ${cardLabel(choice.card)}`);
   else if (currentPlayer === userId) parts.push("À toi : Encore ou Stop ?");
   else if (currentPlayer) parts.push(`${name(currentPlayer)} joue`);
   return parts.join(" · ");
@@ -98,13 +127,15 @@ const BancoTable = () => {
 
   if (!anyGame || !userId) return null;
   const game = anyGame as unknown as BancoGame;
-  const { turnOrder, currentPlayer, status, roundOver, deckCount } = game.gameData;
-  const myTurn = !roundOver && currentPlayer === userId && status[userId] === "playing";
+  const { turnOrder, currentPlayer, status, roundOver, deckCount, pending } = game.gameData;
+  const myTurn = !roundOver && !pending.length && currentPlayer === userId && status[userId] === "playing";
+  const myChoice = !roundOver && pending[0]?.playerId === userId ? pending[0] : null;
   const others = turnOrder.filter((id) => id !== userId);
+  const name = (id: string) => game.players.find((p) => p.id === id)?.username ?? "?";
 
-  const play = async (move: "hit" | "stay") => {
+  const play = async (move: "hit" | "stay" | "target", target?: string) => {
     setSending(true);
-    await sendMessage("play-move", { room: game.id, move });
+    await sendMessage("play-move", target ? { room: game.id, move, target } : { room: game.id, move });
     setSending(false);
   };
 
@@ -145,14 +176,33 @@ const BancoTable = () => {
                   <BancoPlayer game={game} playerId={userId} isMe />
                 </div>
               )}
-              <div className="flex justify-center gap-3">
-                <button className="btn btn-primary btn-lg" onClick={() => play("hit")} disabled={!myTurn || sending}>
-                  Encore
-                </button>
-                <button className="btn btn-lg" onClick={() => play("stay")} disabled={!myTurn || sending}>
-                  Stop
-                </button>
-              </div>
+              {myChoice ? (
+                <div
+                  role="group"
+                  aria-label={`Cible de ${cardLabel(myChoice.card)}`}
+                  className="flex flex-wrap justify-center gap-2"
+                >
+                  {validTargets(game.gameData).map((id) => (
+                    <button
+                      key={id}
+                      className="btn btn-secondary"
+                      onClick={() => play("target", id)}
+                      disabled={sending}
+                    >
+                      {id === userId ? `${name(id)} (toi)` : name(id)}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex justify-center gap-3">
+                  <button className="btn btn-primary btn-lg" onClick={() => play("hit")} disabled={!myTurn || sending}>
+                    Encore
+                  </button>
+                  <button className="btn btn-lg" onClick={() => play("stay")} disabled={!myTurn || sending}>
+                    Stop
+                  </button>
+                </div>
+              )}
             </>
           )}
         </footer>

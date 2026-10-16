@@ -1,3 +1,4 @@
+import { GAME_KIND } from "@/lib/gameKind";
 import ReconnectMessage from "@/components/game/messages/ReconnectMessage";
 import { useUser } from "@/hooks/User";
 import { useWebSocket } from "@/hooks/WebSocket";
@@ -16,7 +17,7 @@ const Create = () => {
     async (privateRoom: boolean) => {
       setLoading(true);
       if (socket && isConnected) {
-        const response = await api.post("game", { privateRoom });
+        const response = await api.post("game", { privateRoom, type: GAME_KIND });
 
         if (response.error) {
           setLoading(false);

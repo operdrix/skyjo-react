@@ -1,4 +1,5 @@
 import ScoreTable from "@/components/game/ScoreTable";
+import { scoringOf } from "@/game/kinds";
 import { useGame } from "@/hooks/Game";
 import { useUser } from "@/hooks/User";
 import { useWebSocket } from "@/hooks/WebSocket";
@@ -55,6 +56,7 @@ const RoundResults = () => {
           userId={userId}
           variant="round"
           playAgain={finished ? playersPlayAgain : undefined}
+          winning={scoringOf(game).winning}
         />
       </div>
 

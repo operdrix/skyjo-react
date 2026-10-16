@@ -1,3 +1,4 @@
+import { GAME_KIND } from "@/lib/gameKind";
 import ChangePseudo from "@/components/dashboard/ChangePseudo";
 import ChangeTheme from "@/components/dashboard/ChangeTheme";
 import DeleteAccount from "@/components/dashboard/DeleteAccount";
@@ -38,7 +39,7 @@ const Dashboard = () => {
     const getGames = async () => {
       setLoading(true);
 
-      const response = await api.get(`users/${userId}/games`);
+      const response = await api.get(`users/${userId}/games?type=${GAME_KIND}`);
 
       if (response.error) {
         setError(response.error);

@@ -2,7 +2,7 @@ import type { Socket } from "socket.io-client";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { eq } from "drizzle-orm";
-import type { GameType, ServerEvent } from "../../../shared/types.ts";
+import type { GameData, GameType, ServerEvent } from "../../../shared/types.ts";
 import { db } from "../db/index.ts";
 import { games } from "../db/schema.ts";
 import { closeApp, connectPlayer, type TestPlayer, createPlayer, nextEvent, setupApp } from "../../test/helpers.ts";
@@ -113,7 +113,11 @@ describe("cartes cachées", () => {
     await aliceSocket.emitWithAck("play-move", { room: gameId, move: "draw" });
 
     const [drawn] = (await moved).gameData.deckCards;
-    expect(drawn).toMatchObject({ value: stored.gameData.deckCards[0].value, revealed: true, onHand: true });
+    expect(drawn).toMatchObject({
+      value: (stored.gameData as GameData).deckCards[0].value,
+      revealed: true,
+      onHand: true,
+    });
   });
 
   it("montre toutes les cartes des joueurs en fin de manche", async () => {

@@ -40,7 +40,29 @@ export type PublicGameData = Omit<GameData, "playersCards" | "deckCards"> & {
 };
 
 // Jeu de la plateforme auquel appartient une partie
-export type GameKind = "colonnes";
+export type GameKind = "colonnes" | "banco";
+
+// ─── Banco : stop ou encore ──────────────────────────────────────────────────
+
+export type BancoCard = { id: string; value: number };
+
+// En jeu, arrêté (garde ses points) ou éliminé par un doublon (0 point)
+export type BancoStatus = "playing" | "stopped" | "busted";
+
+export type BancoData = {
+  // Pioche : jamais diffusée
+  deck: BancoCard[];
+  hands: Record<string, BancoCard[]>;
+  status: Record<string, BancoStatus>;
+  turnOrder: string[];
+  currentPlayer: string | null;
+  // Dernière carte tirée, pour suivre la partie
+  lastDraw: { playerId: string; card: BancoCard } | null;
+  roundOver: boolean;
+};
+
+// Données de Banco diffusées : la pioche n'est donnée que par son nombre de cartes
+export type PublicBancoData = Omit<BancoData, "deck"> & { deckCount: number };
 
 export type GameState = "pending" | "playing" | "finished";
 
@@ -83,10 +105,10 @@ type GameFields<D> = {
   playersPlayAgain: string[];
 };
 // nextGameId : partie créée par « Rejouer », jamais diffusée (la nouvelle partie est privée)
-export type StoredGame = GameFields<GameData> & { nextGameId: string | null };
+export type StoredGame = GameFields<GameData | BancoData> & { nextGameId: string | null };
 
-// Partie telle que renvoyée par l'API et diffusée par les websockets
-export type GameType = GameFields<PublicGameData>;
+// Partie telle que renvoyée par l'API et diffusée par les websockets (D : données du jeu, Colonnes par défaut)
+export type GameType<D = PublicGameData> = GameFields<D>;
 
 // ─── Événements temps réel ───────────────────────────────────────────────────
 
@@ -99,7 +121,8 @@ export type RoomPayload = { room: string };
 export type EmptyPayload = Record<string, never>;
 
 // Coup joué : le client indique son intention, le serveur calcule la partie suivante
-export type MoveType = "draw" | "take-discard" | "discard-drawn" | "replace" | "flip" | "reveal";
+// Colonnes : draw … reveal ; Banco : hit (Encore), stay (Stop)
+export type MoveType = "draw" | "take-discard" | "discard-drawn" | "replace" | "flip" | "reveal" | "hit" | "stay";
 export type Intent = { move: MoveType; cardIndex?: number };
 
 // Événements envoyés par le client (toujours avec un accusé de réception)

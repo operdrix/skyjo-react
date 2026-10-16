@@ -689,6 +689,12 @@
   }
 }
 
+/* Table de Banco : cartes des adversaires petites, celles du joueur plus grandes, selon l'écran */
+.banco-table {
+  --banco-card-w: clamp(22px, min(8vw, 4.5dvh), 52px);
+  --banco-my-card-w: clamp(32px, min(13vw, 8dvh), 80px);
+}
+
 /*
   Plateau de jeu : la largeur des cartes suit la place disponible (largeur ET hauteur de l'écran),
   pour que les 4 joueurs tiennent sans défilement du téléphone au grand écran.

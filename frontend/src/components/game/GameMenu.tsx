@@ -1,4 +1,5 @@
-import Rules from "@/components/game/Rules";
+import GameRules from "@/components/game/GameRules";
+import { useGame } from "@/hooks/Game";
 import { useNavigate } from "react-router";
 
 const openDialog = (id: string) => (document.getElementById(id) as HTMLDialogElement | null)?.showModal();
@@ -6,13 +7,14 @@ const openDialog = (id: string) => (document.getElementById(id) as HTMLDialogEle
 // Boutons de gauche de la table : quitter, scores, règles (avec la fenêtre des règles)
 export default function GameMenu() {
   const navigate = useNavigate();
+  const { game } = useGame();
 
   return (
     <>
       {/* Modal d'affichage des règles */}
       <dialog id="modalRules" className="modal">
         <div className="modal-box">
-          <Rules />
+          <GameRules kind={game?.gameType} />
           <div className="modal-action">
             <form method="dialog">
               {/* if there is a button in form, it will close the modal */}

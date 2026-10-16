@@ -16,8 +16,11 @@ type ScoredPlayer = {
   game_players: { score: number; scoreByRound: number[] };
 };
 
-// Classement : le plus petit total gagne, les ex aequo partagent le même rang
-export function rankPlayers(players: ScoredPlayer[]): RankedPlayer[] {
+// Sens du classement : le plus petit total gagne (Colonnes) ou le plus grand (Banco)
+export type Winning = "lowest" | "highest";
+
+// Classement selon le sens du jeu, les ex aequo partagent le même rang
+export function rankPlayers(players: ScoredPlayer[], winning: Winning = "lowest"): RankedPlayer[] {
   const sorted = players
     .map(({ id, username, isAnonymous, game_players: { score, scoreByRound } }) => ({
       id,
@@ -27,7 +30,7 @@ export function rankPlayers(players: ScoredPlayer[]): RankedPlayer[] {
       rounds: scoreByRound,
       lastRound: scoreByRound.length > 0 ? scoreByRound[scoreByRound.length - 1] : null,
     }))
-    .sort((a, b) => a.total - b.total);
+    .sort((a, b) => (winning === "lowest" ? a.total - b.total : b.total - a.total));
   return sorted.map((player) => ({ ...player, rank: sorted.findIndex((p) => p.total === player.total) + 1 }));
 }
 

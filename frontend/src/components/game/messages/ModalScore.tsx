@@ -1,4 +1,5 @@
 import ScoreTable from "@/components/game/ScoreTable";
+import { scoringOf } from "@/game/kinds";
 import { useGame } from "@/hooks/Game";
 import { useUser } from "@/hooks/User";
 
@@ -18,11 +19,9 @@ const ModalScore = () => {
         </form>
         <h3 className="mb-3 text-xl font-bold">Scores · Manche {game.roundNumber}</h3>
         <div className="overflow-x-auto">
-          <ScoreTable players={game.players} userId={userId} />
+          <ScoreTable players={game.players} userId={userId} winning={scoringOf(game).winning} />
         </div>
-        <p className="mt-3 text-xs text-muted">
-          Le plus petit total gagne. La partie s'arrête quand un joueur atteint 100.
-        </p>
+        <p className="mt-3 text-xs text-muted">{scoringOf(game).note}</p>
       </div>
       <form method="dialog" className="modal-backdrop">
         <button>Fermer</button>

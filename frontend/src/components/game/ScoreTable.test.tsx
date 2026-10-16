@@ -24,6 +24,12 @@ describe("ScoreTable", () => {
     expect(rows()[1].textContent).toContain("toi");
   });
 
+  it("classe le plus haut total en premier quand il gagne", () => {
+    render(<ScoreTable players={players} userId="BOB" winning="highest" />);
+
+    expect(rows()[0].textContent).toContain("bob");
+  });
+
   it("résume la dernière manche", () => {
     render(<ScoreTable players={players} userId="BOB" variant="round" />);
 

@@ -42,6 +42,13 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("invité en fin de partie", () => {
+  it("classe le plus haut total en premier pour Banco", () => {
+    state.game = { ...makeGame("playing"), gameType: "banco", gameData: { roundOver: true } };
+    renderResults();
+
+    expect(screen.getAllByRole("row")[1].textContent).toContain("bob");
+  });
+
   it("lui propose de créer son compte", () => {
     state.game = makeGame("finished");
     state.isGuest = true;

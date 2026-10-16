@@ -46,23 +46,29 @@ export function usersRoutes(app: FastifyInstance) {
     },
   );
   //Récupération des parties d'un utilisateur
-  app.get<IdParams>(
+  app.get<IdParams & { Querystring: { type?: string } }>(
     "/api/users/:id/games",
     {
       schema: {
         tags: ["Parties"],
         summary: "Parties d'un utilisateur",
-        description: "Récupère toutes les parties d'un utilisateur",
+        description: "Récupère toutes les parties d'un utilisateur, d'un seul jeu si le type est donné",
         params: {
           type: "object",
           properties: {
             id: { type: "string", description: "ID de l'utilisateur" },
           },
         },
+        querystring: {
+          type: "object",
+          properties: {
+            type: { type: "string", description: "Filtrer par jeu (colonnes)" },
+          },
+        },
       },
     },
     async (request, reply) => {
-      return sendResult(reply, await getUserGames(request.params.id));
+      return sendResult(reply, await getUserGames(request.params.id, request.query.type));
     },
   );
 }

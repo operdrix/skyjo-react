@@ -1,0 +1,1 @@
+ALTER TABLE `games` ADD `game_type` varchar(16) DEFAULT 'colonnes' NOT NULL;

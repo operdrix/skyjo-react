@@ -2,6 +2,7 @@ import { fromNodeHeaders } from "better-auth/node";
 import type { FastifyInstance } from "fastify";
 import type { Socket } from "socket.io";
 import type { Ack, ClientEvent, ClientPayloads, GameType, MoveType, NextGame } from "../../../shared/types.ts";
+import { ALL_MOVES } from "../game/engines.ts";
 import {
   addPlayerPlayAgain,
   getGame,
@@ -34,9 +35,8 @@ export function cancelPendingLeaves() {
 
 // Contrôle de chaque champ attendu des événements client
 type Check = (value: unknown) => boolean;
-const MOVES: MoveType[] = ["draw", "take-discard", "discard-drawn", "replace", "flip", "reveal"];
 const text: Check = (value) => typeof value === "string" && value !== "";
-const move: Check = (value) => MOVES.includes(value as MoveType);
+const move: Check = (value) => ALL_MOVES.includes(value as MoveType);
 const optionalIndex: Check = (value) => value === undefined || Number.isInteger(value);
 
 const CLIENT_FIELDS: { [E in ClientEvent]: Record<keyof ClientPayloads[E], Check> } = {

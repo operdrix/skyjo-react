@@ -1,7 +1,7 @@
 import ErrorMessage from "@/components/game/messages/ErrorMessage";
 import ReconnectMessage from "@/components/game/messages/ReconnectMessage";
 import OnlineStatus from "@/components/game/OnlineStatus";
-import Rules from "@/components/game/Rules";
+import GameRules from "@/components/game/GameRules";
 import PageSkeleton from "@/components/PageSkeleton";
 import PlayerList from "@/components/waiting-room/PlayerList";
 import PrivacyBadge from "@/components/waiting-room/PrivacyBadge";
@@ -229,7 +229,7 @@ const WaitingRoom = () => {
           <PlayerList game={game} />
         </div>
         <div className="col-span-3">
-          <Rules />
+          <GameRules kind={game?.gameType} />
         </div>
       </div>
     </div>

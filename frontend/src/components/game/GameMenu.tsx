@@ -1,5 +1,4 @@
-import BancoRules from "@/components/banco/BancoRules";
-import Rules from "@/components/game/Rules";
+import GameRules from "@/components/game/GameRules";
 import { useGame } from "@/hooks/Game";
 import { useNavigate } from "react-router";
 
@@ -15,7 +14,7 @@ export default function GameMenu() {
       {/* Modal d'affichage des règles */}
       <dialog id="modalRules" className="modal">
         <div className="modal-box">
-          {game?.gameType === "banco" ? <BancoRules /> : <Rules />}
+          <GameRules kind={game?.gameType} />
           <div className="modal-action">
             <form method="dialog">
               {/* if there is a button in form, it will close the modal */}

@@ -33,7 +33,7 @@ Le jeu actuel devient le jeu `colonnes` d'un socle commun, sans aucun changement
 - [x] Test d'API : une partie créée sans type est de type `colonnes` ; un type inconnu est refusé avec un message.
 - [x] Test d'API : liste publique et historique ne renvoient que les parties du type demandé.
 - [x] Tous les tests existants (règles, websocket, invités, cartes masquées) passent sans modification de comportement.
-- [ ] Contrôle manuel : une partie complète à 2 joueurs dans le navigateur, identique à avant.
+- [x] Contrôle manuel : une partie à 2 joueurs dans le navigateur, identique à avant (fait avec la phase 2 : révélation, tours, fin de manche, doublement, fin de partie).
 - [x] `make check` vert.
 
 ## Bloquée par
@@ -52,15 +52,17 @@ Une partie de Banco se joue de bout en bout avec les cartes nombres (0 à 12, n 
 
 ### Critères d'acceptation
 
-- [ ] Tests unitaires des règles : paquet de nombres, Encore, Stop, doublon à 0 point, bonus de 7 nombres et fin de manche, fin de manche quand tous sont arrêtés ou éliminés, rotation du premier joueur, fin à 200, égalité.
-- [ ] Test d'API : création d'une partie Banco, de 2 à 8 joueurs, refus hors limites.
-- [ ] Test websocket : partie jouée par intentions jusqu'à la fin ; coup hors de son tour refusé avec un message.
-- [ ] Test websocket : aucune carte de la pioche dans les réponses HTTP ni dans les diffusions.
-- [ ] Test websocket : un joueur déconnecté au-delà du délai de grâce est passé ; reconnexion dans le délai sans perte.
-- [ ] Test d'API : un invité rejoint et joue une partie Banco.
-- [ ] Tests de composant : boutons Encore/Stop actifs seulement à son tour, état des joueurs, résultats de manche, écran de fin.
-- [ ] Contrôle manuel à 3 joueurs (navigateur + robots), sur mobile compris.
-- [ ] `make check` vert.
+- [x] Tests unitaires des règles : paquet de nombres, Encore, Stop, doublon à 0 point, bonus de 7 nombres et fin de manche, fin de manche quand tous sont arrêtés ou éliminés, rotation du premier joueur, fin à 200, égalité.
+- [x] Test d'API : création d'une partie Banco, de 2 à 8 joueurs, refus hors limites.
+- [x] Test websocket : partie jouée par intentions jusqu'à la fin ; coup hors de son tour refusé avec un message.
+- [x] Test websocket : aucune carte de la pioche dans les réponses HTTP ni dans les diffusions.
+- [x] Test websocket : un joueur déconnecté au-delà du délai de grâce est passé ; reconnexion dans le délai sans perte (reconnexion : socle commun, déjà testé).
+- [x] Test d'API : un invité rejoint et joue une partie Banco.
+- [x] Tests de composant : boutons Encore/Stop actifs seulement à son tour, état des joueurs, résultats de manche, écran de fin.
+- [x] Contrôle manuel à 3 puis 8 joueurs (navigateur + robots), en format mobile compris : manches, rotation, fin à 200, rejouer, départ d'un joueur, 0 fuite de pioche.
+- [x] `make check` vert.
+
+Écart assumé : un paquet neuf est mélangé à chaque manche (la pioche continue d'une manche à l'autre et se reforme avec la défausse en phase 4).
 
 ## Bloquée par
 

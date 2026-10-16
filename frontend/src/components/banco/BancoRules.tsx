@@ -1,4 +1,4 @@
-// Aide de jeu de Banco, rédigée pour le site (version courte, cartes nombres)
+// Aide de jeu de Banco, rédigée pour le site (version courte, nombres et modificateurs)
 const BancoRules = () => (
   <div className="mx-auto max-w-3xl space-y-3 p-4">
     <h1 className="mb-2 text-center text-2xl font-bold">Règles de Banco</h1>
@@ -13,6 +13,11 @@ const BancoRules = () => (
     <p>
       Réunis 7 nombres différents et tu gagnes 15 points de bonus ; la manche s'arrête aussitôt. Sinon, elle se termine
       quand plus personne n'est en jeu.
+    </p>
+    <p>
+      Les modificateurs (+2, +4, +6, +8, +10 et ×2) se posent à côté de tes nombres. Ils ne comptent jamais comme un
+      doublon. Le ×2 double la somme de tes nombres, puis les + s'ajoutent. Un joueur éliminé marque 0, modificateurs
+      compris.
     </p>
     <p>
       Tu marques la somme de tes cartes. Le premier joueur change à chaque manche. Dès qu'un joueur atteint 200 points

@@ -81,7 +81,7 @@ describe("partie de Banco", () => {
     expect(game.gameData.currentPlayer).toBe(alice.id);
     expect(Object.values(game.gameData.hands).map((hand) => hand.length)).toEqual([1, 1, 1]);
     expect(game.gameData).not.toHaveProperty("deck");
-    expect(game.gameData.deckCount).toBe(79 - 3);
+    expect(game.gameData.deckCount).toBe(85 - 3);
 
     const stored = await storedBanco(gameId);
     const fetched = await app.inject({ method: "GET", url: `/api/game/${gameId}` });

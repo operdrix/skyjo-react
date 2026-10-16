@@ -44,7 +44,11 @@ export type GameKind = "colonnes" | "banco";
 
 // ─── Banco : stop ou encore ──────────────────────────────────────────────────
 
-export type BancoCard = { id: string; value: number };
+// Nombre (0 à 12), modificateur « + » (+2 à +10) ou ×2 : les modificateurs ne comptent pas comme des nombres
+export type BancoCard =
+  | { id: string; kind: "number"; value: number }
+  | { id: string; kind: "plus"; value: number }
+  | { id: string; kind: "double" };
 
 // En jeu, arrêté (garde ses points) ou éliminé par un doublon (0 point)
 export type BancoStatus = "playing" | "stopped" | "busted";

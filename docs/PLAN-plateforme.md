@@ -80,9 +80,9 @@ Les 6 modificateurs (+2, +4, +6, +8, +10, ×2) entrent dans le paquet. Ils sont 
 
 ### Critères d'acceptation
 
-- [ ] Tests unitaires : calcul du score avec et sans ×2, avec plusieurs +, avec bonus de 7 ; modificateurs exclus du doublon et des 7 nombres ; 0 point en cas de doublon.
-- [ ] Test de composant : modificateurs affichés à part des nombres, total provisoire juste.
-- [ ] `make check` vert.
+- [x] Tests unitaires : calcul du score avec et sans ×2, avec plusieurs +, avec bonus de 7 ; modificateurs exclus du doublon et des 7 nombres ; 0 point en cas de doublon.
+- [x] Test de composant : modificateurs affichés à part des nombres, total provisoire juste.
+- [x] `make check` vert.
 
 ## Bloquée par
 

@@ -192,3 +192,46 @@ describe("robot Moyen", () => {
     expect(winRate("moyen", "facile", 200, 2026)).toBeGreaterThanOrEqual(0.7);
   });
 });
+
+describe("robot Difficile", () => {
+  it("joue des parties complètes à 2, 3 et 4 robots sans coup refusé", () => {
+    const random = seededRandom(9);
+    for (const count of [2, 3, 4]) {
+      for (let i = 0; i < 5; i++) {
+        const players = Array.from({ length: count }, (_, index) => ({
+          id: `p${index}`,
+          level: (["difficile", "moyen", "facile"] as const)[index % 3],
+        }));
+        expect(Object.keys(simulateGame(players, random).totals)).toHaveLength(count);
+      }
+    }
+  });
+
+  it("complète une colonne quand la défausse le permet", () => {
+    // Colonne 0 : indices 0, 4, 8 ; deux 7 visibles, un 10 visible
+    const botCards = hand([7, 1, 2, 3, 7, 1, 2, 3, 10, 1, 2, 3], [0, 4, 8]);
+    const drawStep = botTurn("draw", botCards, { discardPile: [card(7)] });
+    expect(chooseIntent(hideCards(drawStep), "bot", "difficile")).toEqual({ move: "take-discard" });
+
+    const replaceStep = botTurn("replace-discard", botCards, { discardPile: [card(7, true, true)] });
+    expect(chooseIntent(hideCards(replaceStep), "bot", "difficile")).toEqual({ move: "replace", cardIndex: 8 });
+  });
+
+  it("ne retourne pas sa dernière carte cachée quand il n'a pas le plus petit score", () => {
+    // Le robot a 11 cartes visibles (total élevé) et une seule cachée ; l'adversaire est loin devant
+    const botCards = hand([9, 10, 11, 12, 9, 10, 11, 12, 9, 10, 11, 5], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    const gameData = botTurn("decide-deck", botCards, {
+      playersCards: { bot: botCards, human: hand([0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1], true) },
+    });
+    gameData.deckCards[0] = card(8, true, true);
+
+    const intent = chooseIntent(hideCards(gameData), "bot", "difficile");
+
+    expect(intent?.move).toBe("replace");
+    expect(botCards[intent!.cardIndex!].revealed).toBe(true);
+  });
+
+  it("banc d'essai : bat le Moyen au moins 60 % du temps sur 200 parties", () => {
+    expect(winRate("difficile", "moyen", 200, 2026)).toBeGreaterThanOrEqual(0.6);
+  }, 60_000);
+});

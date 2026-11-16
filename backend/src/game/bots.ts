@@ -93,6 +93,113 @@ function mediumIntent(view: PublicGameData, cards: Slot[], random: Random): Inte
   }
 }
 
+// ─── Difficile ───────────────────────────────────────────────────────────────
+
+// Composition du paquet : 5 cartes −2, 10 cartes −1, 15 cartes 0, 10 cartes de chaque valeur de 1 à 12
+const DECK_COUNTS: Record<number, number> = { [-2]: 5, [-1]: 10, 0: 15 };
+for (let value = 1; value <= 12; value++) DECK_COUNTS[value] = 10;
+
+// Valeur moyenne des cartes encore inconnues, d'après toutes les cartes visibles par tous
+// (jeux des joueurs, défausse, carte piochée)
+function unknownAverage(view: PublicGameData): number {
+  const remaining = { ...DECK_COUNTS };
+  const seen = [...Object.values(view.playersCards).flat(), ...view.discardPile, ...view.deckCards];
+  for (const card of seen) {
+    if (card.revealed && card.value !== undefined) remaining[card.value]--;
+  }
+  let total = 0;
+  let count = 0;
+  for (const [value, left] of Object.entries(remaining)) {
+    total += Number(value) * Math.max(0, left);
+    count += Math.max(0, left);
+  }
+  return count ? total / count : HIDDEN_AVERAGE;
+}
+
+// Cartes de la même colonne qu'une place (colonnes : indices i, i + n/3, i + 2n/3)
+function columnMates(cards: Slot[], index: number): Slot[] {
+  const offset = cards.length / 3;
+  const column = index % offset;
+  return [column, column + offset, column + 2 * offset].filter((i) => i !== index).map((i) => cards[i]);
+}
+
+// Score estimé d'un jeu : cartes visibles, cartes cachées à la valeur moyenne inconnue,
+// colonnes de 3 cartes visibles identiques retirées
+function estimatedScore(cards: ShownCard[], average: number): number {
+  const offset = cards.length / 3;
+  let score = 0;
+  for (let column = 0; column < offset; column++) {
+    const trio = [cards[column], cards[column + offset], cards[column + 2 * offset]];
+    const complete = trio.every((card) => card.revealed) && trio.every((card) => card.value === trio[0].value);
+    if (!complete) score += trio.reduce((sum, card) => sum + (card.revealed ? card.value! : average), 0);
+  }
+  return score;
+}
+
+// Difficile : compte les cartes sorties, vise les colonnes identiques et ne termine la manche
+// que s'il a de bonnes chances d'avoir le plus petit score (sinon ses points seraient doublés)
+function hardIntent(view: PublicGameData, botId: string, cards: Slot[], random: Random): Intent {
+  const average = unknownAverage(view);
+  const opponents = Object.entries(view.playersCards).filter(([id]) => id !== botId);
+  const bestOpponent = Math.min(...opponents.map(([, hand]) => estimatedScore(hand, average)));
+  const hiddenCount = hidden(cards).length;
+  // Un autre joueur a déjà terminé : plus de risque de doublement pour le robot
+  const lastTurn = view.lastTurn;
+
+  // Jeu du robot après avoir posé `value` à la place `index` (ou retourné cette carte, à valeur moyenne)
+  const handAfter = (index: number, value: number | null): ShownCard[] =>
+    cards.map(({ card }, i) =>
+      i === index
+        ? value === null
+          ? { ...card, revealed: true, value: Math.round(average) }
+          : { ...card, revealed: true, value }
+        : card,
+    ) as ShownCard[];
+
+  // Intérêt d'un jeu après le coup : score estimé (plus il est bas, mieux c'est), plus le risque
+  // de doublement si le coup termine la manche sans avoir clairement le plus petit score
+  const cost = (hand: ShownCard[]) => {
+    const score = estimatedScore(hand, average);
+    const ends = hand.every((card) => card.revealed);
+    if (!ends || lastTurn) return score;
+    // Terminer en tête est un avantage : les autres n'ont plus qu'un tour
+    return score < bestOpponent - 2 ? score - 3 : score + Math.max(score, 5) + 5;
+  };
+  // Coût de chaque pose possible de `value`, du meilleur au moins bon
+  const placements = (value: number) =>
+    cards.map((slot) => ({ slot, cost: cost(handAfter(slot.index, value)) })).sort((a, b) => a.cost - b.cost);
+  // Coût de retourner une carte cachée (sans rien poser) : meilleure carte cachée à retourner
+  const flips = () =>
+    hidden(cards)
+      .map((slot) => {
+        // Retourner près d'une paire visible laisse une chance de compléter la colonne
+        const mates = columnMates(cards, slot.index).filter(({ card }) => card.revealed);
+        const pairBonus = mates.length === 2 && mates[0].card.value === mates[1].card.value ? -1 : 0;
+        return { slot, cost: cost(handAfter(slot.index, null)) + pairBonus + random() * 0.01 };
+      })
+      .sort((a, b) => a.cost - b.cost);
+  const current = cost(cards.map(({ card }) => card));
+
+  switch (view.currentStep) {
+    case "draw": {
+      const discard = view.discardPile[view.discardPile.length - 1].value!;
+      const [best] = placements(discard);
+      // La défausse vaut le coup si elle fait gagner nettement plus qu'une carte piochée en moyenne
+      return best.cost <= current - 2.5 ? { move: "take-discard" } : { move: "draw" };
+    }
+    case "replace-discard":
+      return replace(placements(cardInHand(view))[0].slot);
+    case "decide-deck": {
+      const [best] = placements(cardInHand(view));
+      if (hiddenCount === 0) return replace(best.slot);
+      const [flipBest] = flips();
+      return best.cost <= flipBest.cost - 0.5 ? replace(best.slot) : { move: "discard-drawn" };
+    }
+    default:
+      return flip(flips()[0].slot);
+  }
+}
+
 // Plus forte carte visible
 function leastBad(cards: Slot[]): Slot {
   return cards.reduce((best, slot) => (slot.card.value! > best.card.value! ? slot : best));
@@ -125,5 +232,7 @@ export function chooseIntent(
   }
   if (view.currentPlayer !== botId) return null;
   if (!["draw", "decide-deck", "replace-discard", "flip-deck"].includes(view.currentStep)) return null;
-  return level === "facile" ? easyIntent(view, mine, random) : mediumIntent(view, mine, random);
+  if (level === "facile") return easyIntent(view, mine, random);
+  if (level === "moyen") return mediumIntent(view, mine, random);
+  return hardIntent(view, botId, mine, random);
 }

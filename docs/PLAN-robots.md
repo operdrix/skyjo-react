@@ -137,11 +137,11 @@ Le niveau Difficile devient disponible. En plus du jeu du Moyen, il :
 
 ### Critères d'acceptation
 
-- [ ] Le Difficile ne fait jamais de coup refusé par le serveur (test sur de nombreuses positions tirées au hasard).
-- [ ] Test sur position construite : il complète une colonne quand la défausse le permet.
-- [ ] Test sur position construite : il ne retourne pas sa dernière carte cachée quand son total visible dépasse nettement celui d'un adversaire.
-- [ ] Banc d'essai, 200 parties, tirage fixé : Difficile bat Moyen au moins 60 % du temps.
-- [ ] Contrôle manuel dans Chrome : partie contre un Difficile.
+- [x] Le Difficile ne fait jamais de coup refusé par le serveur (test sur de nombreuses positions tirées au hasard).
+- [x] Test sur position construite : il complète une colonne quand la défausse le permet.
+- [x] Test sur position construite : il ne retourne pas sa dernière carte cachée quand son total visible dépasse nettement celui d'un adversaire.
+- [x] Banc d'essai, 200 parties, tirage fixé : Difficile bat Moyen au moins 60 % du temps.
+- [x] Contrôle manuel dans Chrome : partie contre un Difficile.
 
 ## Bloquée par
 

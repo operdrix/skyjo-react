@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Card, GameData, GameStep } from "../../../shared/types.ts";
+import type { BotLevel, Card, GameData, GameStep } from "../../../shared/types.ts";
 import { chooseIntent } from "./bots.ts";
 import { applyIntent } from "./moves.ts";
 import { advanceGame, dealCards } from "./rules.ts";
@@ -149,5 +149,46 @@ describe("simulation", () => {
       moves++;
     }
     expect(gameData.currentStep).toBe("endGame");
+  });
+});
+
+// Taux de victoire de `level` contre `opponent` sur `games` parties en tête-à-tête, tirage fixé
+// (chacun commence la liste des joueurs une partie sur deux)
+function winRate(level: BotLevel, opponent: BotLevel, games: number, seed: number) {
+  const random = seededRandom(seed);
+  let wins = 0;
+  for (let i = 0; i < games; i++) {
+    const a = { id: "a", level };
+    const b = { id: "b", level: opponent };
+    if (simulateGame(i % 2 ? [a, b] : [b, a], random).winner === "a") wins++;
+  }
+  return wins / games;
+}
+
+describe("robot Moyen", () => {
+  it("joue des parties complètes à 2, 3 et 4 robots sans coup refusé", () => {
+    const random = seededRandom(8);
+    for (const count of [2, 3, 4]) {
+      for (let i = 0; i < 10; i++) {
+        const players = Array.from({ length: count }, (_, index) => ({ id: `p${index}`, level: "moyen" as const }));
+        expect(Object.keys(simulateGame(players, random).totals)).toHaveLength(count);
+      }
+    }
+  });
+
+  it("garde une carte piochée basse à la place de sa plus forte carte visible", () => {
+    const gameData = botTurn("decide-deck", hand(values, [0, 11]));
+    gameData.deckCards[0] = card(1, true, true);
+    expect(chooseIntent(hideCards(gameData), "bot", "moyen")).toEqual({ move: "replace", cardIndex: 11 });
+  });
+
+  it("jette une carte piochée forte et retourne une carte cachée", () => {
+    const gameData = botTurn("decide-deck", hand(values, [0, 1]));
+    gameData.deckCards[0] = card(11, true, true);
+    expect(chooseIntent(hideCards(gameData), "bot", "moyen")).toEqual({ move: "discard-drawn" });
+  });
+
+  it("banc d'essai : bat le Facile au moins 70 % du temps sur 200 parties", () => {
+    expect(winRate("moyen", "facile", 200, 2026)).toBeGreaterThanOrEqual(0.7);
   });
 });

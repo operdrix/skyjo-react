@@ -99,7 +99,7 @@ Les robots ne jouent que si au moins un humain de la partie est connecté. Quand
 ### Ce qu'on livre
 
 **Choix du niveau**
-- Le bouton « Ajouter un robot » propose le niveau : Facile, Moyen, Difficile. Difficile est grisé jusqu'à la phase 4.
+- Le bouton « Ajouter un robot » propose le niveau : Facile, Moyen (par défaut), Difficile. Les trois phases sortant dans la même release, Difficile est proposé dès cette phase (il joue comme le Moyen jusqu'à la phase 4).
 - On peut mélanger les niveaux dans une même partie, et le nom de chaque robot indique son niveau.
 
 **Robot Moyen**
@@ -112,10 +112,10 @@ Les robots ne jouent que si au moins un humain de la partie est connecté. Quand
 
 ### Critères d'acceptation
 
-- [ ] Un robot ajouté avec le niveau Moyen apparaît « Robot moyen », et un robot Facile ajouté ensuite apparaît « Robot facile ».
-- [ ] Le Moyen ne fait jamais de coup refusé par le serveur (test sur de nombreuses positions tirées au hasard).
-- [ ] Banc d'essai, 200 parties, tirage fixé : Moyen bat Facile au moins 70 % du temps.
-- [ ] Contrôle manuel dans Chrome : partie contre un Facile et un Moyen.
+- [x] Un robot ajouté avec le niveau Moyen apparaît « Robot moyen », et un robot Facile ajouté ensuite apparaît « Robot facile ».
+- [x] Le Moyen ne fait jamais de coup refusé par le serveur (test sur de nombreuses positions tirées au hasard).
+- [x] Banc d'essai, 200 parties, tirage fixé : Moyen bat Facile au moins 70 % du temps.
+- [x] Contrôle manuel dans Chrome : partie contre un Facile et un Moyen.
 
 ## Bloquée par
 

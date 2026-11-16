@@ -168,12 +168,28 @@ describe("robots en salle d'attente", () => {
     ...extra,
   });
 
-  it("le créateur ajoute un robot Facile", async () => {
+  it("le créateur ajoute un robot Moyen par défaut", async () => {
     await renderRoom(aliceGame());
 
     fireEvent.click(screen.getByRole("button", { name: /ajouter un robot/i }));
 
+    expect(sendMessage).toHaveBeenCalledWith("add-bot", { room: "g1", level: "moyen" });
+  });
+
+  it("le créateur choisit le niveau du robot", async () => {
+    await renderRoom(aliceGame());
+
+    fireEvent.change(screen.getByRole("combobox", { name: /niveau du robot/i }), { target: { value: "facile" } });
+    fireEvent.click(screen.getByRole("button", { name: /ajouter un robot/i }));
+
     expect(sendMessage).toHaveBeenCalledWith("add-bot", { room: "g1", level: "facile" });
+  });
+
+  it("propose les trois niveaux", async () => {
+    await renderRoom(aliceGame());
+
+    const options = screen.getAllByRole("option").map((option) => option.textContent);
+    expect(options).toEqual(["Facile", "Moyen", "Difficile"]);
   });
 
   it("l'ajout est désactivé quand la partie est complète", async () => {

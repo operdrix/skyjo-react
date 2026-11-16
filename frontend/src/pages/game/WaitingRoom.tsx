@@ -10,7 +10,7 @@ import ShareLink from "@/components/waiting-room/ShareLink";
 import { useUser } from "@/hooks/User";
 import { useWebSocket } from "@/hooks/WebSocket";
 import { api } from "@/services/apiService";
-import type { ErrorType, GameType } from "@/types/types";
+import type { BotLevel, ErrorType, GameType } from "@/types/types";
 import notify from "@/utils/notify";
 import { toast } from "@/lib/toast";
 import { useEffect, useRef, useState } from "react";
@@ -163,9 +163,9 @@ const WaitingRoom = () => {
   };
 
   // Robots : le serveur diffuse la partie à jour (arrivée ou départ d'un joueur)
-  const handleAddBot = () => {
+  const handleAddBot = (level: BotLevel) => {
     if (!isCreator || !game) return;
-    sendMessage("add-bot", { room: game.id, level: "facile" });
+    sendMessage("add-bot", { room: game.id, level });
   };
 
   const handleRemoveBot = (botId: string) => {

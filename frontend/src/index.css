@@ -841,9 +841,17 @@
 .game-card-face .playing-card {
   width: 100%;
 }
+/* Carte jouable : fin liseré collé à la carte (il reste dans l'écart entre deux cartes) qui respire
+   doucement, sans changer la taille de la carte pour ne pas faire bouger le plateau */
 .game-card-playable .playing-card {
-  outline: 3px solid var(--color-accent);
-  outline-offset: 2px;
+  outline: 2px solid var(--color-accent);
+  outline-offset: 0;
+  animation: playable-glow 1.6s ease-in-out infinite;
+}
+@keyframes playable-glow {
+  50% {
+    outline-color: color-mix(in oklab, var(--color-accent) 35%, transparent);
+  }
 }
 /* Carte sous la pioche ou la défausse, légèrement décalée */
 .game-card-behind {

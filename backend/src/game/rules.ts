@@ -70,6 +70,7 @@ export function advanceGame(gameData: GameData): GameData {
   }
 
   if (gameData.currentStep === "endTurn") {
+    refillDeck(gameData);
     checkColumn(gameData);
 
     checkLastTurn(gameData);
@@ -128,6 +129,14 @@ export function checkMaximumScore(totals: Scores) {
   }
 
   return { finished, winner, winnerScore };
+}
+
+// Pioche épuisée : la défausse, sauf sa carte du dessus, est mélangée et retournée pour former la pioche
+function refillDeck(gameData: GameData) {
+  if (gameData.deckCards.length > 0 || gameData.discardPile.length < 2) return;
+  const top = gameData.discardPile.pop()!;
+  gameData.deckCards = shuffle(gameData.discardPile).map((card) => ({ ...card, revealed: false, onHand: false }));
+  gameData.discardPile = [top];
 }
 
 function revealAllCards(gameData: GameData, playerId: string) {

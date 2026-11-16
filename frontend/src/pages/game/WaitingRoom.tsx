@@ -162,6 +162,17 @@ const WaitingRoom = () => {
     sendMessage("update-game-params", { room: game.id });
   };
 
+  // Robots : le serveur diffuse la partie à jour (arrivée ou départ d'un joueur)
+  const handleAddBot = () => {
+    if (!isCreator || !game) return;
+    sendMessage("add-bot", { room: game.id, level: "facile" });
+  };
+
+  const handleRemoveBot = (botId: string) => {
+    if (!isCreator || !game) return;
+    sendMessage("remove-bot", { room: game.id, botId });
+  };
+
   const handleStartGame = async () => {
     if (!isCreator || !game) return;
     setCreationLoading(true);
@@ -207,6 +218,7 @@ const WaitingRoom = () => {
               game={game}
               starting={creationLoading}
               onChangeMaxPlayers={handleChangeMaxPlayers}
+              onAddBot={handleAddBot}
               onStart={handleStartGame}
             />
           )}
@@ -226,7 +238,7 @@ const WaitingRoom = () => {
                 : "En attente de joueurs..."}
             </p>
           </div>
-          <PlayerList game={game} />
+          <PlayerList game={game} onRemoveBot={isCreator ? handleRemoveBot : undefined} />
         </div>
         <div className="col-span-3">
           <Rules />

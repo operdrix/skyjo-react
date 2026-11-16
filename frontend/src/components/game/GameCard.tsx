@@ -65,7 +65,7 @@ function FlipCard({ card, onClick, disabled }: { card: ShownCard; onClick?: () =
 
   const isFlipped = card.revealed;
   const label = card.revealed ? `carte ${card.value}` : "carte cachée";
-  const className = `game-card ${disabled ? "" : "game-card-playable cursor-pointer animate-small-scale"} ${card.onHand ? "rotate-12" : ""}`;
+  const className = `game-card ${disabled ? "" : "game-card-playable cursor-pointer"} ${card.onHand ? "rotate-12" : ""}`;
   const faces = (
     <span
       className={`game-card-inner ${shouldAnimate ? "game-card-animated" : ""} ${isFlipped ? "game-card-flipped" : ""}`}

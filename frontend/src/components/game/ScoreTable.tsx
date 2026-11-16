@@ -51,7 +51,7 @@ export default function ScoreTable({
               className={`border-t ${isMe ? "bg-base-200 font-bold" : ""}`}
             >
               <td className="py-1 sm:py-1.5 pr-1 font-display font-bold">{player.rank}</td>
-              <td className="max-w-0 truncate py-1 sm:py-1.5">
+              <td className="max-w-0 min-w-20 truncate py-1 sm:py-1.5">
                 {playAgain && (
                   <span
                     role="img"

@@ -81,10 +81,10 @@ Les robots ne jouent que si au moins un humain de la partie est connecté. Quand
 
 ### Critères d'acceptation
 
-- [ ] Test temps réel : le seul humain se déconnecte pendant le tour d'un robot. Après le délai de grâce, l'état de la partie ne bouge plus.
-- [ ] Au retour de l'humain, le robot dont c'était le tour joue son coup.
-- [ ] Dans une partie à deux humains et un robot, le robot continue de jouer tant qu'un des deux humains est connecté.
-- [ ] Aucun geste programmé ne reste en attente une fois la partie supprimée ou terminée.
+- [x] Test temps réel : le seul humain se déconnecte pendant le tour d'un robot. Après le délai de grâce, l'état de la partie ne bouge plus.
+- [x] Au retour de l'humain, le robot dont c'était le tour joue son coup.
+- [x] Dans une partie à deux humains et un robot, le robot continue de jouer tant qu'un des deux humains est connecté.
+- [x] Aucun geste programmé ne reste en attente une fois la partie supprimée ou terminée.
 
 ## Bloquée par
 

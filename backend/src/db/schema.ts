@@ -39,6 +39,9 @@ export const users = mysqlTable("users", {
   theme: varchar({ length: 16 }).notNull().default("tapis"),
   // Invité (jouer sans compte, plugin anonymous de Better Auth) : pas d'historique, oublié après 7 jours
   isAnonymous: boolean().notNull().default(false),
+  // Robot : joueur géré par le serveur (sans session ni moyen de connexion), avec son niveau
+  isBot: boolean().notNull().default(false),
+  botLevel: mysqlEnum(["facile", "moyen", "difficile"]),
   ...timestamps,
 });
 

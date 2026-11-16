@@ -62,6 +62,8 @@ describe("forme d'une partie renvoyée par l'API", () => {
       id: bob.id,
       username: "bob",
       isAnonymous: false,
+      isBot: false,
+      botLevel: null,
       game_players: expect.objectContaining({
         gameId,
         userId: bob.id,
@@ -113,7 +115,13 @@ describe("liste des parties", () => {
     const game = response.json<GameType[]>().find((game) => game.id === gameId)!;
 
     expect(response.statusCode).toBe(200);
-    expect(game.creatorPlayer).toEqual({ id: bob.id, username: "bob", isAnonymous: false });
+    expect(game.creatorPlayer).toEqual({
+      id: bob.id,
+      username: "bob",
+      isAnonymous: false,
+      isBot: false,
+      botLevel: null,
+    });
     expect(game.players.map((player) => player.id)).toEqual([bob.id]);
     expect(game).not.toHaveProperty("gameData");
   });

@@ -1,17 +1,20 @@
 import type { GameType } from "@/types/types";
 
-// Réglages du créateur : nombre de joueurs maximum et lancement de la partie
+// Réglages du créateur : nombre de joueurs maximum, robots et lancement de la partie
 export default function RoomSettings({
   game,
   starting,
   onChangeMaxPlayers,
+  onAddBot,
   onStart,
 }: {
   game: GameType;
   starting: boolean;
   onChangeMaxPlayers: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onAddBot: () => void;
   onStart: () => void;
 }) {
+  const full = game.players.length >= game.maxPlayers;
   return (
     <>
       <div className="divider"></div>
@@ -35,6 +38,12 @@ export default function RoomSettings({
               <span>4</span>
             </div>
           </div>
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <span>Jouer contre l'ordinateur</span>
+          <button type="button" className="btn btn-outline btn-sm" onClick={onAddBot} disabled={full}>
+            🤖 Ajouter un robot
+          </button>
         </div>
       </div>
       <div className="flex flex-1 items-end justify-center">

@@ -43,11 +43,17 @@ export type GameState = "pending" | "playing" | "finished";
 
 export type PlayerStatus = "connected" | "disconnected";
 
+// Niveau d'un robot (joueur géré par le serveur)
+export type BotLevel = "facile" | "moyen" | "difficile";
+
 export type PublicUser = {
   id: string;
   username: string;
   // Invité (joue sans compte)
   isAnonymous: boolean;
+  // Robot : joué par le serveur, avec son niveau (null pour un humain)
+  isBot: boolean;
+  botLevel: BotLevel | null;
 };
 
 // Joueur d'une partie tel que renvoyé par l'API
@@ -106,6 +112,9 @@ export type ClientPayloads = {
   "restart-game": RoomPayload;
   "player-play-again": RoomPayload;
   "play-move": RoomPayload & Intent;
+  // Le créateur ajoute ou retire un robot dans la salle d'attente
+  "add-bot": RoomPayload & { level: BotLevel };
+  "remove-bot": RoomPayload & { botId: string };
   // Suivre la liste des parties publiques (jusqu'à l'entrée dans une partie)
   "watch-public-games": EmptyPayload;
 };

@@ -36,6 +36,13 @@
       "when": 1791235358216,
       "tag": "0004_chilly_mauler",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1794868318921,
+      "tag": "0005_brief_kitty_pryde",
+      "breakpoints": true
     }
   ]
 }

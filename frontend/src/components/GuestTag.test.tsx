@@ -50,3 +50,42 @@ describe("mention « invité » à côté du pseudo d'un invité", () => {
     expectGuestTagOnLynxOnly();
   });
 });
+
+describe("mention « robot » à côté du nom d'un robot", () => {
+  const withBot = [
+    players[0],
+    {
+      id: "robot-moyen-1",
+      username: "Robot moyen",
+      isAnonymous: false,
+      isBot: true,
+      botLevel: "moyen",
+      game_players: { score: 30, scoreByRound: [30] },
+    },
+  ];
+  const botGame = { ...game, players: withBot } as unknown as GameType;
+  const expectBotTag = () => {
+    expect(screen.getAllByText("robot")).toHaveLength(1);
+    expect(screen.queryByText("invité")).toBeNull();
+    expect(screen.getByText("robot").parentElement?.closest("li, tr, span, p")?.textContent).toContain("Robot moyen");
+  };
+
+  it("en salle d'attente", () => {
+    render(<PlayerList game={botGame} />);
+    expectBotTag();
+  });
+
+  it("dans les résultats", () => {
+    render(<ScoreTable players={withBot} userId="ALICE" />);
+    expectBotTag();
+  });
+
+  it("dans l'historique", () => {
+    render(
+      <MemoryRouter>
+        <GameHistoryCard game={botGame} userId="ALICE" onDelete={vi.fn()} />
+      </MemoryRouter>,
+    );
+    expectBotTag();
+  });
+});

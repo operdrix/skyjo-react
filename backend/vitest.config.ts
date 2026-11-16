@@ -27,6 +27,8 @@ export default defineConfig({
             SMTP_PORT: "1025",
             // Délai de grâce avant de retirer un joueur déconnecté (10 s en vrai)
             PRESENCE_GRACE_MS: "300",
+            // Pause entre deux gestes d'un robot (environ 1 s en vrai)
+            BOT_DELAY_MS: "0",
           },
         },
       },

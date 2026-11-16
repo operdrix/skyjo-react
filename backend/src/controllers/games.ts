@@ -453,11 +453,16 @@ function botToPlay(gameData: GameData, game: StoredGame) {
   return bots.find((bot) => bot.id === gameData.currentPlayer);
 }
 
+// Au moins un humain de la partie est là (un joueur parti n'est marqué déconnecté qu'après le délai de grâce)
+const hasHumanPresent = (game: StoredGame) =>
+  game.players.some((player) => !player.isBot && player.game_players.status === "connected");
+
 // Joue un geste du robot qui doit jouer, sous verrou, à partir de la vue masquée de la partie
-// (celle de tous les joueurs). Renvoie la partie à jour, ou null si aucun robot n'a à jouer.
+// (celle de tous les joueurs). Renvoie la partie à jour, ou null si aucun robot n'a à jouer :
+// sans humain présent, les robots attendent son retour.
 export async function playBotMove(gameId: string): Promise<GameType | null> {
   return applyMove(gameId, (current, game) => {
-    if (game.state !== "playing") return null;
+    if (game.state !== "playing" || !hasHumanPresent(game)) return null;
     const bot = botToPlay(current, game);
     if (!bot) return null;
     const intent = chooseIntent(hideCards(current), bot.id, bot.botLevel ?? "facile");

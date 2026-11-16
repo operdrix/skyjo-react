@@ -176,6 +176,8 @@ export async function websockets(app: FastifyInstance) {
       socket.join(gameId);
       socket.data.room = gameId;
       io.to(gameId).emit("player-joined-game", game);
+      // Retour d'un humain : les robots reprennent s'ils attendaient
+      if (game.state === "playing") scheduleBots(io, gameId);
     });
 
     // L'émetteur affiche la liste des parties publiques

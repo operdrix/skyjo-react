@@ -45,15 +45,19 @@ const RoundResults = () => {
   const handleRequestNewGame = () => sendMessage("player-play-again", { room: game.id });
 
   return (
-    <section aria-labelledby={titleId} className="panel w-full max-w-md p-3 sm:p-4 md:w-[26rem]">
+    <section
+      aria-labelledby={titleId}
+      className={`panel w-full p-3 sm:p-4 ${finished ? "max-w-xl md:w-[34rem]" : "max-w-md md:w-[26rem]"}`}
+    >
       <h2 id={titleId} className="text-center text-lg font-bold sm:text-xl">
         {finished ? `🎉 Fin de la partie en ${game.roundNumber} manches` : `Fin de la manche ${game.roundNumber}`}
       </h2>
-      <div className="my-1 sm:my-2">
+      {/* En fin de partie, le détail de chaque manche ; défilement horizontal si les manches sont nombreuses */}
+      <div className="my-1 overflow-x-auto sm:my-2">
         <ScoreTable
           players={game.players}
           userId={userId}
-          variant="round"
+          variant={finished ? "full" : "round"}
           playAgain={finished ? playersPlayAgain : undefined}
         />
       </div>

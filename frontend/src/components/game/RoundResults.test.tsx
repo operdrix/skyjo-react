@@ -1,5 +1,5 @@
 import RoundResults from "@/components/game/RoundResults";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -85,6 +85,23 @@ describe("résultats de manche au centre de la table", () => {
     expect(screen.getByRole("region", { name: /fin de la partie/i })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /ok pour rejouer/i }));
     expect(sendMessage).toHaveBeenCalledWith("player-play-again", { room: "g1" });
+  });
+
+  it("détaille les scores de chaque manche en fin de partie", () => {
+    state.game = makeGame("finished");
+    renderResults();
+    expect(screen.getByRole("columnheader", { name: "M1" })).toBeTruthy();
+    expect(screen.getByRole("columnheader", { name: "M2" })).toBeTruthy();
+    const alice = screen.getByRole("row", { name: /alice/i });
+    expect(within(alice).getByRole("cell", { name: "4" })).toBeTruthy();
+    expect(within(alice).getByRole("cell", { name: "6" })).toBeTruthy();
+  });
+
+  it("ne résume que la dernière manche en cours de partie", () => {
+    state.game = makeGame("playing");
+    renderResults();
+    expect(screen.queryByRole("columnheader", { name: "M1" })).toBeNull();
+    expect(screen.getByRole("columnheader", { name: "Manche" })).toBeTruthy();
   });
 
   it("réactive le bouton quand le lancement est refusé", async () => {

@@ -49,8 +49,8 @@ async function joinRoom(player: TestPlayer, room: string) {
 const getGame = async (gameId: string) =>
   (await app.inject({ method: "GET", url: `/api/game/${gameId}` })).json<GameType>();
 
-// Partie lancée avec un robot (et Bob si demandé) ; une fois les robots révélés, c'est au tour du robot
-async function gameAtBotTurn(withBob = false) {
+// Partie lancée avec un robot (et Bob si demandé), une fois les cartes du robot révélées
+async function startedWithBot(withBob = false) {
   const created = await app.inject({ method: "POST", url: "/api/game", cookies: alice.cookies, payload: {} });
   const gameId = created.json<{ gameId: string }>().gameId;
   if (withBob) {
@@ -68,22 +68,27 @@ async function gameAtBotTurn(withBob = false) {
   ) {
     await wait(10);
   }
+  return { gameId, botId, aliceSocket, bobSocket };
+}
 
+// Met la partie au tour du robot (étape « piocher »). À faire une fois les gestes déjà programmés terminés
+// (après le délai de grâce) : sinon l'un d'eux pourrait jouer ce tour avant les vérifications.
+async function setBotTurn(gameId: string, botId: string) {
   const gameData: GameData = await storedGameData(gameId);
   for (const cards of Object.values(gameData.playersCards)) {
     cards.forEach((card, index) => (card.revealed = card.revealed || index < 2));
   }
   Object.assign(gameData, { currentStep: "draw", currentPlayer: botId });
   await db.update(games).set({ gameData }).where(eq(games.id, gameId));
-  return { gameId, botId, aliceSocket, bobSocket };
 }
 
 describe("robots et présence des humains", () => {
   it("le robot ne joue plus quand le seul humain est parti, et reprend à son retour", async () => {
-    const { gameId, aliceSocket } = await gameAtBotTurn();
+    const { gameId, botId, aliceSocket } = await startedWithBot();
 
     aliceSocket.close();
     await wait(AFTER_GRACE_MS);
+    await setBotTurn(gameId, botId);
 
     expect(await playBotMove(gameId)).toBeNull();
     expect((await storedGameData(gameId)).currentStep).toBe("draw");
@@ -98,16 +103,19 @@ describe("robots et présence des humains", () => {
   });
 
   it("le robot continue tant qu'un des humains est connecté", async () => {
-    const { gameId, bobSocket } = await gameAtBotTurn(true);
+    const { gameId, botId, bobSocket } = await startedWithBot(true);
 
     bobSocket!.close();
     await wait(AFTER_GRACE_MS);
+    await setBotTurn(gameId, botId);
 
     expect(await playBotMove(gameId)).not.toBeNull();
   });
 
   it("un geste programmé sur une partie supprimée ne casse rien", async () => {
-    const { gameId } = await gameAtBotTurn();
+    const { gameId, botId } = await startedWithBot();
+    await wait(AFTER_GRACE_MS);
+    await setBotTurn(gameId, botId);
     await app.inject({ method: "DELETE", url: `/api/game/${gameId}`, cookies: alice.cookies });
 
     expect(await playBotMove(gameId)).toBeNull();

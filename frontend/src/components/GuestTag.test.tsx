@@ -1,4 +1,5 @@
 import GameHistoryCard from "@/components/dashboard/GameHistoryCard";
+import OpponentCard from "@/components/dashboard/OpponentCard";
 import ScoreTable from "@/components/game/ScoreTable";
 import PlayerList from "@/components/waiting-room/PlayerList";
 import type { GameType } from "@/types/types";
@@ -87,5 +88,19 @@ describe("mention « robot » à côté du nom d'un robot", () => {
       </MemoryRouter>,
     );
     expectBotTag();
+  });
+
+  it("dans le bilan par adversaire", () => {
+    const opponent = {
+      id: "robot-moyen",
+      username: "Robot moyen",
+      isBot: true,
+      games: 2,
+      victories: 1,
+      defeats: 1,
+      rounds: 8,
+    };
+    render(<OpponentCard opponent={opponent} selected={false} onSelect={vi.fn()} />);
+    expect(screen.getByRole("heading", { name: /Robot moyen/ }).textContent).toContain("robot");
   });
 });

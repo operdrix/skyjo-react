@@ -159,10 +159,10 @@ Les parties avec robots apparaissent dans l'historique, les robots avec la menti
 
 ### Critères d'acceptation
 
-- [ ] Une partie terminée contre « Robot moyen 2 » apparaît dans l'historique avec la mention « robot ».
-- [ ] Le bilan par adversaire montre une ligne « Robot moyen » qui cumule les parties contre « Robot moyen » et « Robot moyen 2 ».
-- [ ] Filtrer l'historique sur « Robot moyen » montre les parties contre tous les robots de ce niveau.
-- [ ] Les victoires et le taux de victoire comptent les parties gagnées ou perdues contre des robots.
+- [x] Une partie terminée contre « Robot moyen 2 » apparaît dans l'historique avec la mention « robot ».
+- [x] Le bilan par adversaire montre une ligne « Robot moyen » qui cumule les parties contre « Robot moyen » et « Robot moyen 2 ».
+- [x] Filtrer l'historique sur « Robot moyen » montre les parties contre tous les robots de ce niveau.
+- [x] Les victoires et le taux de victoire comptent les parties gagnées ou perdues contre des robots.
 
 ## Bloquée par
 

@@ -6,7 +6,7 @@ import OpponentCard from "@/components/dashboard/OpponentCard";
 import StatsBar from "@/components/dashboard/StatsBar";
 import ErrorMessage from "@/components/game/messages/ErrorMessage";
 import PageSkeleton from "@/components/PageSkeleton";
-import { opponentStats, playerStats } from "@/game/stats";
+import { opponentStats, playerStats, playsAgainst } from "@/game/stats";
 import { goToLogin, goToRegister } from "@/lib/redirect";
 import { toast } from "@/lib/toast";
 import { useUser } from "@/hooks/User";
@@ -123,7 +123,7 @@ const Dashboard = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 my-4">
             {games
-              .filter((game) => !opponentFilter || game.players?.find((player) => player.id === opponentFilter))
+              .filter((game) => !opponentFilter || playsAgainst(game, opponentFilter))
               .map((game) => (
                 <GameHistoryCard key={game.id} game={game} userId={userId} onDelete={handleDeleteGame} />
               ))}

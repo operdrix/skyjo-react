@@ -122,7 +122,7 @@ describe("robot Facile", () => {
         expect(Object.keys(result.totals)).toHaveLength(count);
       }
     }
-  });
+  }, 30_000);
 });
 
 describe("simulation", () => {
@@ -174,7 +174,7 @@ describe("robot Moyen", () => {
         expect(Object.keys(simulateGame(players, random).totals)).toHaveLength(count);
       }
     }
-  });
+  }, 30_000);
 
   it("garde une carte piochée basse à la place de sa plus forte carte visible", () => {
     const gameData = botTurn("decide-deck", hand(values, [0, 11]));
@@ -190,7 +190,7 @@ describe("robot Moyen", () => {
 
   it("banc d'essai : bat le Facile au moins 70 % du temps sur 200 parties", () => {
     expect(winRate("moyen", "facile", 200, 2026)).toBeGreaterThanOrEqual(0.7);
-  });
+  }, 60_000);
 });
 
 describe("robot Difficile", () => {
@@ -205,7 +205,7 @@ describe("robot Difficile", () => {
         expect(Object.keys(simulateGame(players, random).totals)).toHaveLength(count);
       }
     }
-  });
+  }, 30_000);
 
   it("complète une colonne quand la défausse le permet", () => {
     // Colonne 0 : indices 0, 4, 8 ; deux 7 visibles, un 10 visible

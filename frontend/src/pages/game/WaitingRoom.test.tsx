@@ -142,3 +142,79 @@ describe("salle d'attente", () => {
     await waitFor(() => expect(button.disabled).toBe(false), { timeout: 1000 });
   });
 });
+
+describe("robots en salle d'attente", () => {
+  const robot = { id: "robot-facile-1", username: "Robot facile", isBot: true, botLevel: "facile" };
+
+  const renderRoom = async (game: object) => {
+    sendMessage.mockResolvedValue({ ok: true });
+    api.get.mockResolvedValue({ data: game });
+    render(
+      <MemoryRouter initialEntries={["/join/g1"]}>
+        <Routes>
+          <Route path="/join/:gameId" element={<WaitingRoom />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    await screen.findAllByText("alice");
+  };
+
+  const aliceGame = (extra: object = {}) => ({
+    ...fullGame,
+    creator: "ALICE",
+    creatorPlayer: { id: "ALICE", username: "alice" },
+    players: [{ id: "ALICE", username: "alice" }],
+    maxPlayers: 4,
+    ...extra,
+  });
+
+  it("le créateur ajoute un robot Moyen par défaut", async () => {
+    await renderRoom(aliceGame());
+
+    fireEvent.click(screen.getByRole("button", { name: /ajouter un robot/i }));
+
+    expect(sendMessage).toHaveBeenCalledWith("add-bot", { room: "g1", level: "moyen" });
+  });
+
+  it("le créateur choisit le niveau du robot", async () => {
+    await renderRoom(aliceGame());
+
+    fireEvent.change(screen.getByRole("combobox", { name: /niveau du robot/i }), { target: { value: "facile" } });
+    fireEvent.click(screen.getByRole("button", { name: /ajouter un robot/i }));
+
+    expect(sendMessage).toHaveBeenCalledWith("add-bot", { room: "g1", level: "facile" });
+  });
+
+  it("propose les trois niveaux", async () => {
+    await renderRoom(aliceGame());
+
+    const options = screen.getAllByRole("option").map((option) => option.textContent);
+    expect(options).toEqual(["Facile", "Moyen", "Difficile"]);
+  });
+
+  it("l'ajout est désactivé quand la partie est complète", async () => {
+    await renderRoom(aliceGame({ maxPlayers: 2, players: [{ id: "ALICE", username: "alice" }, robot] }));
+
+    expect((screen.getByRole("button", { name: /ajouter un robot/i }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("le créateur retire un robot", async () => {
+    await renderRoom(aliceGame({ players: [{ id: "ALICE", username: "alice" }, robot] }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Retirer Robot facile" }));
+
+    expect(sendMessage).toHaveBeenCalledWith("remove-bot", { room: "g1", botId: "robot-facile-1" });
+  });
+
+  it("les autres joueurs voient le robot sans pouvoir l'ajouter ni le retirer", async () => {
+    await renderRoom({
+      ...fullGame,
+      maxPlayers: 4,
+      players: [...fullGame.players, { id: "ALICE", username: "alice" }, robot],
+    });
+
+    expect(screen.getByText("Robot facile")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /ajouter un robot/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /retirer/i })).toBeNull();
+  });
+});

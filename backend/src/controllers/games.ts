@@ -1,7 +1,8 @@
 import { and, asc, eq, getTableColumns, inArray, sql, type SQL } from "drizzle-orm";
-import type { ErrorType, GameData, GameType, Intent, NextGame, StoredGame } from "../../../shared/types.ts";
+import type { BotLevel, ErrorType, GameData, GameType, Intent, NextGame, StoredGame } from "../../../shared/types.ts";
 import { db, type Db, type Tx } from "../db/index.ts";
 import { gamePlayers, games, users } from "../db/schema.ts";
+import { chooseIntent } from "../game/bots.ts";
 import { applyIntent } from "../game/moves.ts";
 import * as rules from "../game/rules.ts";
 import { hideCards } from "../game/view.ts";
@@ -27,6 +28,8 @@ const PUBLIC_USER = {
   id: users.id,
   username: sql<string>`coalesce(${users.username}, ${users.name})`,
   isAnonymous: users.isAnonymous,
+  isBot: users.isBot,
+  botLevel: users.botLevel,
 };
 
 // Partie avec ses joueurs et son créateur, au format attendu par le front.
@@ -295,7 +298,9 @@ async function applyMove(gameId: string, move: (current: GameData, game: StoredG
       const totals = await saveScores(tx, game, gameData);
       const { finished, winner, winnerScore } = rules.checkMaximumScore(totals);
       if (finished) {
-        Object.assign(update, { state: "finished", winner, winnerScore });
+        // Les robots sont toujours partants pour rejouer
+        const bots = game.players.filter((player) => player.isBot).map((player) => player.id);
+        Object.assign(update, { state: "finished", winner, winnerScore, playersPlayAgain: bots });
       }
     }
 
@@ -368,5 +373,99 @@ export async function restartGame(gameId: string): Promise<NextGame | ErrorType>
       .where(eq(games.id, created.gameId));
     await tx.update(games).set({ nextGameId: created.gameId }).where(eq(games.id, game.id));
     return { gameId: created.gameId, players };
+  });
+}
+
+// ─── Robots ──────────────────────────────────────────────────────────────────
+
+// Robots disponibles par niveau : de quoi remplir une table de 8 avec un seul humain
+const BOTS_PER_LEVEL = 7;
+
+const botId = (level: BotLevel, rank: number) => `robot-${level}-${rank}`;
+
+// Crée le compte du robot au premier besoin (sans pseudo ni moyen de connexion : il ne peut pas se connecter)
+async function ensureBot(tx: Tx, level: BotLevel, rank: number) {
+  const id = botId(level, rank);
+  await tx
+    .insert(users)
+    .values({
+      id,
+      name: rank === 1 ? `Robot ${level}` : `Robot ${level} ${rank}`,
+      email: `${id}@robots.invalid`,
+      isBot: true,
+      botLevel: level,
+    })
+    .onDuplicateKeyUpdate({ set: { isBot: true } });
+  return id;
+}
+
+// Le créateur ajoute un robot du niveau voulu, dans la salle d'attente et s'il reste une place
+export async function addBot(gameId: string, level: BotLevel): Promise<GameType | ErrorType> {
+  return db.transaction(async (tx) => {
+    const game = await lockGame(tx, gameId);
+    if (!game) {
+      return { error: "La partie n'existe pas.", code: 404 };
+    }
+    if (game.state !== "pending") {
+      return { error: "Les robots s'ajoutent dans la salle d'attente.", code: 400 };
+    }
+    if (game.players.length >= game.maxPlayers) {
+      return { error: `Cette partie est déjà complète avec ${game.maxPlayers} joueurs !`, code: 400 };
+    }
+    const taken = new Set(game.players.map((player) => player.id));
+    const rank = Array.from({ length: BOTS_PER_LEVEL }, (_, index) => index + 1).find(
+      (candidate) => !taken.has(botId(level, candidate)),
+    );
+    if (!rank) {
+      return { error: "Plus de robot disponible pour ce niveau.", code: 400 };
+    }
+    const userId = await ensureBot(tx, level, rank);
+    await tx.insert(gamePlayers).values({ gameId, userId });
+    return toPublic((await loadGame(gameId, tx))!);
+  });
+}
+
+// Le créateur retire un robot de la salle d'attente
+export async function removeBot(gameId: string, botUserId: string): Promise<GameType | ErrorType> {
+  return db.transaction(async (tx) => {
+    const game = await lockGame(tx, gameId);
+    if (!game) {
+      return { error: "La partie n'existe pas.", code: 404 };
+    }
+    if (game.state !== "pending") {
+      return { error: "Les robots se retirent dans la salle d'attente.", code: 400 };
+    }
+    if (!game.players.some((player) => player.id === botUserId && player.isBot)) {
+      return { error: "Ce joueur n'est pas un robot de la partie.", code: 400 };
+    }
+    await tx.delete(gamePlayers).where(and(eq(gamePlayers.gameId, gameId), eq(gamePlayers.userId, botUserId)));
+    return toPublic((await loadGame(gameId, tx))!);
+  });
+}
+
+// Robot qui doit jouer : pendant la révélation initiale, le premier qui n'a pas révélé ses 2 cartes ;
+// sinon celui dont c'est le tour
+function botToPlay(gameData: GameData, game: StoredGame) {
+  const bots = game.players.filter((player) => player.isBot);
+  if (gameData.currentStep === "initialReveal") {
+    return bots.find((bot) => gameData.playersCards[bot.id]?.filter((card) => card.revealed).length < 2);
+  }
+  return bots.find((bot) => bot.id === gameData.currentPlayer);
+}
+
+// Au moins un humain de la partie est là (un joueur parti n'est marqué déconnecté qu'après le délai de grâce)
+const hasHumanPresent = (game: StoredGame) =>
+  game.players.some((player) => !player.isBot && player.game_players.status === "connected");
+
+// Joue un geste du robot qui doit jouer, sous verrou, à partir de la vue masquée de la partie
+// (celle de tous les joueurs). Renvoie la partie à jour, ou null si aucun robot n'a à jouer :
+// sans humain présent, les robots attendent son retour.
+export async function playBotMove(gameId: string): Promise<GameType | null> {
+  return applyMove(gameId, (current, game) => {
+    if (game.state !== "playing" || !hasHumanPresent(game)) return null;
+    const bot = botToPlay(current, game);
+    if (!bot) return null;
+    const intent = chooseIntent(hideCards(current), bot.id, bot.botLevel ?? "facile");
+    return intent && applyIntent(current, bot.id, intent);
   });
 }

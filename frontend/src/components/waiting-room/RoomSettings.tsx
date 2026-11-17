@@ -1,17 +1,28 @@
-import type { GameType } from "@/types/types";
+import type { BotLevel, GameType } from "@/types/types";
+import { useState } from "react";
 
-// Réglages du créateur : nombre de joueurs maximum et lancement de la partie
+const BOT_LEVELS: { value: BotLevel; label: string }[] = [
+  { value: "facile", label: "Facile" },
+  { value: "moyen", label: "Moyen" },
+  { value: "difficile", label: "Difficile" },
+];
+
+// Réglages du créateur : nombre de joueurs maximum, robots et lancement de la partie
 export default function RoomSettings({
   game,
   starting,
   onChangeMaxPlayers,
+  onAddBot,
   onStart,
 }: {
   game: GameType;
   starting: boolean;
   onChangeMaxPlayers: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onAddBot: (level: BotLevel) => void;
   onStart: () => void;
 }) {
+  const full = game.players.length >= game.maxPlayers;
+  const [botLevel, setBotLevel] = useState<BotLevel>("moyen");
   return (
     <>
       <div className="divider"></div>
@@ -34,6 +45,26 @@ export default function RoomSettings({
               {game.players.length <= 3 && <span>3</span>}
               <span>4</span>
             </div>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span>Jouer contre l'ordinateur</span>
+          <div className="flex items-center gap-2">
+            <select
+              aria-label="Niveau du robot"
+              className="select select-sm w-auto"
+              value={botLevel}
+              onChange={(event) => setBotLevel(event.target.value as BotLevel)}
+            >
+              {BOT_LEVELS.map(({ value, label }) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            <button type="button" className="btn btn-outline btn-sm" onClick={() => onAddBot(botLevel)} disabled={full}>
+              🤖 Ajouter un robot
+            </button>
           </div>
         </div>
       </div>

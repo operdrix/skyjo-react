@@ -5,6 +5,7 @@ type Player = {
   id: string;
   username: string;
   isAnonymous?: boolean;
+  isBot?: boolean;
   game_players: { score: number; scoreByRound: number[] };
 };
 

@@ -3,6 +3,8 @@ import type { GameType } from "@/types/types";
 export type OpponentStats = {
   id: string;
   username: string;
+  // Robots d'un même niveau regroupés (« Robot moyen » et « Robot moyen 2 »)
+  isBot?: boolean;
   games: number;
   victories: number;
   defeats: number;
@@ -24,6 +26,19 @@ export function playerStats(games: GameType[], userId: string) {
   };
 }
 
+type Opponent = { id: string; username: string; isBot?: boolean; botLevel?: string | null };
+
+// Adversaire tel que compté dans le bilan : un humain par son identifiant, les robots par niveau
+function opponentOf(player: Opponent) {
+  if (!player.isBot || !player.botLevel) return { id: player.id, username: player.username };
+  return { id: `robot-${player.botLevel}`, username: `Robot ${player.botLevel}`, isBot: true };
+}
+
+// La partie oppose-t-elle le joueur à cet adversaire (identifiant du bilan) ?
+export function playsAgainst(game: GameType, opponentId: string): boolean {
+  return (game.players ?? []).some((player) => opponentOf(player).id === opponentId);
+}
+
 // Bilan de chaque adversaire sur les parties terminées (victoires et défaites vues de l'adversaire),
 // du plus souvent rencontré au moins souvent
 export function opponentStats(games: GameType[], userId: string): OpponentStats[] {
@@ -31,24 +46,29 @@ export function opponentStats(games: GameType[], userId: string): OpponentStats[
 
   for (const game of games) {
     if (!game.winner) continue;
-    for (const player of game.players ?? []) {
-      if (player.id === userId) continue;
-      const stats = opponents.get(player.id) ?? {
-        id: player.id,
-        username: player.username,
+    const players = game.players ?? [];
+    const winner = players.find((player) => player.id === game.winner);
+    const winnerId = winner ? opponentOf(winner).id : game.winner;
+    // Un adversaire par partie : deux robots du même niveau ne comptent qu'une fois
+    const met = new Map(
+      players.filter((player) => player.id !== userId).map((player) => [opponentOf(player).id, opponentOf(player)]),
+    );
+    for (const opponent of met.values()) {
+      const stats = opponents.get(opponent.id) ?? {
+        ...opponent,
         games: 0,
         victories: 0,
         defeats: 0,
         rounds: 0,
       };
       stats.games++;
-      if (game.winner === player.id) {
+      if (winnerId === opponent.id) {
         stats.victories++;
       } else {
         stats.defeats++;
       }
       stats.rounds += game.roundNumber;
-      opponents.set(player.id, stats);
+      opponents.set(opponent.id, stats);
     }
   }
   return [...opponents.values()].sort((a, b) => b.games - a.games);

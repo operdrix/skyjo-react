@@ -1,15 +1,26 @@
 import { fromNodeHeaders } from "better-auth/node";
 import type { FastifyInstance } from "fastify";
 import type { Socket } from "socket.io";
-import type { Ack, ClientEvent, ClientPayloads, GameType, MoveType, NextGame } from "../../../shared/types.ts";
+import type {
+  Ack,
+  BotLevel,
+  ClientEvent,
+  ClientPayloads,
+  GameType,
+  MoveType,
+  NextGame,
+} from "../../../shared/types.ts";
 import {
+  addBot,
   addPlayerPlayAgain,
   getGame,
   playMove as savePlayMove,
+  removeBot,
   restartGame as createNextGame,
   updateGame,
 } from "../controllers/games.ts";
 import { logger } from "../utils/logger.ts";
+import { scheduleBots } from "./bots.ts";
 import type { GameServer, GameSocket } from "./types.ts";
 
 const INVALID_DATA = "Données invalides";
@@ -38,6 +49,8 @@ const MOVES: MoveType[] = ["draw", "take-discard", "discard-drawn", "replace", "
 const text: Check = (value) => typeof value === "string" && value !== "";
 const move: Check = (value) => MOVES.includes(value as MoveType);
 const optionalIndex: Check = (value) => value === undefined || Number.isInteger(value);
+const BOT_LEVELS: BotLevel[] = ["facile", "moyen", "difficile"];
+const botLevel: Check = (value) => BOT_LEVELS.includes(value as BotLevel);
 
 const CLIENT_FIELDS: { [E in ClientEvent]: Record<keyof ClientPayloads[E], Check> } = {
   "player-joined-game": { room: text },
@@ -46,6 +59,8 @@ const CLIENT_FIELDS: { [E in ClientEvent]: Record<keyof ClientPayloads[E], Check
   "restart-game": { room: text },
   "player-play-again": { room: text },
   "play-move": { room: text, move, cardIndex: optionalIndex },
+  "add-bot": { room: text, level: botLevel },
+  "remove-bot": { room: text, botId: text },
   "watch-public-games": {},
 };
 
@@ -161,6 +176,8 @@ export async function websockets(app: FastifyInstance) {
       socket.join(gameId);
       socket.data.room = gameId;
       io.to(gameId).emit("player-joined-game", game);
+      // Retour d'un humain : les robots reprennent s'ils attendaient
+      if (game.state === "playing") scheduleBots(io, gameId);
     });
 
     // L'émetteur affiche la liste des parties publiques
@@ -185,6 +202,27 @@ export async function websockets(app: FastifyInstance) {
       io.to(gameId).emit("waiting-deal");
       io.to(gameId).emit("start-game", started as GameType);
       notifyPublicGames(io);
+      scheduleBots(io, gameId);
+    });
+
+    // Le créateur ajoute un robot dans la salle d'attente
+    on(socket, app, "add-bot", async ({ room, level }) => {
+      if (!(await creatorGame(socket, room))) return CREATOR_ONLY;
+      const game = await addBot(room, level);
+      const refusal = errorOf(game);
+      if (refusal) return refusal;
+      io.to(room).emit("player-joined-game", game as GameType);
+      notifyPublicGames(io);
+    });
+
+    // Le créateur retire un robot de la salle d'attente
+    on(socket, app, "remove-bot", async ({ room, botId }) => {
+      if (!(await creatorGame(socket, room))) return CREATOR_ONLY;
+      const game = await removeBot(room, botId);
+      const refusal = errorOf(game);
+      if (refusal) return refusal;
+      io.to(room).emit("player-left-game", game as GameType);
+      notifyPublicGames(io);
     });
 
     // Un joueur annonce son coup ; le serveur le calcule sur l'état enregistré
@@ -192,6 +230,7 @@ export async function websockets(app: FastifyInstance) {
       const game = await savePlayMove(room, { move, cardIndex }, userId);
       if (!game) return MOVE_REFUSED;
       io.to(game.id).emit("play-move", game);
+      scheduleBots(io, game.id);
     });
 
     // L'émetteur veut rejouer
@@ -209,6 +248,7 @@ export async function websockets(app: FastifyInstance) {
       if (refusal) return refusal;
       io.to(gameId).emit("waiting-deal");
       io.to(gameId).emit("go-to-new-game", next as NextGame);
+      scheduleBots(io, (next as NextGame).gameId);
     });
 
     // Un joueur déconnecté quitte la partie après le délai de grâce,

@@ -26,12 +26,18 @@ export const INACTIVITY_DAYS = 3 * 365;
 // Supprime les comptes sans connexion depuis INACTIVITY_DAYS (date d'inscription à défaut).
 // Les sessions, moyens de connexion, parties créées et participations suivent par cascade.
 // Les invités ne sont pas concernés : ils sont oubliés bien avant (forgetInactiveGuests), et leur pseudo
-// reste affiché dans l'historique des autres joueurs.
+// reste affiché dans l'historique des autres joueurs. Les robots non plus : ils ne se connectent jamais.
 export async function purgeInactiveUsers(now = new Date()) {
   const limit = new Date(now.getTime() - INACTIVITY_DAYS * 24 * 3600 * 1000);
   const [result] = await db
     .delete(users)
-    .where(and(eq(users.isAnonymous, false), sql`coalesce(${users.lastActiveAt}, ${users.createdAt}) < ${limit}`));
+    .where(
+      and(
+        eq(users.isAnonymous, false),
+        eq(users.isBot, false),
+        sql`coalesce(${users.lastActiveAt}, ${users.createdAt}) < ${limit}`,
+      ),
+    );
   return result.affectedRows;
 }
 

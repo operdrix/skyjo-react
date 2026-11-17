@@ -269,3 +269,41 @@ describe("checkMaximumScore", () => {
     expect(checkMaximumScore({ a: 105, b: -3 }).winner).toBe("b");
   });
 });
+
+describe("advanceGame : pioche épuisée", () => {
+  it("reforme la pioche avec la défausse mélangée, sauf la carte du dessus", () => {
+    const discardPile = hand([3, 4, 5, 6, 7], true);
+    const topId = discardPile[4].id;
+    const gameData = game({
+      currentStep: "endTurn",
+      currentPlayer: "a",
+      turnOrder: ["a", "b"],
+      playersCards: { a: hand(twelve(1), [0]), b: hand(twelve(1)) },
+      deckCards: [],
+      discardPile,
+    });
+
+    advanceGame(gameData);
+
+    expect(gameData.discardPile.map((card) => card.id)).toEqual([topId]);
+    expect(gameData.deckCards.map((card) => card.value).sort()).toEqual([3, 4, 5, 6]);
+    expect(gameData.deckCards.every((card) => !card.revealed && !card.onHand)).toBe(true);
+  });
+
+  it("garde la pioche telle quelle tant qu'elle n'est pas vide", () => {
+    const deckCards = hand([8]);
+    const gameData = game({
+      currentStep: "endTurn",
+      currentPlayer: "a",
+      turnOrder: ["a", "b"],
+      playersCards: { a: hand(twelve(1), [0]), b: hand(twelve(1)) },
+      deckCards,
+      discardPile: hand([3, 4], true),
+    });
+
+    advanceGame(gameData);
+
+    expect(gameData.deckCards).toEqual(deckCards);
+    expect(gameData.discardPile).toHaveLength(2);
+  });
+});
